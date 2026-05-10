@@ -1,0 +1,10 @@
+version: platform_v0
+primary_eval_platform: braintrust
+local_artifacts_required: true
+optional_platforms:
+  - weave
+artifact_roots:
+  reports: reports
+  raw_traces: traces/raw
+  redacted_traces: traces/redacted
+  evidence_packs: evidence_packs

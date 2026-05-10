@@ -1,0 +1,17 @@
+version: risk_weights_v0
+risk_bands:
+  L0:
+    weight: 1
+    description: Routine synthetic workflow with low user or partner impact.
+  L1:
+    weight: 2
+    description: Minor support or communication risk.
+  L2:
+    weight: 4
+    description: Consent, policy, escalation, or misleading-language risk.
+  L3:
+    weight: 8
+    description: High-risk workflow requiring human approval or stronger evaluator checks.
+  L4:
+    weight: 13
+    description: Do-not-automate path for this public synthetic system.

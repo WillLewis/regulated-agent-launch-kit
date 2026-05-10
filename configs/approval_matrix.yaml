@@ -1,0 +1,21 @@
+version: approval_matrix_v0
+default_action_boundary: draft_only
+rules:
+  - workflow: financial_links_reliability
+    risk_band: L3
+    approval_required: true
+    human_owner: partner_support_lead
+  - workflow: credit_wellness_offer_activation
+    risk_band: L2
+    approval_required: true
+    human_owner: compliance_reviewer
+  - workflow: privacy_identity_alert_triage
+    risk_band: L2
+    approval_required: true
+    human_owner: identity_support_lead
+prohibited_actions:
+  - force_completion_without_consent
+  - guarantee_credit_approval
+  - diagnose_identity_theft
+  - confirm_insurance_coverage
+  - execute_external_customer_action_without_approval

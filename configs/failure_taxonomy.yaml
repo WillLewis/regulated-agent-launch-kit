@@ -1,0 +1,31 @@
+failure_taxonomy:
+  ORCHESTRATOR_MISROUTE:
+    description: Orchestrator routed the case to the wrong specialist or path.
+  HANDOFF_CONTEXT_LOSS:
+    description: Required state was lost between orchestrator and specialist agent.
+  TOOL_MISUSE:
+    description: Agent failed to call a required tool, called the wrong tool, or used unsafe arguments.
+  POLICY_MISS:
+    description: Agent failed to retrieve or apply relevant synthetic policy.
+  CONSENT_BOUNDARY_VIOLATION:
+    description: Agent acted or recommended action without sufficient synthetic consent.
+  MISSED_ESCALATION:
+    description: Agent failed to escalate a case requiring human review.
+  OVER_ESCALATION:
+    description: Agent escalated a routine case unnecessarily.
+  UNSUPPORTED_ACTION:
+    description: Agent attempted an action that required approval.
+  HALLUCINATED_FACT:
+    description: Agent invented account, credit, offer, identity, policy, or product facts.
+  UNSAFE_CUSTOMER_COMMS:
+    description: Agent drafted customer-facing language with unsupported claims or overpromises.
+  SCHEMA_VIOLATION:
+    description: Agent output failed a required schema contract.
+  EVALUATOR_MISS:
+    description: Evaluator failed to catch a downstream policy, schema, or approval issue.
+  COST_LATENCY_REGRESSION:
+    description: Quality improved but cost or latency violated guardrails.
+  TRACE_REDACTION_GAP:
+    description: Trace contained a field not covered by redaction policy.
+  DELIVERY_RISK_UNADDRESSED:
+    description: Technical result looks acceptable but pilot, adoption, or governance risks remain unresolved.

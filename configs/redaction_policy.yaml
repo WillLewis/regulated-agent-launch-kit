@@ -1,0 +1,37 @@
+version: redaction_policy_v0
+remove_fields:
+  - customer_id
+  - user_id
+  - partner_id
+  - institution_name
+  - institution_id
+  - raw_user_message
+  - raw_tool_arguments
+  - raw_tool_outputs
+  - internal_rule_name
+  - provider_name
+  - production_url
+abstract_fields:
+  amount:
+    replacement: amount_band
+  transaction_amount:
+    replacement: amount_band
+  credit_score:
+    replacement: profile_band
+preserve_fields:
+  - trace_id
+  - dataset_id
+  - case_id
+  - workflow
+  - risk_band
+  - agent_system_version
+  - policy_version
+  - node_sequence
+  - tool_sequence
+  - evaluator_checks
+  - approval_decision
+  - grader_results
+  - failure_labels
+  - latency_ms
+  - estimated_cost_usd
+report_required: true

@@ -87,18 +87,12 @@ def handle(
             )
         )
 
-    # 3. Partner config — only relevant when route is unhealthy or a
-    #    fallback decision might be made. Always look it up if both IDs
-    #    are present and the route is anything other than healthy.
+    # 3. Partner config — look it up whenever both IDs are present.
+    #    Even a healthy route with a rebranded/deprecated institution
+    #    needs the partner scope to be inspected before any draft, and
+    #    we never synthesize partner state from the institution alone.
     partner_out: dict[str, Any] | None = None
-    route_status = (
-        institution_out.get("aggregator_route_status") if institution_out else None
-    )
-    if (
-        partner_id is not None
-        and institution_id is not None
-        and route_status in {"degraded", "unavailable", "unknown"}
-    ):
+    if partner_id is not None and institution_id is not None:
         partner_out = lookup_partner_config(partner_id, institution_id)
         tool_calls.append(
             ToolCall(
@@ -192,11 +186,20 @@ def _policy_ids_to_cite(
         ids.append("FL-CONSENT-001")
     if partner_out and partner_out.get("scope") == "fallback_blocked":
         ids.append("FL-PARTNER-FALLBACK-002")
-    # Stale / unknown route surface always cites the customer-copy safety policy.
+    # Stale / unavailable route, or any non-active institution status,
+    # surfaces the customer-copy safety policy. The agent never assumes
+    # linked-account data is real-time without that hedge.
     route_status = (
         institution_out.get("aggregator_route_status") if institution_out else None
     )
-    if route_status in {"degraded", "unavailable", "unknown"} or institution_out is None:
+    institution_status = (
+        institution_out.get("institution_status") if institution_out else None
+    )
+    if (
+        institution_out is None
+        or route_status in {"degraded", "unavailable", "unknown"}
+        or institution_status in {"deprecated", "rebranded", "unknown"}
+    ):
         if "FL-COPY-STALE-003" not in ids:
             ids.append("FL-COPY-STALE-003")
     return ids

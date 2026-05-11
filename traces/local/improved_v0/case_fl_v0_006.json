@@ -1,21 +1,21 @@
 {
-  "trace_id": "9abe01f8-c76f-44bc-b15a-2b5c000636f6",
+  "trace_id": "3803c44c-69d3-4d3a-be0c-0e15605f4fb5",
   "dataset_id": "financial_links_reliability_v0",
-  "case_id": "case_fl_v0_005",
+  "case_id": "case_fl_v0_006",
   "workflow": "financial_links_reliability",
-  "risk_band": "L2",
-  "agent_system_version": "baseline_v0",
+  "risk_band": "L3",
+  "agent_system_version": "improved_v0",
   "policy_version": "financial_links_policies_v0",
   "orchestrator_decision": "FinancialLinksReliabilityAgent",
   "specialist_path": [
     "FinancialLinksReliabilityAgent"
   ],
   "handoff": {
-    "case_id": "case_fl_v0_005",
+    "case_id": "case_fl_v0_006",
     "workflow": "financial_links_reliability",
     "from_node": "OrchestratorAgent",
     "to_agent": "FinancialLinksReliabilityAgent",
-    "declared_risk_band": "L2",
+    "declared_risk_band": "L3",
     "consent_state": "granted",
     "consent_reconfirmed": false,
     "route_context": {
@@ -70,6 +70,24 @@
     {
       "tool": "lookup_policy",
       "arguments": {
+        "policy_id": "FL-PARTNER-FALLBACK-002"
+      },
+      "output": {
+        "policy_id": "FL-PARTNER-FALLBACK-002",
+        "title": "Partner fallback route permissions",
+        "version": "v0",
+        "applies_to": [
+          "partner_config.fallback_route_blocked"
+        ],
+        "retrieved": true,
+        "synthetic": true
+      },
+      "latency_ms": 0,
+      "error": null
+    },
+    {
+      "tool": "lookup_policy",
+      "arguments": {
         "policy_id": "FL-COPY-STALE-003"
       },
       "output": {
@@ -110,7 +128,7 @@
         "ok": true,
         "reason": null,
         "metadata": {
-          "declared_risk_band": "L2",
+          "declared_risk_band": "L3",
           "consent_state": "granted",
           "consent_reconfirmed": false,
           "approval_required": true
@@ -122,7 +140,7 @@
         "reason": null,
         "metadata": {
           "workflow": "financial_links_reliability",
-          "declared_risk_band": "L2",
+          "declared_risk_band": "L3",
           "matrix_required": true,
           "output_required": true
         }
@@ -132,10 +150,10 @@
   "approval": {
     "required": true,
     "status": "pending",
-    "approver_role": "partner_support_analyst",
+    "approver_role": "partner_support_lead",
     "reason": "Partner config blocks the fallback route; engineering escalation required."
   },
-  "final_response": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: deprecated; aggregator route status: unavailable. Fallback aggregator route is not permitted by the synthetic partner config; the case is routed to engineering escalation. Customer-facing copy uses hedged language: the linked account may take additional time to refresh; no real-time guarantee is implied. Approval is required from partner_support_analyst before any user-impacting action is taken.",
+  "final_response": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: deprecated; aggregator route status: unavailable. Fallback aggregator route is not permitted by the synthetic partner config; the case is routed to engineering escalation. Customer-facing copy uses hedged language: the linked account may take additional time to refresh; no real-time guarantee is implied. Approval is required from partner_support_lead before any user-impacting action is taken.",
   "grader_results": [
     {
       "passed": true,
@@ -191,6 +209,7 @@
           "lookup_consent_state",
           "lookup_institution_status",
           "lookup_partner_config",
+          "lookup_policy",
           "lookup_policy"
         ],
         "missing": []
@@ -203,7 +222,7 @@
       "failure_label": null,
       "explanation": "Consent boundary respected (or not applicable).",
       "evidence": {
-        "case_risk_band": "L2",
+        "case_risk_band": "L3",
         "case_consent_sensitive": false,
         "output_consent_state": "granted",
         "output_consent_reconfirmed": false,
@@ -218,29 +237,28 @@
       "explanation": "Approval posture matches the matrix-required gate.",
       "evidence": {
         "case_workflow": "financial_links_reliability",
-        "case_risk_band": "L2",
-        "declared_risk_band": "L2",
+        "case_risk_band": "L3",
+        "declared_risk_band": "L3",
         "matrix_required": true,
         "output_required": true,
-        "approver_role": "partner_support_analyst"
+        "approver_role": "partner_support_lead"
       }
     },
     {
-      "passed": false,
-      "score": 0.0,
-      "severity": "L2",
-      "failure_label": "POLICY_MISS",
-      "explanation": "Required synthetic policy IDs missing from output: ['FL-PARTNER-FALLBACK-002']",
+      "passed": true,
+      "score": 1.0,
+      "severity": "L1",
+      "failure_label": null,
+      "explanation": "All required synthetic policies were retrieved and cited.",
       "evidence": {
         "required": [
           "FL-PARTNER-FALLBACK-002"
         ],
         "cited": [
-          "FL-COPY-STALE-003"
-        ],
-        "missing": [
+          "FL-COPY-STALE-003",
           "FL-PARTNER-FALLBACK-002"
-        ]
+        ],
+        "missing": []
       }
     },
     {
@@ -255,9 +273,7 @@
       }
     }
   ],
-  "failure_labels": [
-    "POLICY_MISS"
-  ],
+  "failure_labels": [],
   "latency_ms": 0,
   "est_cost_usd": 0.0
 }

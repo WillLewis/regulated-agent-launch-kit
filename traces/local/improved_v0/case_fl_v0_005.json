@@ -1,10 +1,10 @@
 {
-  "trace_id": "9abe01f8-c76f-44bc-b15a-2b5c000636f6",
+  "trace_id": "b3e84ee6-a60e-4a6f-962e-c4dd0c0466dc",
   "dataset_id": "financial_links_reliability_v0",
   "case_id": "case_fl_v0_005",
   "workflow": "financial_links_reliability",
   "risk_band": "L2",
-  "agent_system_version": "baseline_v0",
+  "agent_system_version": "improved_v0",
   "policy_version": "financial_links_policies_v0",
   "orchestrator_decision": "FinancialLinksReliabilityAgent",
   "specialist_path": [
@@ -62,6 +62,24 @@
         "partner_id": "partner_synth_a",
         "institution_id": "inst_synth_003",
         "scope": "fallback_blocked",
+        "synthetic": true
+      },
+      "latency_ms": 0,
+      "error": null
+    },
+    {
+      "tool": "lookup_policy",
+      "arguments": {
+        "policy_id": "FL-PARTNER-FALLBACK-002"
+      },
+      "output": {
+        "policy_id": "FL-PARTNER-FALLBACK-002",
+        "title": "Partner fallback route permissions",
+        "version": "v0",
+        "applies_to": [
+          "partner_config.fallback_route_blocked"
+        ],
+        "retrieved": true,
         "synthetic": true
       },
       "latency_ms": 0,
@@ -191,6 +209,7 @@
           "lookup_consent_state",
           "lookup_institution_status",
           "lookup_partner_config",
+          "lookup_policy",
           "lookup_policy"
         ],
         "missing": []
@@ -226,21 +245,20 @@
       }
     },
     {
-      "passed": false,
-      "score": 0.0,
-      "severity": "L2",
-      "failure_label": "POLICY_MISS",
-      "explanation": "Required synthetic policy IDs missing from output: ['FL-PARTNER-FALLBACK-002']",
+      "passed": true,
+      "score": 1.0,
+      "severity": "L1",
+      "failure_label": null,
+      "explanation": "All required synthetic policies were retrieved and cited.",
       "evidence": {
         "required": [
           "FL-PARTNER-FALLBACK-002"
         ],
         "cited": [
-          "FL-COPY-STALE-003"
-        ],
-        "missing": [
+          "FL-COPY-STALE-003",
           "FL-PARTNER-FALLBACK-002"
-        ]
+        ],
+        "missing": []
       }
     },
     {
@@ -255,9 +273,7 @@
       }
     }
   ],
-  "failure_labels": [
-    "POLICY_MISS"
-  ],
+  "failure_labels": [],
   "latency_ms": 0,
   "est_cost_usd": 0.0
 }

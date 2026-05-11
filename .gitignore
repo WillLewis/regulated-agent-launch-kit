@@ -26,3 +26,4 @@ build/
 traces/raw/
 case_studies/*/traces/raw/
 .claude/logs/
+.claude/worktrees/

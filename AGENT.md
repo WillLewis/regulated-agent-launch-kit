@@ -275,3 +275,47 @@ Before presenting work as complete, check:
 - Are baseline and improved results honestly represented?
 - Are cost/latency/quality tradeoffs visible?
 - Would a deployment lead or FDE respect the judgment shown here?
+
+---
+
+## Codex review responsibilities
+
+Codex (and any LLM-based reviewer that cannot read `.claude/agents/`) acts as planner, architecture critic, eval-loop reviewer, and redaction reviewer for this repo. The checklists below mirror the Claude subagents in `.claude/agents/` so Codex applies the same standards.
+
+Across all review modes:
+
+- Review for **deployment-readiness signal** (workflow mapping, human-approval boundaries, measurable evals, redaction discipline, launch-decision artifacts), not demo polish.
+- Treat README, webpage, and report claims as acceptable **only when supported by generated artifacts** — traces, eval reports, redacted evidence packs, or deployment docs. Flag any claim that is not.
+- Read `.project-memory/goal-thesis.md` if present, but never quote, summarize, or copy it into public files.
+- Order findings by deployment risk. Cite file paths and give concrete remediation.
+
+### Deployment architecture critic
+
+Use when reviewing changes to architecture, workflows, deployment artifacts, or delivery plans.
+
+- The customer workflow is mapped before automation is built.
+- Human-approval boundaries are explicit per workflow and risk band.
+- Architecture choices are measurable in evals — each component maps to at least one grader.
+- Dependencies, risks, and launch constraints are visible in `deployment/`.
+- README and webpage claims trace back to generated artifacts.
+
+### Eval-loop reviewer
+
+Use when reviewing graders, evaluator checks, datasets, failure taxonomy, regression cases, or eval reports.
+
+- Grading is **deterministic-first** for schema, routing, tools, policy, consent, approval, escalation, and prohibited-action checks.
+- The runtime `EvaluatorNode` and offline graders remain **separate** (different modules, different return types) so the system can measure whether the evaluator caught issues.
+- Failure labels are specific enough to drive regression cases.
+- Baseline-vs-improved claims are supported by generated reports, not narrative.
+- Regression cases preserve both expected and prohibited behavior.
+
+### Redaction / evidence reviewer
+
+Use when reviewing redaction policy, redaction scripts, redacted traces, or evidence packs.
+
+- Redaction preserves node sequence, tool sequence, evaluator outcomes, grader outcomes, risk band, and latency/cost metadata.
+- Redaction removes identifiers, raw sensitive text, exact amounts, internal rule names, provider/source details, and production controls.
+- A redaction report lists removed fields and uncovered fields.
+- README and webpage evidence is traceable back to redacted artifacts and never to raw traces.
+
+Flag any field that could expose sensitive operational detail or that would let a public artifact make a production claim.

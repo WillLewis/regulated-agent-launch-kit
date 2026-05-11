@@ -91,7 +91,9 @@ def test_eval_runner_writes_report_and_traces(tmp_path: Path) -> None:
     assert report.case_count == 4
     assert report.passed_case_count + report.failed_case_count == report.case_count
     assert report.dataset_path == str(SMOKE_PATH)
-    assert report.agent_system_version == "baseline_v0"
+    # Default profile is the policy-compliant improved profile; the
+    # baseline profile must be requested explicitly via CLI/API.
+    assert report.agent_system_version == "improved_v0"
 
     # aggregate grader pass rates exist for every grader, with totals == case_count
     seen = {r.name for r in report.aggregate_grader_pass_rates}

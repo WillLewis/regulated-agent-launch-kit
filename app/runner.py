@@ -23,6 +23,7 @@ import yaml
 from pydantic import BaseModel
 
 from app.agents import financial_links_reliability_agent
+from app.agents.profiles import DEFAULT_PROFILE, normalize_profile
 from app.evaluator import evaluate
 from app.schemas import (
     AgentOutput,
@@ -70,16 +71,20 @@ def run_case(
     case_dict: dict[str, Any],
     approval_matrix: dict[str, Any] | None = None,
     *,
-    agent_system_version: str = "baseline_v0",
+    agent_system_version: str = DEFAULT_PROFILE.value,
     policy_version: str = "financial_links_policies_v0",
     dataset_id: str | None = None,
 ) -> RunResult:
     """Run one Financial Links case end-to-end.
 
+    ``agent_system_version`` selects the agent-system profile (see
+    ``app.agents.profiles``); the value is also recorded on the trace.
+
     The function is intentionally deterministic. It does not call any
     external API, model, or service. All tool calls are synthetic.
     """
 
+    profile = normalize_profile(agent_system_version)
     matrix = approval_matrix or load_default_approval_matrix()
 
     case = _build_case(case_dict)
@@ -116,6 +121,7 @@ def run_case(
         case=case,
         handoff=handoff,
         approval_matrix=matrix,
+        profile=profile,
     )
 
     evaluator_report = evaluate(
@@ -130,7 +136,7 @@ def run_case(
         case_id=case.case_id,
         workflow=case.workflow,
         risk_band=case.risk_band,
-        agent_system_version=agent_system_version,
+        agent_system_version=profile,
         policy_version=policy_version,
         orchestrator_decision=specialist,
         specialist_path=[specialist],

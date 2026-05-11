@@ -26,6 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from app.agents.profiles import DEFAULT_PROFILE, KNOWN_PROFILES  # noqa: E402
 from app.runner import run_case  # noqa: E402
 
 
@@ -59,6 +60,16 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="Path to write the resulting trace JSON.",
     )
+    parser.add_argument(
+        "--agent-system-version",
+        default=DEFAULT_PROFILE.value,
+        choices=sorted(KNOWN_PROFILES),
+        help=(
+            "Agent-system profile to run. Default is the policy-compliant "
+            "improved profile; pass 'baseline_v0' to run the deliberately "
+            "weak synthetic baseline."
+        ),
+    )
     args = parser.parse_args(argv)
 
     if not args.dataset.exists():
@@ -66,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     case_dict = _load_case(args.dataset, args.case_id)
-    result = run_case(case_dict)
+    result = run_case(case_dict, agent_system_version=args.agent_system_version)
 
     args.trace_out.parent.mkdir(parents=True, exist_ok=True)
     args.trace_out.write_text(

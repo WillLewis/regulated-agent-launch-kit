@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.agents.profiles import AgentSystemProfile, normalize_profile
 from app.schemas import (
     AgentOutput,
     ApprovalDecision,
@@ -40,19 +41,32 @@ _INSUFFICIENT_CONSENT = {
     ConsentState.UNKNOWN,
 }
 
+# Phrase the synthetic baseline injects on granted-consent healthy-route
+# cases. It is deliberately picked to trip ``grade_unsupported_claim``'s
+# "in real time" pattern so the offline eval surfaces a clear
+# ``UNSAFE_CUSTOMER_COMMS`` failure for the baseline profile.
+_BASELINE_OVERPROMISE = (
+    "The linked account will refresh in real time and the data is real-time once linked."
+)
+
 
 def handle(
     case: Case,
     handoff: HandoffPayload,
     approval_matrix: dict[str, Any],
+    *,
+    profile: str = AgentSystemProfile.IMPROVED_V0.value,
 ) -> AgentOutput:
     """Deterministic handler for one Financial Links case.
 
     Returns an ``AgentOutput`` that the runner records on the trace and
-    that the offline graders score. The decision rules below are
-    deliberately conservative: when in doubt, escalate to approval and
-    use hedged customer copy.
+    that the offline graders score. ``profile`` selects between the
+    deliberately weak ``baseline_v0`` and the policy-compliant
+    ``improved_v0`` behaviors (see ``app.agents.profiles``).
     """
+
+    profile = normalize_profile(profile)
+    is_baseline = profile == AgentSystemProfile.BASELINE_V0.value
 
     facts: dict[str, Any] = dict(case.payload or {})
     user_id = facts.get("user_id")
@@ -87,12 +101,23 @@ def handle(
             )
         )
 
-    # 3. Partner config — look it up whenever both IDs are present.
-    #    Even a healthy route with a rebranded/deprecated institution
-    #    needs the partner scope to be inspected before any draft, and
-    #    we never synthesize partner state from the institution alone.
+    # 3. Partner config — improved profile looks it up whenever both IDs
+    #    are present (even a healthy route may sit in front of a
+    #    rebranded institution that requires explicit partner-scope
+    #    verification). Baseline profile intentionally skips the call
+    #    when the route appears healthy — that is one of the planted
+    #    weaknesses the eval pass should surface as TOOL_MISUSE on
+    #    case_fl_v0_010.
+    route_status = (
+        institution_out.get("aggregator_route_status") if institution_out else None
+    )
     partner_out: dict[str, Any] | None = None
-    if partner_id is not None and institution_id is not None:
+    skip_partner_for_baseline = is_baseline and route_status == "healthy"
+    if (
+        partner_id is not None
+        and institution_id is not None
+        and not skip_partner_for_baseline
+    ):
         partner_out = lookup_partner_config(partner_id, institution_id)
         tool_calls.append(
             ToolCall(
@@ -102,8 +127,12 @@ def handle(
             )
         )
 
-    # 4. Decide which synthetic policies to cite.
+    # 4. Decide which synthetic policies to cite. Baseline intentionally
+    #    omits FL-PARTNER-FALLBACK-002 — the eval pass should surface this
+    #    as POLICY_MISS on the partner-fallback-blocked cases.
     policy_ids = _policy_ids_to_cite(consent_state, institution_out, partner_out)
+    if is_baseline:
+        policy_ids = [pid for pid in policy_ids if pid != "FL-PARTNER-FALLBACK-002"]
     policy_refs: list[PolicyReference] = []
     for pid in policy_ids:
         policy_out = lookup_policy(pid)
@@ -150,6 +179,15 @@ def handle(
         policy_ids=policy_ids,
         approval=approval,
     )
+    # Baseline overpromise: on granted-consent, healthy-route cases the
+    # baseline draft adds an unsupported "real-time" claim. This is the
+    # planted UNSAFE_CUSTOMER_COMMS failure for case_fl_v0_010.
+    if (
+        is_baseline
+        and consent_state == ConsentState.GRANTED
+        and route_status == "healthy"
+    ):
+        draft_text = f"{draft_text} {_BASELINE_OVERPROMISE}"
 
     prohibited_avoided = ["force_completion_without_consent"]
     if partner_out and partner_out.get("scope") == "fallback_blocked":

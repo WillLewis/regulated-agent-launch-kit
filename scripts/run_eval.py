@@ -24,6 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from app.agents.profiles import DEFAULT_PROFILE, KNOWN_PROFILES  # noqa: E402
 from evals.run import run_eval  # noqa: E402
 
 
@@ -54,8 +55,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--agent-system-version",
-        default="baseline_v0",
-        help="Free-form label recorded on every trace and on the report.",
+        default=DEFAULT_PROFILE.value,
+        choices=sorted(KNOWN_PROFILES),
+        help=(
+            "Agent-system profile to run. Default is the policy-compliant "
+            "improved profile; pass 'baseline_v0' to evaluate the deliberately "
+            "weak synthetic baseline (used to demonstrate failing cases the "
+            "improved profile fixes)."
+        ),
     )
     args = parser.parse_args(argv)
 

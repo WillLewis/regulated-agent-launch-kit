@@ -28,6 +28,7 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field
 
+from app.agents.profiles import DEFAULT_PROFILE, normalize_profile
 from app.runner import RunResult, load_default_approval_matrix, run_case
 from app.schemas import Case, GraderResult, RiskBand, TraceRecord, Workflow
 from evals.graders import (
@@ -182,11 +183,18 @@ def run_eval(
     traces_out: Path,
     report_out: Path | None = None,
     *,
-    agent_system_version: str = "baseline_v0",
+    agent_system_version: str = DEFAULT_PROFILE.value,
     approval_matrix: dict[str, Any] | None = None,
 ) -> EvalReport:
-    """Run the offline eval pass and (optionally) write the report to disk."""
+    """Run the offline eval pass and (optionally) write the report to disk.
 
+    ``agent_system_version`` selects an entry from
+    ``app.agents.profiles.AgentSystemProfile``. The default is the
+    policy-compliant improved profile; pass ``baseline_v0`` explicitly
+    to evaluate the deliberately weak baseline.
+    """
+
+    profile = normalize_profile(agent_system_version)
     dataset_path = Path(dataset_path)
     traces_out = Path(traces_out)
     traces_out.mkdir(parents=True, exist_ok=True)
@@ -205,7 +213,7 @@ def run_eval(
         run_result = run_case(
             case_dict,
             approval_matrix=matrix,
-            agent_system_version=agent_system_version,
+            agent_system_version=profile,
         )
         elapsed_ms = int(round((time.perf_counter() - start) * 1000))
 
@@ -295,7 +303,7 @@ def run_eval(
     }
 
     report = EvalReport(
-        agent_system_version=agent_system_version,
+        agent_system_version=profile,
         dataset_path=str(dataset_path),
         case_count=len(per_case),
         passed_case_count=sum(1 for c in per_case if c.passed),

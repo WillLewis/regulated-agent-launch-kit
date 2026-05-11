@@ -1,0 +1,282 @@
+"""Deterministic FinancialLinksReliabilityAgent for the Phase 3 vertical slice.
+
+This is intentionally a code-only, rule-driven agent. It calls the
+synthetic tools in ``app.tools.synthetic_connectivity_tools``, decides
+which synthetic policy IDs to cite, decides whether human approval is
+required for the case, and emits a hedged, synthetic draft. It never
+calls an external API or LLM.
+
+A future iteration may swap the draft composer for an LLM. The contract
+this module exposes — ``handle(case, handoff, approval_matrix)`` returning
+an ``AgentOutput`` — is what the runner and the offline graders depend on.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from app.schemas import (
+    AgentOutput,
+    ApprovalDecision,
+    ApprovalStatus,
+    Case,
+    ConsentState,
+    HandoffPayload,
+    PolicyReference,
+    ToolCall,
+)
+from app.tools.synthetic_connectivity_tools import (
+    lookup_consent_state,
+    lookup_institution_status,
+    lookup_partner_config,
+    lookup_policy,
+)
+
+
+_INSUFFICIENT_CONSENT = {
+    ConsentState.EXPIRED,
+    ConsentState.REVOKED,
+    ConsentState.INSUFFICIENT,
+    ConsentState.UNKNOWN,
+}
+
+
+def handle(
+    case: Case,
+    handoff: HandoffPayload,
+    approval_matrix: dict[str, Any],
+) -> AgentOutput:
+    """Deterministic handler for one Financial Links case.
+
+    Returns an ``AgentOutput`` that the runner records on the trace and
+    that the offline graders score. The decision rules below are
+    deliberately conservative: when in doubt, escalate to approval and
+    use hedged customer copy.
+    """
+
+    facts: dict[str, Any] = dict(case.payload or {})
+    user_id = facts.get("user_id")
+    institution_id = facts.get("institution_id")
+    partner_id = facts.get("partner_id")
+
+    tool_calls: list[ToolCall] = []
+
+    # 1. Consent lookup — always required when a user_id is present.
+    consent_state = handoff.consent_state
+    if user_id is not None:
+        consent_out = lookup_consent_state(user_id)
+        tool_calls.append(
+            ToolCall(
+                tool="lookup_consent_state",
+                arguments={"user_id": user_id},
+                output=consent_out,
+            )
+        )
+        consent_state = ConsentState(consent_out["consent_state"])
+
+    # 2. Institution status — skip when institution_id is missing (the
+    #    missing-info path must not synthesize an ID).
+    institution_out: dict[str, Any] | None = None
+    if institution_id is not None:
+        institution_out = lookup_institution_status(institution_id)
+        tool_calls.append(
+            ToolCall(
+                tool="lookup_institution_status",
+                arguments={"institution_id": institution_id},
+                output=institution_out,
+            )
+        )
+
+    # 3. Partner config — only relevant when route is unhealthy or a
+    #    fallback decision might be made. Always look it up if both IDs
+    #    are present and the route is anything other than healthy.
+    partner_out: dict[str, Any] | None = None
+    route_status = (
+        institution_out.get("aggregator_route_status") if institution_out else None
+    )
+    if (
+        partner_id is not None
+        and institution_id is not None
+        and route_status in {"degraded", "unavailable", "unknown"}
+    ):
+        partner_out = lookup_partner_config(partner_id, institution_id)
+        tool_calls.append(
+            ToolCall(
+                tool="lookup_partner_config",
+                arguments={"partner_id": partner_id, "institution_id": institution_id},
+                output=partner_out,
+            )
+        )
+
+    # 4. Decide which synthetic policies to cite.
+    policy_ids = _policy_ids_to_cite(consent_state, institution_out, partner_out)
+    policy_refs: list[PolicyReference] = []
+    for pid in policy_ids:
+        policy_out = lookup_policy(pid)
+        tool_calls.append(
+            ToolCall(
+                tool="lookup_policy",
+                arguments={"policy_id": pid},
+                output=policy_out,
+            )
+        )
+        policy_refs.append(
+            PolicyReference(
+                policy_id=pid,
+                version=policy_out.get("version", "v0"),
+                title=policy_out.get("title"),
+                retrieved=bool(policy_out.get("retrieved")),
+            )
+        )
+
+    # 5. Compute the approval posture from the matrix. The agent never
+    #    auto-reconfirms consent — that is reserved for an explicit
+    #    HumanApprovalNode in a later phase.
+    rule = _find_rule(approval_matrix, case.workflow.value, case.risk_band.value)
+    approval_required = bool(rule and rule.get("approval_required"))
+    approver_role = rule.get("human_owner") if rule else None
+    if consent_state in _INSUFFICIENT_CONSENT and not approval_required:
+        # Insufficient consent always escalates, even when the matrix has
+        # no explicit rule for the band.
+        approval_required = True
+        approver_role = approver_role or "partner_support_analyst"
+
+    approval = ApprovalDecision(
+        required=approval_required,
+        status=ApprovalStatus.PENDING if approval_required else ApprovalStatus.NOT_REQUIRED,
+        approver_role=approver_role,
+        reason=_approval_reason(consent_state, partner_out, institution_out),
+    )
+
+    draft_text = _compose_draft(
+        case=case,
+        consent_state=consent_state,
+        institution_out=institution_out,
+        partner_out=partner_out,
+        policy_ids=policy_ids,
+        approval=approval,
+    )
+
+    prohibited_avoided = ["force_completion_without_consent"]
+    if partner_out and partner_out.get("scope") == "fallback_blocked":
+        prohibited_avoided.append("execute_external_customer_action_without_approval")
+
+    evidence_sufficient = (
+        consent_state == ConsentState.GRANTED
+        and institution_out is not None
+        and institution_out.get("institution_status") != "unknown"
+    )
+
+    return AgentOutput(
+        case_id=case.case_id,
+        workflow=case.workflow,
+        declared_risk_band=case.risk_band,
+        consent_state=consent_state,
+        consent_reconfirmed=False,
+        draft_text=draft_text,
+        policy_references=policy_refs,
+        tool_calls=tool_calls,
+        approval=approval,
+        evidence_sufficiency=evidence_sufficient,
+        prohibited_actions_avoided=prohibited_avoided,
+    )
+
+
+def _policy_ids_to_cite(
+    consent_state: ConsentState,
+    institution_out: dict[str, Any] | None,
+    partner_out: dict[str, Any] | None,
+) -> list[str]:
+    ids: list[str] = []
+    if consent_state in _INSUFFICIENT_CONSENT:
+        ids.append("FL-CONSENT-001")
+    if partner_out and partner_out.get("scope") == "fallback_blocked":
+        ids.append("FL-PARTNER-FALLBACK-002")
+    # Stale / unknown route surface always cites the customer-copy safety policy.
+    route_status = (
+        institution_out.get("aggregator_route_status") if institution_out else None
+    )
+    if route_status in {"degraded", "unavailable", "unknown"} or institution_out is None:
+        if "FL-COPY-STALE-003" not in ids:
+            ids.append("FL-COPY-STALE-003")
+    return ids
+
+
+def _approval_reason(
+    consent_state: ConsentState,
+    partner_out: dict[str, Any] | None,
+    institution_out: dict[str, Any] | None,
+) -> str | None:
+    if consent_state in _INSUFFICIENT_CONSENT:
+        return f"Consent state is {consent_state.value}; requires human re-confirmation."
+    if partner_out and partner_out.get("scope") == "fallback_blocked":
+        return "Partner config blocks the fallback route; engineering escalation required."
+    if institution_out and institution_out.get("institution_status") in {
+        "deprecated",
+        "rebranded",
+        "unknown",
+    }:
+        return (
+            "Institution metadata is "
+            f"{institution_out.get('institution_status')}; human review recommended."
+        )
+    return None
+
+
+def _compose_draft(
+    case: Case,
+    consent_state: ConsentState,
+    institution_out: dict[str, Any] | None,
+    partner_out: dict[str, Any] | None,
+    policy_ids: list[str],
+    approval: ApprovalDecision,
+) -> str:
+    parts: list[str] = []
+    parts.append(
+        "Synthetic draft for analyst review. This is a public-safe synthetic example "
+        "and is not a real customer communication."
+    )
+    if consent_state in _INSUFFICIENT_CONSENT:
+        parts.append(
+            f"Consent for case {case.case_id} is {consent_state.value}; remediation "
+            "must wait for explicit re-confirmation by the user or approval by the "
+            "designated human owner."
+        )
+    if institution_out is None:
+        parts.append(
+            "Institution metadata was not provided in the case payload; cannot draft "
+            "a remediation that depends on institution-specific routing without it."
+        )
+    else:
+        parts.append(
+            f"Institution status: {institution_out['institution_status']}; "
+            f"aggregator route status: {institution_out['aggregator_route_status']}."
+        )
+    if partner_out and partner_out.get("scope") == "fallback_blocked":
+        parts.append(
+            "Fallback aggregator route is not permitted by the synthetic partner "
+            "config; the case is routed to engineering escalation."
+        )
+    if "FL-COPY-STALE-003" in policy_ids:
+        parts.append(
+            "Customer-facing copy uses hedged language: the linked account may take "
+            "additional time to refresh; no real-time guarantee is implied."
+        )
+    if approval.required:
+        parts.append(
+            "Approval is required from "
+            f"{approval.approver_role or 'the designated human owner'} before any "
+            "user-impacting action is taken."
+        )
+    return " ".join(parts)
+
+
+def _find_rule(
+    approval_matrix: dict[str, Any],
+    workflow_value: str,
+    risk_band_value: str,
+) -> dict[str, Any] | None:
+    for rule in approval_matrix.get("rules", []) or []:
+        if rule.get("workflow") == workflow_value and rule.get("risk_band") == risk_band_value:
+            return rule
+    return None

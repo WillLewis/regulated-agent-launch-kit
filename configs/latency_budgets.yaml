@@ -1,0 +1,33 @@
+version: latency_budgets_v0
+
+# Synthetic latency budgets used only for planning and offline eval
+# scoring in this deployment-readiness lab. These are NOT production
+# thresholds, NOT partner SLAs, and NOT regulatory commitments. Per
+# PLAN.md R4, surface this label anywhere a budget value appears.
+synthetic: true
+note: >
+  Budgets are illustrative envelopes for the synthetic Financial Links
+  workflow. They describe what "feels acceptable" for an analyst-facing
+  draft, not what any real customer system would commit to.
+
+risk_bands:
+  L0:
+    p50_ms: 1500
+    p95_ms: 3000
+    description: Routine cases; cheaper model + minimal tool calls expected.
+  L1:
+    p50_ms: 2000
+    p95_ms: 4000
+    description: Light support / communication; one tool lookup typical.
+  L2:
+    p50_ms: 3500
+    p95_ms: 7000
+    description: Consent-sensitive draft path; evaluator runs additional checks.
+  L3:
+    p50_ms: 6000
+    p95_ms: 12000
+    description: High-risk cases requiring human approval; stronger model + retrieval.
+  L4:
+    p50_ms: 8000
+    p95_ms: 16000
+    description: Do-not-automate path; agent escalates without drafting.

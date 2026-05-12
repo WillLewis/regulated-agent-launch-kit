@@ -12,6 +12,14 @@ classify and so an "improved" delta is real, not narrative.
 ``IMPROVED_V0`` preserves the policy-compliant deterministic behavior
 shipped earlier in Phase 3.
 
+``LLM_CANDIDATE_V0`` is an *optional* profile that reuses every
+deterministic decision ``IMPROVED_V0`` makes (tool calls, policy
+citations, approval boundary, prohibited-action avoidance) but
+generates the customer-facing ``draft_text`` via the
+``app.agents.llm_adapter``. It requires credentials, is **not** part
+of the public proof loop, and is not the default. Approval boundaries
+remain deterministic; the LLM never decides who must approve a case.
+
 Profile strings are stable so they can be written into
 ``TraceRecord.agent_system_version``, surfaced in eval reports, and
 filtered on without parsing. Add new profiles by extending the enum
@@ -28,6 +36,7 @@ class AgentSystemProfile(str, Enum):
 
     BASELINE_V0 = "baseline_v0"
     IMPROVED_V0 = "improved_v0"
+    LLM_CANDIDATE_V0 = "llm_candidate_v0"
 
 
 KNOWN_PROFILES: frozenset[str] = frozenset(profile.value for profile in AgentSystemProfile)

@@ -99,21 +99,21 @@
       "samples_by_risk_band": {
         "L1": {
           "count": 3,
-          "max_ms": 16,
+          "max_ms": 14,
           "min_ms": 2,
-          "mean_ms": 7
+          "mean_ms": 6
         },
         "L2": {
           "count": 5,
           "max_ms": 3,
           "min_ms": 2,
-          "mean_ms": 3
+          "mean_ms": 2
         },
         "L3": {
           "count": 2,
-          "max_ms": 3,
-          "min_ms": 3,
-          "mean_ms": 3
+          "max_ms": 2,
+          "min_ms": 2,
+          "mean_ms": 2
         }
       }
     }
@@ -275,7 +275,7 @@
       "evaluator_all_ok": true,
       "approval_required": false,
       "passed": true,
-      "latency_ms": 16,
+      "latency_ms": 14,
       "est_cost_usd": 0.0
     },
     {
@@ -581,7 +581,7 @@
       "evaluator_all_ok": true,
       "approval_required": true,
       "passed": true,
-      "latency_ms": 3,
+      "latency_ms": 2,
       "est_cost_usd": 0.0
     },
     {
@@ -902,7 +902,7 @@
       "evaluator_all_ok": false,
       "approval_required": true,
       "passed": false,
-      "latency_ms": 3,
+      "latency_ms": 2,
       "est_cost_usd": 0.0
     },
     {
@@ -1070,7 +1070,7 @@
       "evaluator_all_ok": false,
       "approval_required": true,
       "passed": false,
-      "latency_ms": 3,
+      "latency_ms": 2,
       "est_cost_usd": 0.0
     },
     {
@@ -1528,7 +1528,7 @@
       "evaluator_all_ok": true,
       "approval_required": true,
       "passed": true,
-      "latency_ms": 3,
+      "latency_ms": 2,
       "est_cost_usd": 0.0
     },
     {

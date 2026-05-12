@@ -1,5 +1,5 @@
 {
-  "trace_id": "39cbbef9-7e51-4486-add0-08c3097b5030",
+  "trace_id": "4fec3750-6eaf-4d60-831e-d25049d16554",
   "dataset_id": "financial_links_reliability_v0",
   "case_id": "case_fl_v0_001",
   "workflow": "financial_links_reliability",
@@ -306,6 +306,6 @@
     }
   ],
   "failure_labels": [],
-  "latency_ms": 15,
+  "latency_ms": 14,
   "est_cost_usd": 0.0
 }

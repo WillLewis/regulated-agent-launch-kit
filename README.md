@@ -45,6 +45,14 @@ makes no pilot, production, or regulatory claim.
 Install the graph dependencies once with `uv sync --extra agent --extra dev` (the
 `agent` extra brings in `langgraph` + `langchain-core`).
 
+An optional **`llm_candidate_v0`** profile (see [`app/agents/llm_adapter.py`](app/agents/llm_adapter.py))
+delegates only the customer-facing draft text to an LLM while every deterministic
+decision — tool calls, policy citations, approval boundary, prohibited-action avoidance —
+stays in the specialist. It requires `ANTHROPIC_API_KEY` and the `anthropic` SDK; with
+neither, it raises `LLMAdapterConfigError` rather than silently falling back. **No
+Make target uses it.** The deterministic `baseline_v0` / `improved_v0` profiles remain
+the public proof loop.
+
 See **[Financial Links V0 Evidence](#financial-links-v0-evidence)** below for the
 artifacts.
 

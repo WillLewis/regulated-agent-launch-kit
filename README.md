@@ -50,8 +50,37 @@ delegates only the customer-facing draft text to an LLM while every deterministi
 decision — tool calls, policy citations, approval boundary, prohibited-action avoidance —
 stays in the specialist. It requires `ANTHROPIC_API_KEY` and the `anthropic` SDK; with
 neither, it raises `LLMAdapterConfigError` rather than silently falling back. **No
-Make target uses it.** The deterministic `baseline_v0` / `improved_v0` profiles remain
-the public proof loop.
+default Make target uses it; opt-in targets exist and never run in CI.** The
+deterministic `baseline_v0` / `improved_v0` profiles remain the public proof loop.
+
+#### Optional LLM candidate run (opt-in, credential-gated)
+
+The deterministic public proof loop runs with no credentials. The LLM candidate path
+is entirely opt-in:
+
+```bash
+# 1. Copy the env template and set your key + optional model
+cp .env.example .env
+# edit .env so it has at minimum: ANTHROPIC_API_KEY=...
+# (optionally) AGENT_MODEL_DEFAULT=claude-...
+
+# 2. Install the optional anthropic SDK
+uv pip install anthropic
+
+# 3. Actionable preflight — verifies the key + the SDK without any network call
+make check-llm-env       # prints "OK: llm_candidate_v0 environment is ready."
+
+# 4. Run the smoke eval with the LLM candidate profile
+make eval-smoke-llm      # writes reports/llm_smoke_eval.json + traces/local/llm_smoke/
+
+# 5. Render the comparison card (improved_v0 vs llm_candidate_v0 on the smoke slice)
+make eval-card-llm-smoke # writes reports/llm_candidate_smoke_card.md
+```
+
+If `ANTHROPIC_API_KEY` is missing or the `anthropic` SDK isn't installed, every step
+above fails with a clear message — there is **no silent fallback** to a deterministic
+profile. No standard test ever requires the LLM key, the SDK, or any LLM-generated
+report; the public proof loop stays unchanged.
 
 See **[Financial Links V0 Evidence](#financial-links-v0-evidence)** below for the
 artifacts.

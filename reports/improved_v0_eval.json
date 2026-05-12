@@ -101,15 +101,15 @@
         },
         "L2": {
           "count": 5,
-          "max_ms": 4,
+          "max_ms": 3,
           "min_ms": 2,
           "mean_ms": 3
         },
         "L3": {
           "count": 2,
           "max_ms": 3,
-          "min_ms": 2,
-          "mean_ms": 2
+          "min_ms": 3,
+          "mean_ms": 3
         }
       }
     }
@@ -579,7 +579,7 @@
       "evaluator_all_ok": true,
       "approval_required": true,
       "passed": true,
-      "latency_ms": 3,
+      "latency_ms": 2,
       "est_cost_usd": 0.0
     },
     {
@@ -890,7 +890,7 @@
       "evaluator_all_ok": true,
       "approval_required": true,
       "passed": true,
-      "latency_ms": 4,
+      "latency_ms": 3,
       "est_cost_usd": 0.0
     },
     {
@@ -1506,7 +1506,7 @@
       "evaluator_all_ok": true,
       "approval_required": true,
       "passed": true,
-      "latency_ms": 2,
+      "latency_ms": 3,
       "est_cost_usd": 0.0
     },
     {

@@ -278,9 +278,52 @@ def test_run_case_cli_accepts_llm_profile_as_choice() -> None:
 # Make targets must NOT use the LLM profile
 # ---------------------------------------------------------------------------
 
-def test_makefile_does_not_reference_llm_candidate_profile() -> None:
+def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
+    """`llm_candidate_v0` may only be invoked inside opt-in LLM targets.
+
+    The deterministic public proof loop must never request the LLM
+    profile by name. The targets that legitimately do are
+    ``eval-smoke-llm`` and ``eval-card-llm-smoke`` (plus the
+    ``check-llm-env`` preflight, whose recipe doesn't name the profile).
+    """
+
+    import re
+
     makefile = MAKEFILE.read_text()
-    assert "llm_candidate_v0" not in makefile, (
-        "Make targets must stay on the deterministic public proof loop; "
-        "llm_candidate_v0 is opt-in only."
+
+    # Split on blank-line-followed-by-target-name boundaries by walking
+    # lines and grouping by current target.
+    current: str | None = None
+    target_recipes: dict[str, list[str]] = {}
+    for line in makefile.splitlines():
+        if not line.startswith(("\t", " ", "#")) and ":" in line:
+            head = line.split(":", 1)[0].strip()
+            if re.match(r"^[A-Za-z0-9_\-]+$", head):
+                current = head
+                target_recipes.setdefault(current, [])
+                continue
+        if current is not None and line.startswith("\t"):
+            target_recipes[current].append(line)
+
+    allowed = {"eval-smoke-llm", "eval-card-llm-smoke"}
+
+    def _is_invocation(step: str) -> bool:
+        """Skip @echo / printf documentation lines; only real recipe lines count."""
+
+        stripped = step.lstrip("\t").lstrip()
+        if stripped.startswith("@echo") or stripped.startswith("echo "):
+            return False
+        if stripped.startswith("@printf") or stripped.startswith("printf "):
+            return False
+        return "llm_candidate_v0" in step
+
+    offenders = {
+        target: [step for step in recipe if _is_invocation(step)]
+        for target, recipe in target_recipes.items()
+        if target not in allowed
+        and any(_is_invocation(step) for step in recipe)
+    }
+    assert not offenders, (
+        f"deterministic Make targets must not invoke llm_candidate_v0; "
+        f"found offenders: {sorted(offenders)}"
     )

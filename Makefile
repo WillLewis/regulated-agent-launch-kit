@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0
+.PHONY: help setup test scaffold-test lint dataset-test eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -22,6 +22,12 @@ help:
 	@echo "  regression-check-v0  validate regressions_v0.jsonl and assert improved_v0 passes every regression"
 	@echo "  redact-v0            redact the three baseline v0 failing traces under traces/redacted/baseline_v0/"
 	@echo "  evidence-pack-v0     assemble the public-safe evidence pack at evidence_packs/financial_links_v0/"
+	@echo ""
+	@echo "Opt-in LLM targets (require ANTHROPIC_API_KEY and the anthropic SDK; not in the public proof loop):"
+	@echo "  check-llm-env        actionable preflight: verifies ANTHROPIC_API_KEY + anthropic SDK"
+	@echo "  eval-smoke-llm       run the smoke eval with profile=llm_candidate_v0 (fails clean if creds missing)"
+	@echo "  eval-card-llm-smoke  render improved_v0 vs llm_candidate_v0 comparison card from the smoke reports"
+	@echo ""
 	@echo "  lint                 run ruff over the repo"
 	@echo ""
 	@echo "If uv is not installed, you can run tests directly:"
@@ -140,6 +146,29 @@ evidence-pack-v0: eval-card-v0 regression-check-v0 redact-v0
 		--regressions case_studies/financial_links_reliability/evals/regressions_v0.jsonl \
 		--redacted-traces traces/redacted/baseline_v0 \
 		--out evidence_packs/financial_links_v0
+
+# ---- Opt-in LLM candidate targets ------------------------------------------
+# These never run in CI and no other Make target depends on them. They
+# require ANTHROPIC_API_KEY + the anthropic SDK; the preflight gate fails
+# clean if either is missing — no silent fallback to a deterministic
+# profile. See README "Optional LLM candidate run" for the exact opt-in
+# sequence.
+
+check-llm-env:
+	uv run python scripts/check_llm_env.py
+
+eval-smoke-llm: check-llm-env
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/smoke.jsonl \
+		--traces-out traces/local/llm_smoke \
+		--report-out reports/llm_smoke_eval.json \
+		--agent-system-version llm_candidate_v0
+
+eval-card-llm-smoke: eval-smoke-improved eval-smoke-llm
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/improved_smoke_eval.json \
+		--improved-report reports/llm_smoke_eval.json \
+		--out reports/llm_candidate_smoke_card.md
 
 lint:
 	uv run ruff check .

@@ -1,5 +1,5 @@
 {
-  "trace_id": "1a3f9632-f8ef-47be-bf38-b89f58d61863",
+  "trace_id": "3d01a4da-f247-40bd-aab7-ea1fa5782f6e",
   "dataset_id": "financial_links_reliability_v0",
   "case_id": "case_fl_v0_010",
   "workflow": "financial_links_reliability",
@@ -312,6 +312,6 @@
     "TOOL_MISUSE",
     "UNSAFE_CUSTOMER_COMMS"
   ],
-  "latency_ms": 2,
+  "latency_ms": 3,
   "est_cost_usd": 0.0
 }

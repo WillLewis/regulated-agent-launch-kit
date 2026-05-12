@@ -1,0 +1,62 @@
+{
+  "version": "evidence_pack_v0",
+  "synthetic": true,
+  "disclaimer": "This evidence pack is generated from a fully synthetic local eval run. Identifiers, policies, partner configurations, and risk bands are fabricated for this deployment-readiness lab. Nothing in this pack implies production readiness, regulatory compliance, partner endorsement, or real-world performance. Raw traces are intentionally excluded; only redacted artifacts ship in this directory.",
+  "files": [
+    {
+      "path": "README.md",
+      "purpose": "Pack overview + synthetic-only disclaimer.",
+      "source": "<generated>"
+    },
+    {
+      "path": "eval_card.md",
+      "purpose": "Before/after eval card (markdown).",
+      "source": "reports/v0_eval_card.md"
+    },
+    {
+      "path": "baseline_eval.json",
+      "purpose": "Baseline profile JSON eval report.",
+      "source": "reports/baseline_v0_eval.json"
+    },
+    {
+      "path": "improved_eval.json",
+      "purpose": "Improved profile JSON eval report.",
+      "source": "reports/improved_v0_eval.json"
+    },
+    {
+      "path": "regressions.jsonl",
+      "purpose": "Pinned regression seeds derived from baseline failures.",
+      "source": "case_studies/financial_links_reliability/evals/regressions_v0.jsonl"
+    },
+    {
+      "path": "traces/redacted/case_fl_v0_005.redacted.json",
+      "purpose": "Redacted synthetic trace.",
+      "source": "traces/redacted/baseline_v0/case_fl_v0_005.redacted.json"
+    },
+    {
+      "path": "traces/redacted/case_fl_v0_006.redacted.json",
+      "purpose": "Redacted synthetic trace.",
+      "source": "traces/redacted/baseline_v0/case_fl_v0_006.redacted.json"
+    },
+    {
+      "path": "traces/redacted/case_fl_v0_010.redacted.json",
+      "purpose": "Redacted synthetic trace.",
+      "source": "traces/redacted/baseline_v0/case_fl_v0_010.redacted.json"
+    },
+    {
+      "path": "traces/redacted/case_fl_v0_005.redaction_report.json",
+      "purpose": "Redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/baseline_v0/case_fl_v0_005.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/case_fl_v0_006.redaction_report.json",
+      "purpose": "Redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/baseline_v0/case_fl_v0_006.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/case_fl_v0_010.redaction_report.json",
+      "purpose": "Redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/baseline_v0/case_fl_v0_010.redaction_report.json"
+    }
+  ]
+}

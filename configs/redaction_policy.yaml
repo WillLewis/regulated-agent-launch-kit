@@ -1,23 +1,57 @@
 version: redaction_policy_v0
+
+# Synthetic redaction policy for this deployment-readiness lab. Every
+# trace this policy is applied to is synthetic; the discipline mirrors
+# what the same scripts would do against a real trace. ``preserve_fields``
+# uses the actual top-level keys from ``app.schemas.TraceRecord`` so
+# drift between the policy and the trace schema surfaces as
+# ``preserve_fields_missing`` in the redaction report.
+synthetic: true
+
+# Keys to delete entirely wherever they appear in the trace (any depth).
 remove_fields:
+  # Identifiers — never publish raw IDs, even synthetic ones.
   - customer_id
   - user_id
   - partner_id
   - institution_name
   - institution_id
+  # Raw payloads that may carry customer text or vendor schema details.
   - raw_user_message
   - raw_tool_arguments
   - raw_tool_outputs
+  # Operational detail that should never leak via an evidence pack.
   - internal_rule_name
   - provider_name
   - production_url
+
+# Keys whose values get replaced with the configured placeholder
+# wherever they appear. Use this for fields whose presence is
+# diagnostic (you want to know they were emitted) but whose content
+# could carry sensitive copy or numeric detail.
 abstract_fields:
+  # Drafts and snippets — the eval card cites these, but the redacted
+  # trace should not republish raw draft text.
+  final_response:
+    replacement: <draft_text_abstracted>
+  draft_text:
+    replacement: <draft_text_abstracted>
+  draft_excerpt:
+    replacement: <draft_text_abstracted>
+  # Future-proofing for richer agent outputs: amount bands, profile
+  # bands, etc. Not present in the current synthetic trace surface, but
+  # left here so the discipline is visible.
   amount:
     replacement: amount_band
   transaction_amount:
     replacement: amount_band
   credit_score:
     replacement: profile_band
+
+# Top-level trace keys that MUST be present after redaction so an
+# analyst can read the redacted trace alongside the eval card / report.
+# Names mirror ``app.schemas.TraceRecord``; the redaction report flags
+# any missing or uncovered top-level fields.
 preserve_fields:
   - trace_id
   - dataset_id
@@ -26,12 +60,15 @@ preserve_fields:
   - risk_band
   - agent_system_version
   - policy_version
-  - node_sequence
-  - tool_sequence
-  - evaluator_checks
-  - approval_decision
+  - orchestrator_decision
+  - specialist_path
+  - handoff
+  - tool_calls
+  - evaluator_report
+  - approval
   - grader_results
   - failure_labels
   - latency_ms
-  - estimated_cost_usd
+  - est_cost_usd
+
 report_required: true

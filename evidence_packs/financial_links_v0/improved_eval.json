@@ -1,11 +1,11 @@
 {
   "version": "local_eval_v0",
   "synthetic": true,
-  "agent_system_version": "baseline_v0",
+  "agent_system_version": "improved_v0",
   "dataset_path": "case_studies/financial_links_reliability/data/cases_v0.jsonl",
   "case_count": 10,
-  "passed_case_count": 7,
-  "failed_case_count": 3,
+  "passed_case_count": 10,
+  "failed_case_count": 0,
   "aggregate_grader_pass_rates": [
     {
       "name": "schema_validity",
@@ -22,8 +22,8 @@
     {
       "name": "required_tool_use",
       "total": 10,
-      "passed": 9,
-      "pass_rate": 0.9
+      "passed": 10,
+      "pass_rate": 1.0
     },
     {
       "name": "consent_boundary",
@@ -40,14 +40,14 @@
     {
       "name": "policy_retrieval",
       "total": 10,
-      "passed": 8,
-      "pass_rate": 0.8
+      "passed": 10,
+      "pass_rate": 1.0
     },
     {
       "name": "unsupported_claim",
       "total": 10,
-      "passed": 9,
-      "pass_rate": 0.9
+      "passed": 10,
+      "pass_rate": 1.0
     },
     {
       "name": "evaluator_catch_rate",
@@ -56,11 +56,7 @@
       "pass_rate": 1.0
     }
   ],
-  "failure_label_counts": {
-    "POLICY_MISS": 2,
-    "TOOL_MISUSE": 1,
-    "UNSAFE_CUSTOMER_COMMS": 1
-  },
+  "failure_label_counts": {},
   "synthetic_latency_envelope": {
     "synthetic_planning_envelope": {
       "version": "latency_budgets_v0",
@@ -128,7 +124,7 @@
       "case_id": "case_fl_v0_001",
       "workflow": "financial_links_reliability",
       "risk_band": "L1",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_001.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_001.json",
       "grader_results": [
         {
           "passed": true,
@@ -282,7 +278,7 @@
       "case_id": "case_fl_v0_002",
       "workflow": "financial_links_reliability",
       "risk_band": "L2",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_002.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_002.json",
       "grader_results": [
         {
           "passed": true,
@@ -336,6 +332,7 @@
             "called": [
               "lookup_consent_state",
               "lookup_institution_status",
+              "lookup_partner_config",
               "lookup_policy"
             ],
             "missing": []
@@ -435,7 +432,7 @@
       "case_id": "case_fl_v0_003",
       "workflow": "financial_links_reliability",
       "risk_band": "L2",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_003.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_003.json",
       "grader_results": [
         {
           "passed": true,
@@ -489,6 +486,7 @@
             "called": [
               "lookup_consent_state",
               "lookup_institution_status",
+              "lookup_partner_config",
               "lookup_policy"
             ],
             "missing": []
@@ -588,7 +586,7 @@
       "case_id": "case_fl_v0_004",
       "workflow": "financial_links_reliability",
       "risk_band": "L2",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_004.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_004.json",
       "grader_results": [
         {
           "passed": true,
@@ -642,6 +640,7 @@
             "called": [
               "lookup_consent_state",
               "lookup_institution_status",
+              "lookup_partner_config",
               "lookup_policy"
             ],
             "missing": []
@@ -741,7 +740,7 @@
       "case_id": "case_fl_v0_005",
       "workflow": "financial_links_reliability",
       "risk_band": "L2",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_005.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_005.json",
       "grader_results": [
         {
           "passed": true,
@@ -797,6 +796,7 @@
               "lookup_consent_state",
               "lookup_institution_status",
               "lookup_partner_config",
+              "lookup_policy",
               "lookup_policy"
             ],
             "missing": []
@@ -832,21 +832,20 @@
           }
         },
         {
-          "passed": false,
-          "score": 0.0,
-          "severity": "L2",
-          "failure_label": "POLICY_MISS",
-          "explanation": "Required synthetic policy IDs missing from output: ['FL-PARTNER-FALLBACK-002']",
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required synthetic policies were retrieved and cited.",
           "evidence": {
             "required": [
               "FL-PARTNER-FALLBACK-002"
             ],
             "cited": [
-              "FL-COPY-STALE-003"
-            ],
-            "missing": [
+              "FL-COPY-STALE-003",
               "FL-PARTNER-FALLBACK-002"
-            ]
+            ],
+            "missing": []
           }
         },
         {
@@ -867,18 +866,9 @@
           "failure_label": null,
           "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
           "evidence": {
-            "in_scope_offline_failures": [
-              {
-                "label": "POLICY_MISS",
-                "expected_runtime_checks": [
-                  "policy_citation"
-                ]
-              }
-            ],
+            "in_scope_offline_failures": [],
             "missed": [],
-            "failing_evaluator_checks": [
-              "policy_citation"
-            ],
+            "failing_evaluator_checks": [],
             "scope": {
               "POLICY_MISS": [
                 "policy_citation"
@@ -896,12 +886,10 @@
           }
         }
       ],
-      "failure_labels": [
-        "POLICY_MISS"
-      ],
-      "evaluator_all_ok": false,
+      "failure_labels": [],
+      "evaluator_all_ok": true,
       "approval_required": true,
-      "passed": false,
+      "passed": true,
       "latency_ms": 0,
       "est_cost_usd": 0.0
     },
@@ -909,7 +897,7 @@
       "case_id": "case_fl_v0_006",
       "workflow": "financial_links_reliability",
       "risk_band": "L3",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_006.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_006.json",
       "grader_results": [
         {
           "passed": true,
@@ -965,6 +953,7 @@
               "lookup_consent_state",
               "lookup_institution_status",
               "lookup_partner_config",
+              "lookup_policy",
               "lookup_policy"
             ],
             "missing": []
@@ -1000,21 +989,20 @@
           }
         },
         {
-          "passed": false,
-          "score": 0.0,
-          "severity": "L2",
-          "failure_label": "POLICY_MISS",
-          "explanation": "Required synthetic policy IDs missing from output: ['FL-PARTNER-FALLBACK-002']",
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required synthetic policies were retrieved and cited.",
           "evidence": {
             "required": [
               "FL-PARTNER-FALLBACK-002"
             ],
             "cited": [
-              "FL-COPY-STALE-003"
-            ],
-            "missing": [
+              "FL-COPY-STALE-003",
               "FL-PARTNER-FALLBACK-002"
-            ]
+            ],
+            "missing": []
           }
         },
         {
@@ -1035,18 +1023,9 @@
           "failure_label": null,
           "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
           "evidence": {
-            "in_scope_offline_failures": [
-              {
-                "label": "POLICY_MISS",
-                "expected_runtime_checks": [
-                  "policy_citation"
-                ]
-              }
-            ],
+            "in_scope_offline_failures": [],
             "missed": [],
-            "failing_evaluator_checks": [
-              "policy_citation"
-            ],
+            "failing_evaluator_checks": [],
             "scope": {
               "POLICY_MISS": [
                 "policy_citation"
@@ -1064,12 +1043,10 @@
           }
         }
       ],
-      "failure_labels": [
-        "POLICY_MISS"
-      ],
-      "evaluator_all_ok": false,
+      "failure_labels": [],
+      "evaluator_all_ok": true,
       "approval_required": true,
-      "passed": false,
+      "passed": true,
       "latency_ms": 0,
       "est_cost_usd": 0.0
     },
@@ -1077,7 +1054,7 @@
       "case_id": "case_fl_v0_007",
       "workflow": "financial_links_reliability",
       "risk_band": "L1",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_007.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_007.json",
       "grader_results": [
         {
           "passed": true,
@@ -1231,7 +1208,7 @@
       "case_id": "case_fl_v0_008",
       "workflow": "financial_links_reliability",
       "risk_band": "L1",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_008.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_008.json",
       "grader_results": [
         {
           "passed": true,
@@ -1382,7 +1359,7 @@
       "case_id": "case_fl_v0_009",
       "workflow": "financial_links_reliability",
       "risk_band": "L3",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_009.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_009.json",
       "grader_results": [
         {
           "passed": true,
@@ -1436,6 +1413,7 @@
             "called": [
               "lookup_consent_state",
               "lookup_institution_status",
+              "lookup_partner_config",
               "lookup_policy"
             ],
             "missing": []
@@ -1535,7 +1513,7 @@
       "case_id": "case_fl_v0_010",
       "workflow": "financial_links_reliability",
       "risk_band": "L2",
-      "trace_path": "traces/local/baseline_v0/case_fl_v0_010.json",
+      "trace_path": "traces/local/improved_v0/case_fl_v0_010.json",
       "grader_results": [
         {
           "passed": true,
@@ -1575,11 +1553,11 @@
           }
         },
         {
-          "passed": false,
-          "score": 0.0,
-          "severity": "L2",
-          "failure_label": "TOOL_MISUSE",
-          "explanation": "Missing expected tool calls: ['lookup_partner_config']",
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All expected synthetic tools were called.",
           "evidence": {
             "expected": [
               "lookup_consent_state",
@@ -1590,11 +1568,10 @@
             "called": [
               "lookup_consent_state",
               "lookup_institution_status",
+              "lookup_partner_config",
               "lookup_policy"
             ],
-            "missing": [
-              "lookup_partner_config"
-            ]
+            "missing": []
           }
         },
         {
@@ -1643,16 +1620,13 @@
           }
         },
         {
-          "passed": false,
-          "score": 0.0,
-          "severity": "L2",
-          "failure_label": "UNSAFE_CUSTOMER_COMMS",
-          "explanation": "Draft contains unsupported-claim phrase(s): ['data is real-time', 'in real time']",
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
-            "matched_patterns": [
-              "data is real-time",
-              "in real time"
-            ],
+            "matched_patterns": [],
             "draft_excerpt": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: rebranded; aggregator route status: healthy. Customer-facing copy uses hedged language: the linked account may take additional time to refresh"
           }
         },
@@ -1663,18 +1637,9 @@
           "failure_label": null,
           "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
           "evidence": {
-            "in_scope_offline_failures": [
-              {
-                "label": "UNSAFE_CUSTOMER_COMMS",
-                "expected_runtime_checks": [
-                  "unsupported_claim"
-                ]
-              }
-            ],
+            "in_scope_offline_failures": [],
             "missed": [],
-            "failing_evaluator_checks": [
-              "unsupported_claim"
-            ],
+            "failing_evaluator_checks": [],
             "scope": {
               "POLICY_MISS": [
                 "policy_citation"
@@ -1692,13 +1657,10 @@
           }
         }
       ],
-      "failure_labels": [
-        "TOOL_MISUSE",
-        "UNSAFE_CUSTOMER_COMMS"
-      ],
-      "evaluator_all_ok": false,
+      "failure_labels": [],
+      "evaluator_all_ok": true,
       "approval_required": true,
-      "passed": false,
+      "passed": true,
       "latency_ms": 0,
       "est_cost_usd": 0.0
     }

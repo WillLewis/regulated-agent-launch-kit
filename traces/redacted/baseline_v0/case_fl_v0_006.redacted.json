@@ -1,10 +1,10 @@
 {
-  "trace_id": "0a9471ea-9d5b-4079-bfb5-fb48c0840bf7",
+  "trace_id": "566c4f3d-90f9-45da-959b-6426e10ead5a",
   "dataset_id": "financial_links_reliability_v0",
   "case_id": "case_fl_v0_006",
   "workflow": "financial_links_reliability",
   "risk_band": "L3",
-  "agent_system_version": "improved_v0",
+  "agent_system_version": "baseline_v0",
   "policy_version": "financial_links_policies_v0",
   "orchestrator_decision": "FinancialLinksReliabilityAgent",
   "specialist_path": [
@@ -18,20 +18,14 @@
     "declared_risk_band": "L3",
     "consent_state": "granted",
     "consent_reconfirmed": false,
-    "route_context": {
-      "institution_id": "inst_synth_003",
-      "partner_id": "partner_synth_a"
-    },
+    "route_context": {},
     "notes": null
   },
   "tool_calls": [
     {
       "tool": "lookup_consent_state",
-      "arguments": {
-        "user_id": "user_synth_001"
-      },
+      "arguments": {},
       "output": {
-        "user_id": "user_synth_001",
         "consent_state": "granted",
         "synthetic": true
       },
@@ -40,11 +34,8 @@
     },
     {
       "tool": "lookup_institution_status",
-      "arguments": {
-        "institution_id": "inst_synth_003"
-      },
+      "arguments": {},
       "output": {
-        "institution_id": "inst_synth_003",
         "institution_status": "deprecated",
         "aggregator_route_status": "unavailable",
         "synthetic": true
@@ -54,32 +45,9 @@
     },
     {
       "tool": "lookup_partner_config",
-      "arguments": {
-        "partner_id": "partner_synth_a",
-        "institution_id": "inst_synth_003"
-      },
+      "arguments": {},
       "output": {
-        "partner_id": "partner_synth_a",
-        "institution_id": "inst_synth_003",
         "scope": "fallback_blocked",
-        "synthetic": true
-      },
-      "latency_ms": 0,
-      "error": null
-    },
-    {
-      "tool": "lookup_policy",
-      "arguments": {
-        "policy_id": "FL-PARTNER-FALLBACK-002"
-      },
-      "output": {
-        "policy_id": "FL-PARTNER-FALLBACK-002",
-        "title": "Partner fallback route permissions",
-        "version": "v0",
-        "applies_to": [
-          "partner_config.fallback_route_blocked"
-        ],
-        "retrieved": true,
         "synthetic": true
       },
       "latency_ms": 0,
@@ -147,17 +115,18 @@
       },
       {
         "name": "policy_citation",
-        "ok": true,
-        "reason": null,
+        "ok": false,
+        "reason": "required synthetic policy IDs not cited: ['FL-PARTNER-FALLBACK-002']",
         "metadata": {
           "required": [
             "FL-PARTNER-FALLBACK-002"
           ],
           "cited": [
-            "FL-COPY-STALE-003",
-            "FL-PARTNER-FALLBACK-002"
+            "FL-COPY-STALE-003"
           ],
-          "missing": []
+          "missing": [
+            "FL-PARTNER-FALLBACK-002"
+          ]
         }
       },
       {
@@ -166,7 +135,7 @@
         "reason": null,
         "metadata": {
           "matched_patterns": [],
-          "draft_excerpt": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: deprecated; aggregator route status: unavailable. Fallback agg"
+          "draft_excerpt": "<draft_text_abstracted>"
         }
       }
     ]
@@ -177,7 +146,7 @@
     "approver_role": "partner_support_lead",
     "reason": "Partner config blocks the fallback route; engineering escalation required."
   },
-  "final_response": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: deprecated; aggregator route status: unavailable. Fallback aggregator route is not permitted by the synthetic partner config; the case is routed to engineering escalation. Customer-facing copy uses hedged language: the linked account may take additional time to refresh; no real-time guarantee is implied. Approval is required from partner_support_lead before any user-impacting action is taken.",
+  "final_response": "<draft_text_abstracted>",
   "grader_results": [
     {
       "passed": true,
@@ -233,7 +202,6 @@
           "lookup_consent_state",
           "lookup_institution_status",
           "lookup_partner_config",
-          "lookup_policy",
           "lookup_policy"
         ],
         "missing": []
@@ -269,20 +237,21 @@
       }
     },
     {
-      "passed": true,
-      "score": 1.0,
-      "severity": "L1",
-      "failure_label": null,
-      "explanation": "All required synthetic policies were retrieved and cited.",
+      "passed": false,
+      "score": 0.0,
+      "severity": "L2",
+      "failure_label": "POLICY_MISS",
+      "explanation": "Required synthetic policy IDs missing from output: ['FL-PARTNER-FALLBACK-002']",
       "evidence": {
         "required": [
           "FL-PARTNER-FALLBACK-002"
         ],
         "cited": [
-          "FL-COPY-STALE-003",
-          "FL-PARTNER-FALLBACK-002"
+          "FL-COPY-STALE-003"
         ],
-        "missing": []
+        "missing": [
+          "FL-PARTNER-FALLBACK-002"
+        ]
       }
     },
     {
@@ -293,7 +262,7 @@
       "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
       "evidence": {
         "matched_patterns": [],
-        "draft_excerpt": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: deprecated; aggregator route status: unavailable. Fallback aggregator route is not permitted by the synthetic partner config; the case is rout"
+        "draft_excerpt": "<draft_text_abstracted>"
       }
     },
     {
@@ -303,9 +272,18 @@
       "failure_label": null,
       "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
       "evidence": {
-        "in_scope_offline_failures": [],
+        "in_scope_offline_failures": [
+          {
+            "label": "POLICY_MISS",
+            "expected_runtime_checks": [
+              "policy_citation"
+            ]
+          }
+        ],
         "missed": [],
-        "failing_evaluator_checks": [],
+        "failing_evaluator_checks": [
+          "policy_citation"
+        ],
         "scope": {
           "POLICY_MISS": [
             "policy_citation"
@@ -323,7 +301,9 @@
       }
     }
   ],
-  "failure_labels": [],
+  "failure_labels": [
+    "POLICY_MISS"
+  ],
   "latency_ms": 0,
   "est_cost_usd": 0.0
 }

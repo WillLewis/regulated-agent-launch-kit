@@ -96,8 +96,8 @@
         "L2": {
           "count": 2,
           "max_ms": 15,
-          "min_ms": 2,
-          "mean_ms": 8
+          "min_ms": 3,
+          "mean_ms": 9
         },
         "L3": {
           "count": 1,
@@ -580,7 +580,7 @@
       "evaluator_all_ok": true,
       "approval_required": true,
       "passed": true,
-      "latency_ms": 2,
+      "latency_ms": 3,
       "est_cost_usd": 0.0
     }
   ]

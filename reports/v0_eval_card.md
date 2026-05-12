@@ -89,7 +89,7 @@ authored as targets for this lab.
 |---|---:|---:|
 | Total est. cost (USD) | 0.0 | 0.0 |
 | Cases counted | 10 | 10 |
-| `L1` measured mean (ms) | 6 | 6 |
+| `L1` measured mean (ms) | 7 | 6 |
 | `L2` measured mean (ms) | 3 | 2 |
 | `L3` measured mean (ms) | 3 | 2 |
 

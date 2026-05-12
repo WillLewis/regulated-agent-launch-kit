@@ -29,13 +29,21 @@ Synthetic case
 
 ## Current Status
 
-The Financial Links flagship local proof loop is complete: dataset, deterministic
-vertical-slice runner, runtime evaluator, offline graders, baseline-vs-improved eval card,
-runtime evaluator catch-rate, pinned regression seeds, and a public-safe redacted evidence
-pack all exist locally. The runner is now **graph-backed** — `app/graph.py` defines a
-LangGraph `StateGraph` over `IntakeNormalizer → OrchestratorAgent →
-FinancialLinksReliabilityAgent → EvaluatorNode → HumanApprovalNode (when required)
-→ FinalResponseComposer`. Every node is deterministic; no LLM is called.
+The Financial Links flagship local proof loop is complete: dataset, runtime evaluator,
+offline graders, baseline-vs-improved eval card, runtime evaluator catch-rate, pinned
+regression seeds, and a public-safe redacted evidence pack all exist locally.
+
+**Canonical execution path.** [`app/graph.py`](app/graph.py) is the canonical Financial
+Links execution path. It is a real `langgraph.graph.StateGraph` (not a shim) wiring
+`IntakeNormalizer → OrchestratorAgent → FinancialLinksReliabilityAgent → EvaluatorNode
+→ HumanApprovalNode (when approval is required) → FinalResponseComposer`.
+[`app/runner.py`](app/runner.py) invokes that compiled graph; every other script, eval,
+regression, and evidence-pack flow runs through it. Every node is deterministic and no
+LLM is called — this proves the local synthetic loop closes through real LangGraph; it
+makes no pilot, production, or regulatory claim.
+
+Install the graph dependencies once with `uv sync --extra agent --extra dev` (the
+`agent` extra brings in `langgraph` + `langchain-core`).
 
 See **[Financial Links V0 Evidence](#financial-links-v0-evidence)** below for the
 artifacts.
@@ -207,9 +215,9 @@ artifacts exist.
 - `PLAN_v3_openai_tdl_fde.md` contains the detailed build plan.
 - `deployment/` contains the customer-deployment leadership artifacts.
 - `case_studies/` contains public-safe synthetic datasets and dataset cards.
-- `app/` will contain the LangGraph system under test.
-- `evals/` will contain deterministic graders and eval adapters.
-- `scripts/` will contain local CLIs for datasets, evals, redaction, regressions, and reports.
+- `app/` contains the LangGraph system under test; `app/graph.py` is the canonical Financial Links execution path.
+- `evals/` contains deterministic graders and the local eval runner.
+- `scripts/` contains local CLIs for datasets, evals, redaction, regressions, and reports.
 - `.claude/` contains Claude Code subagent and hook scaffolding.
 
 ## First Build Milestones

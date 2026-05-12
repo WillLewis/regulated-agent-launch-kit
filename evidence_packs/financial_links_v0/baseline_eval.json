@@ -99,9 +99,9 @@
       "samples_by_risk_band": {
         "L1": {
           "count": 3,
-          "max_ms": 15,
+          "max_ms": 16,
           "min_ms": 2,
-          "mean_ms": 6
+          "mean_ms": 7
         },
         "L2": {
           "count": 5,
@@ -275,7 +275,7 @@
       "evaluator_all_ok": true,
       "approval_required": false,
       "passed": true,
-      "latency_ms": 15,
+      "latency_ms": 16,
       "est_cost_usd": 0.0
     },
     {
@@ -902,7 +902,7 @@
       "evaluator_all_ok": false,
       "approval_required": true,
       "passed": false,
-      "latency_ms": 2,
+      "latency_ms": 3,
       "est_cost_usd": 0.0
     },
     {
@@ -1699,7 +1699,7 @@
       "evaluator_all_ok": false,
       "approval_required": true,
       "passed": false,
-      "latency_ms": 3,
+      "latency_ms": 2,
       "est_cost_usd": 0.0
     }
   ]

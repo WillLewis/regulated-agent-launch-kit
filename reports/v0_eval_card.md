@@ -30,6 +30,7 @@
 | `approval_boundary` | 10/10 (1.00) | 10/10 (1.00) | +0.00 |
 | `policy_retrieval` | 8/10 (0.80) | 10/10 (1.00) | +0.20 |
 | `unsupported_claim` | 9/10 (0.90) | 10/10 (1.00) | +0.10 |
+| `evaluator_catch_rate` | 10/10 (1.00) | 10/10 (1.00) | +0.00 |
 
 ### Failure label counts
 
@@ -38,6 +39,20 @@
 | `POLICY_MISS` | 2 | 0 |
 | `TOOL_MISUSE` | 1 | 0 |
 | `UNSAFE_CUSTOMER_COMMS` | 1 | 0 |
+
+### Runtime evaluator catch-rate
+
+The runtime evaluator (`app/evaluator.py`) should catch failures in a small, explicit set of categories. The catch-rate grader compares offline grader failures against the runtime evaluator's own checks for those categories. Architectural failures (`TOOL_MISUSE`, `HANDOFF_CONTEXT_LOSS`, `SCHEMA_VIOLATION`) are intentionally out of scope — they describe the multi-agent system, not what the evaluator could plausibly inspect on a single draft.
+
+**Catchable categories:**
+- `CONSENT_BOUNDARY_VIOLATION` → runtime check(s): `consent_boundary`
+- `POLICY_MISS` → runtime check(s): `policy_citation`
+- `UNSAFE_CUSTOMER_COMMS` → runtime check(s): `unsupported_claim`
+- `UNSUPPORTED_ACTION` → runtime check(s): `approval_requirement`
+
+**Catch-rate:** baseline 10/10 (1.00) · improved 10/10 (1.00)
+
+**Baseline `EVALUATOR_MISS`:** 0 · **Improved `EVALUATOR_MISS`:** 0
 
 ## What failed in baseline
 

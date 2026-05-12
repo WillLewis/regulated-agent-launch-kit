@@ -128,6 +128,7 @@ def run_case(
         agent_output,
         required_fields=_AGENT_OUTPUT_REQUIRED_FIELDS,
         approval_matrix=matrix,
+        required_policy_ids=list(case_dict.get("required_policy_ids", [])),
     )
 
     trace = TraceRecord(

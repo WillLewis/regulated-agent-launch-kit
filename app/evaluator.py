@@ -34,6 +34,26 @@ _INSUFFICIENT_CONSENT = {
     ConsentState.UNKNOWN,
 }
 
+# Kept duplicated (not imported from ``evals.graders``) to preserve the
+# "runtime evaluator and offline graders are separate modules" rule from
+# ``AGENTS.md``. The offline grader's pattern set is the authority for
+# scoring; this one is the runtime mirror used by the catch-rate grader
+# to ask "did the evaluator notice the same thing?". They are allowed to
+# drift slightly — if they do, ``grade_evaluator_catch_rate`` will report
+# EVALUATOR_MISS on the gap, which is exactly the signal we want.
+_RUNTIME_UNSUPPORTED_CLAIM_PATTERNS: tuple[str, ...] = (
+    "we guarantee",
+    "guaranteed to",
+    "is guaranteed",
+    "force complete",
+    "force-complete",
+    "will complete",
+    "in real time",
+    "in real-time",
+    "data is real-time",
+    "data is real time",
+)
+
 
 def schema_check(output: dict[str, Any], required_fields: list[str]) -> EvaluatorCheck:
     """Verify required fields are present in an agent output draft."""
@@ -118,6 +138,63 @@ def approval_requirement_check(
     )
 
 
+def policy_citation_check(
+    output: AgentOutput,
+    required_policy_ids: list[str],
+) -> EvaluatorCheck:
+    """Flag drafts that omit a required synthetic policy citation.
+
+    Mirrors ``evals.graders.grade_policy_retrieval`` at the runtime
+    surface so the catch-rate grader can credit the evaluator when an
+    offline POLICY_MISS is found. Only counts a citation when the
+    policy was actually retrieved (``retrieved=True``).
+    """
+
+    cited = {ref.policy_id for ref in output.policy_references if ref.retrieved}
+    missing = sorted(set(required_policy_ids) - cited)
+    ok = not missing
+    return EvaluatorCheck(
+        name="policy_citation",
+        ok=ok,
+        reason=(
+            None
+            if ok
+            else f"required synthetic policy IDs not cited: {missing}"
+        ),
+        metadata={
+            "required": list(required_policy_ids),
+            "cited": sorted(cited),
+            "missing": missing,
+        },
+    )
+
+
+def unsupported_claim_check(output: AgentOutput) -> EvaluatorCheck:
+    """Flag drafts containing a small set of unsupported-claim patterns.
+
+    Runtime mirror of ``evals.graders.grade_unsupported_claim``. Held
+    independent of the offline grader's pattern list on purpose; the
+    catch-rate grader will surface any drift as EVALUATOR_MISS.
+    """
+
+    draft = (output.draft_text or "").lower()
+    hits = sorted({pattern for pattern in _RUNTIME_UNSUPPORTED_CLAIM_PATTERNS if pattern in draft})
+    ok = not hits
+    return EvaluatorCheck(
+        name="unsupported_claim",
+        ok=ok,
+        reason=(
+            None
+            if ok
+            else f"draft contains unsupported-claim phrase(s): {hits}"
+        ),
+        metadata={
+            "matched_patterns": hits,
+            "draft_excerpt": (output.draft_text or "")[:200],
+        },
+    )
+
+
 def _matrix_requires_approval(
     approval_matrix: dict[str, Any],
     workflow: Workflow,
@@ -137,6 +214,7 @@ def evaluate(
     output: dict[str, Any] | AgentOutput,
     required_fields: list[str] | None = None,
     approval_matrix: dict[str, Any] | None = None,
+    required_policy_ids: list[str] | None = None,
 ) -> EvaluatorReport:
     """Run runtime checks against an agent's draft output.
 
@@ -144,8 +222,11 @@ def evaluate(
     that shape is reserved for offline graders in ``evals.graders``.
 
     ``output`` may be a raw dict (for the schema check only) or an
-    ``AgentOutput`` (for consent/approval checks). Passing ``AgentOutput``
-    enables all available runtime checks.
+    ``AgentOutput`` (for consent/approval/policy/unsupported-claim
+    checks). Passing ``AgentOutput`` enables all available runtime
+    checks. ``required_policy_ids``, when supplied, enables the runtime
+    ``policy_citation`` check that the catch-rate grader credits against
+    offline POLICY_MISS failures.
     """
 
     checks: list[EvaluatorCheck] = []
@@ -157,6 +238,9 @@ def evaluate(
         checks.append(consent_boundary_check(output))
         if approval_matrix is not None:
             checks.append(approval_requirement_check(output, approval_matrix))
+        if required_policy_ids is not None:
+            checks.append(policy_citation_check(output, required_policy_ids))
+        checks.append(unsupported_claim_check(output))
         return EvaluatorReport(checks=checks)
 
     if required_fields is not None:

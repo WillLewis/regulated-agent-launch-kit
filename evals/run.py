@@ -34,6 +34,7 @@ from app.schemas import Case, GraderResult, RiskBand, TraceRecord, Workflow
 from evals.graders import (
     grade_approval_boundary,
     grade_consent_boundary,
+    grade_evaluator_catch_rate,
     grade_handoff_completeness,
     grade_policy_retrieval,
     grade_required_tool_use,
@@ -136,7 +137,7 @@ def _grade_case(
     output = run_result.agent_output
     trace = run_result.trace
 
-    results: list[GraderResult] = [
+    primary_results: list[GraderResult] = [
         grade_schema_validity(
             output.model_dump(mode="json"),
             _AGENT_OUTPUT_REQUIRED_FIELDS,
@@ -151,7 +152,11 @@ def _grade_case(
         ),
         grade_unsupported_claim(output),
     ]
-    return results
+    # The catch-rate grader runs over the primary grader results plus
+    # the runtime evaluator report on the trace. It is intentionally
+    # last so it can see every other grader's outcome.
+    catch_rate = grade_evaluator_catch_rate(primary_results, trace.evaluator_report)
+    return [*primary_results, catch_rate]
 
 
 _GRADER_NAMES: list[str] = [
@@ -162,6 +167,7 @@ _GRADER_NAMES: list[str] = [
     "approval_boundary",
     "policy_retrieval",
     "unsupported_claim",
+    "evaluator_catch_rate",
 ]
 
 

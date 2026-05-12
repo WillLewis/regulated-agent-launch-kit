@@ -119,7 +119,9 @@ def test_eval_runner_writes_report_and_traces(tmp_path: Path) -> None:
         assert case_result.risk_band in {"L0", "L1", "L2", "L3", "L4"}
         # each case has every grader result
         names = [gr.failure_label for gr in case_result.grader_results]
-        assert len(case_result.grader_results) == 7  # noqa: PLR2004
+        # Eight graders: the seven primary deterministic graders plus the
+        # evaluator catch-rate grader.
+        assert len(case_result.grader_results) == 8  # noqa: PLR2004
         # trace file was written and is valid JSON with the right case_id
         trace_path = Path(case_result.trace_path)
         assert trace_path.exists()

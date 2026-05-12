@@ -28,6 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from evals.graders import evaluator_catchable_categories  # noqa: E402
 from evals.run import AggregateGraderRate, CaseEvalResult, EvalReport  # noqa: E402
 
 
@@ -169,6 +170,42 @@ def _operational_block(baseline: EvalReport, improved: EvalReport) -> str:
     return "\n".join(lines)
 
 
+def _catch_rate_block(baseline: EvalReport, improved: EvalReport) -> str:
+    """Render the runtime evaluator catch-rate subsection."""
+
+    def _rate(report: EvalReport) -> str:
+        for rate in report.aggregate_grader_pass_rates:
+            if rate.name == "evaluator_catch_rate":
+                return f"{rate.passed}/{rate.total} ({rate.pass_rate:.2f})"
+        return "_not measured_"
+
+    scope = evaluator_catchable_categories()
+    scope_lines = "\n".join(
+        f"- `{label}` → runtime check(s): "
+        + ", ".join(f"`{name}`" for name in sorted(checks))
+        for label, checks in sorted(scope.items())
+    )
+    baseline_miss = baseline.failure_label_counts.get("EVALUATOR_MISS", 0)
+    improved_miss = improved.failure_label_counts.get("EVALUATOR_MISS", 0)
+    miss_line = (
+        f"**Baseline `EVALUATOR_MISS`:** {baseline_miss} · "
+        f"**Improved `EVALUATOR_MISS`:** {improved_miss}"
+    )
+    return (
+        "The runtime evaluator (`app/evaluator.py`) should catch failures in a "
+        "small, explicit set of categories. The catch-rate grader compares "
+        "offline grader failures against the runtime evaluator's own checks for "
+        "those categories. Architectural failures (`TOOL_MISUSE`, "
+        "`HANDOFF_CONTEXT_LOSS`, `SCHEMA_VIOLATION`) are intentionally out of "
+        "scope — they describe the multi-agent system, not what the evaluator "
+        "could plausibly inspect on a single draft.\n\n"
+        "**Catchable categories:**\n"
+        f"{scope_lines}\n\n"
+        f"**Catch-rate:** baseline {_rate(baseline)} · improved {_rate(improved)}\n\n"
+        f"{miss_line}"
+    )
+
+
 def render_card(baseline: EvalReport, improved: EvalReport) -> str:
     """Render the markdown eval card from two validated reports."""
 
@@ -215,6 +252,12 @@ def render_card(baseline: EvalReport, improved: EvalReport) -> str:
             "Removes the baseline's real-time-data overpromise from customer-facing "
             "copy; the improved draft uses hedged language only."
         )
+    if "EVALUATOR_MISS" in improved_failure_labels_in_baseline:
+        fix_bullets.append(
+            "Closes runtime evaluator gaps the baseline left open — the offline "
+            "catch-rate grader was firing `EVALUATOR_MISS` on the baseline and "
+            "the improved profile clears it."
+        )
     if not fix_bullets:
         fix_bullets.append(
             "No baseline failures were surfaced by the offline graders, so no specific "
@@ -222,6 +265,8 @@ def render_card(baseline: EvalReport, improved: EvalReport) -> str:
         )
 
     fixes_block = "\n".join(f"- {bullet}" for bullet in fix_bullets)
+
+    catch_rate_block = _catch_rate_block(baseline, improved)
 
     return f"""# Local Eval Card — Financial Links Vertical Slice
 
@@ -244,6 +289,10 @@ def render_card(baseline: EvalReport, improved: EvalReport) -> str:
 ### Failure label counts
 
 {label_table}
+
+### Runtime evaluator catch-rate
+
+{catch_rate_block}
 
 ## What failed in baseline
 

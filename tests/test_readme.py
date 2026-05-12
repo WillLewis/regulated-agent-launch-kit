@@ -59,9 +59,11 @@ def test_readme_avoids_pilot_or_production_readiness_claims() -> None:
     """Guard against the obvious overclaim phrases creeping in later.
 
     The forbidden list is intentionally narrow (positive-claim phrases
-    only); broader words like "regulatory compliance" can legitimately
-    appear inside a disclaimer ("does not imply regulatory compliance"),
-    so they are not blocked here.
+    only). ``ready for pilot`` / ``ready for production`` are *not* on
+    the list because the legitimate phrase ``NOT READY FOR PILOT``
+    contains them as substrings. ``regulatory compliance`` can also
+    appear inside disclaimers ("does not imply regulatory compliance"),
+    so only the adjectival ``regulatory compliant`` is blocked.
     """
 
     readme = _readme().lower()
@@ -70,8 +72,23 @@ def test_readme_avoids_pilot_or_production_readiness_claims() -> None:
         "production-ready",
         "pilot ready",
         "pilot-ready",
-        "ready for pilot",
-        "ready for production",
+        "regulatory compliant",
+        "regulatory-compliant",
     )
     for phrase in forbidden:
         assert phrase not in readme, f"README must not claim: {phrase!r}"
+
+
+def test_readme_links_to_v0_evidence_artifacts() -> None:
+    readme = _readme()
+    for target in (
+        "reports/v0_eval_card.md",
+        "evidence_packs/financial_links_v0/README.md",
+        "case_studies/financial_links_reliability/dataset_card.md",
+    ):
+        assert target in readme, f"README missing link to {target!r}"
+
+
+def test_readme_records_not_ready_for_pilot_posture() -> None:
+    readme = _readme()
+    assert "NOT READY FOR PILOT" in readme

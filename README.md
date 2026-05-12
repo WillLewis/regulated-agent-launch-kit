@@ -29,9 +29,19 @@ Synthetic case
 
 ## Current Status
 
-Phase 1 (deployment narrative) is complete. The repo currently contains the deployment-readiness artifacts that scope and constrain the agent system; the agent system itself is not yet implemented and no eval runs have been performed.
+The Financial Links flagship local proof loop is complete: dataset, deterministic
+vertical-slice runner, runtime evaluator, offline graders, baseline-vs-improved eval card,
+runtime evaluator catch-rate, pinned regression seeds, and a public-safe redacted evidence
+pack all exist locally. See **[Financial Links V0 Evidence](#financial-links-v0-evidence)**
+below for the artifacts.
 
-Phase 1 artifacts:
+LangGraph orchestration, Braintrust integration, the Credit Wellness and Privacy datasets,
+and any LLM-backed agent are intentionally **not** implemented yet. See [`PLAN.md`](PLAN.md)
+for the current phase status, the recommended next step, and the locked decisions
+governing the lab.
+
+Phase 1 deployment-readiness artifacts (the documents that scope and constrain the agent
+system):
 
 - [Customer workflow map](deployment/customer_workflow_map.md) — synthetic Financial Links / connectivity reliability workflow, current and future state.
 - [Value case](deployment/value_case.md) — synthetic business outcomes (`H1`–`H5`) with required evidence per claim.
@@ -40,7 +50,7 @@ Phase 1 artifacts:
 - [Risk register](deployment/risk_register.md) — synthetic deployment risks with severity, likelihood, mitigation, detection signal, and owner.
 - [Dependency map](deployment/dependency_map.md) — what blocks what across technical, product, and review dependencies.
 
-Active phase: Phase 2 — synthetic domain model and Pydantic schemas. The Phase 2 contracts (schemas, approval matrix, synthetic tools, runtime evaluator and offline graders) are in place; see the [Synthetic Domain Model](#synthetic-domain-model) section below. Synthetic datasets, baseline eval runs, and pilot-readiness artifacts are still pending. See [`PLAN.md`](PLAN.md) for status and locked decisions, and [`PLAN_v3_openai_tdl_fde.md`](PLAN_v3_openai_tdl_fde.md) for the full phased plan.
+See [`PLAN_v3_openai_tdl_fde.md`](PLAN_v3_openai_tdl_fde.md) for the full phased plan.
 
 ## Synthetic Domain Model
 
@@ -140,7 +150,53 @@ This asymmetry is recorded in `configs/approval_matrix.yaml` under `evaluation_r
 
 ---
 
-The kit is mid-Phase 2: contracts are in place, but no synthetic datasets, baseline eval, or improvement run have been produced yet. Any pilot or launch claim remains explicitly out of scope until those artifacts exist.
+## Financial Links V0 Evidence
+
+The Financial Links v0 dataset is the first slice where the local synthetic loop closes
+end-to-end: baseline failure → offline grading → runtime evaluator catch-rate → pinned
+regressions → redacted evidence pack. Everything here is synthetic; nothing on this page
+implies production behavior, model quality, partner endorsement, or regulatory compliance.
+
+### Headline numbers (full v0 dataset)
+
+| Metric | `baseline_v0` | `improved_v0` |
+|---|---:|---:|
+| Cases | 10 | 10 |
+| Passed | 7 | 10 |
+| Failed | 3 | 0 |
+| Baseline failure labels | `POLICY_MISS`, `TOOL_MISUSE`, `UNSAFE_CUSTOMER_COMMS` | — |
+| Runtime evaluator catch-rate | 10/10 | 10/10 |
+| Total est. cost (USD) | 0.0 (deterministic) | 0.0 (deterministic) |
+
+The `baseline_v0` profile is intentionally weak: it skips partner-config lookups on
+healthy aggregator routes, omits the synthetic `FL-PARTNER-FALLBACK-002` citation, and
+injects a real-time-data overpromise on granted-consent healthy cases. The `improved_v0`
+profile preserves the policy-compliant deterministic behavior. The point of the delta is
+to demonstrate the eval loop closing on planted failures — it is **not** a claim about
+model quality. The current runner does not call an LLM, so cost is `0.0` and latency is
+sub-millisecond.
+
+### Artifacts
+
+- [Dataset card](case_studies/financial_links_reliability/dataset_card.md) — purpose, 10-case mix, per-case fields, smoke slice purpose.
+- [Full v0 dataset (JSONL)](case_studies/financial_links_reliability/data/cases_v0.jsonl) — 10 hand-authored synthetic cases.
+- [Smoke slice (JSONL)](case_studies/financial_links_reliability/evals/smoke.jsonl) — 4-case representative subset for the smoke targets.
+- [V0 eval card](reports/v0_eval_card.md) — baseline-vs-improved comparison with grader pass rates, failure label counts, runtime evaluator catch-rate, regression seeds, and the synthetic latency/cost summary.
+- [Regression seeds (JSONL)](case_studies/financial_links_reliability/evals/regressions_v0.jsonl) — three `pending_review` regressions pinned from the baseline failures (`case_fl_v0_005`, `case_fl_v0_006`, `case_fl_v0_010`).
+- [Evidence pack README](evidence_packs/financial_links_v0/README.md) — public-safe assembled pack with redacted traces, redaction reports, and a manifest. Raw traces are intentionally excluded.
+
+Regenerate locally with `make eval-card-v0`, `make regression-check-v0`, `make redact-v0`,
+and `make evidence-pack-v0`. All four require no external credentials.
+
+### Launch posture
+
+**NOT READY FOR PILOT — local synthetic vertical slice only.** This proves the synthetic
+deployment-readiness loop closes locally with deterministic artifacts. It does not prove
+production behavior, model quality, partner endorsement, or regulatory compliance. The
+baseline failures are planted targets for the eval loop, not real incidents. Any
+pilot-readiness, production-readiness, or launch claim remains explicitly out of scope
+until an LLM-backed agent, real-traffic adversarial cases, and pilot-readiness review
+artifacts exist.
 
 ## Starter Layout
 

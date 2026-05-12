@@ -80,13 +80,24 @@ def test_risk_register_lists_known_phase_1_risks() -> None:
         assert risk_keyword in content, risk_keyword
 
 
-def test_plan_marks_phase_1_complete_and_phase_2_active() -> None:
+def test_plan_tracks_phase_status_and_locked_decisions() -> None:
+    """PLAN.md must record per-phase status and the locked decisions.
+
+    The Financial Links flagship local proof loop is complete through
+    Phase 3; PLAN.md should still capture the next-step recommendation
+    and the deferred items.
+    """
+
     plan = (ROOT / "PLAN.md").read_text()
-    assert "Phase 1" in plan
-    assert "Phase 2" in plan
+    for phase in ("Phase 1", "Phase 2", "Phase 3"):
+        assert phase in plan, f"PLAN.md missing {phase!r}"
+
     plan_lower = plan.lower()
     assert "complete" in plan_lower
-    assert "active" in plan_lower
+    # The "active" status was retired when Phase 3 closed; PLAN.md must
+    # still surface what's next and what's deferred.
+    assert "recommended" in plan_lower
+    assert "deferred" in plan_lower
     assert "Locked Decisions" in plan, "PLAN.md must record locked decisions for Phase 2/3"
 
 

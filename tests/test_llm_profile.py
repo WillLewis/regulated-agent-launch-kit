@@ -283,8 +283,11 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
 
     The deterministic public proof loop must never request the LLM
     profile by name. The targets that legitimately do are
-    ``eval-smoke-llm`` and ``eval-card-llm-smoke`` (plus the
-    ``check-llm-env`` preflight, whose recipe doesn't name the profile).
+    ``eval-smoke-llm`` and ``eval-adversarial-llm`` (plus the
+    ``check-llm-env`` preflight, whose recipe doesn't name the profile;
+    the card-rendering targets ``eval-card-llm-smoke`` and
+    ``eval-card-adversarial-llm`` reference report paths but do not
+    invoke the LLM profile directly).
     """
 
     import re
@@ -305,7 +308,12 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         if current is not None and line.startswith("\t"):
             target_recipes[current].append(line)
 
-    allowed = {"eval-smoke-llm", "eval-card-llm-smoke"}
+    allowed = {
+        "eval-smoke-llm",
+        "eval-card-llm-smoke",
+        "eval-adversarial-llm",
+        "eval-card-adversarial-llm",
+    }
 
     def _is_invocation(step: str) -> bool:
         """Skip @echo / printf documentation lines; only real recipe lines count."""

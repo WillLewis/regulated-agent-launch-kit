@@ -85,10 +85,12 @@ def _validate_pair(baseline: EvalReport, improved: EvalReport) -> None:
 def _grader_table(
     baseline_rates: list[AggregateGraderRate],
     improved_rates: list[AggregateGraderRate],
+    baseline_label: str = "Baseline",
+    improved_label: str = "Improved",
 ) -> str:
     improved_by_name = {rate.name: rate for rate in improved_rates}
     lines = [
-        "| Grader | Baseline | Improved | Δ pass rate |",
+        f"| Grader | {baseline_label} | {improved_label} | Δ pass rate |",
         "|---|---:|---:|---:|",
     ]
     for rate in baseline_rates:
@@ -107,12 +109,14 @@ def _grader_table(
 def _label_table(
     baseline_labels: dict[str, int],
     improved_labels: dict[str, int],
+    baseline_label: str = "Baseline",
+    improved_label: str = "Improved",
 ) -> str:
     keys = sorted(set(baseline_labels) | set(improved_labels))
     if not keys:
         return "_No failure labels surfaced in either run._"
     lines = [
-        "| Failure label | Baseline | Improved |",
+        f"| Failure label | {baseline_label} | {improved_label} |",
         "|---|---:|---:|",
     ]
     for label in keys:
@@ -150,11 +154,16 @@ def _operational_summary(report: EvalReport) -> dict[str, Any]:
     }
 
 
-def _operational_block(baseline: EvalReport, improved: EvalReport) -> str:
+def _operational_block(
+    baseline: EvalReport,
+    improved: EvalReport,
+    baseline_label: str = "Baseline",
+    improved_label: str = "Improved",
+) -> str:
     b = _operational_summary(baseline)
     i = _operational_summary(improved)
     lines = [
-        "| Metric | Baseline | Improved |",
+        f"| Metric | {baseline_label} | {improved_label} |",
         "|---|---:|---:|",
         f"| Total est. cost (USD) | {b['total_est_cost_usd']} | {i['total_est_cost_usd']} |",
         f"| Cases counted | {b['case_count']} | {i['case_count']} |",
@@ -205,7 +214,12 @@ def _regression_seeds_block(regressions: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def _catch_rate_block(baseline: EvalReport, improved: EvalReport) -> str:
+def _catch_rate_block(
+    baseline: EvalReport,
+    improved: EvalReport,
+    baseline_label: str = "Baseline",
+    improved_label: str = "Improved",
+) -> str:
     """Render the runtime evaluator catch-rate subsection."""
 
     def _rate(report: EvalReport) -> str:
@@ -223,8 +237,8 @@ def _catch_rate_block(baseline: EvalReport, improved: EvalReport) -> str:
     baseline_miss = baseline.failure_label_counts.get("EVALUATOR_MISS", 0)
     improved_miss = improved.failure_label_counts.get("EVALUATOR_MISS", 0)
     miss_line = (
-        f"**Baseline `EVALUATOR_MISS`:** {baseline_miss} · "
-        f"**Improved `EVALUATOR_MISS`:** {improved_miss}"
+        f"**{baseline_label} `EVALUATOR_MISS`:** {baseline_miss} · "
+        f"**{improved_label} `EVALUATOR_MISS`:** {improved_miss}"
     )
     return (
         "The runtime evaluator (`app/evaluator.py`) should catch failures in a "
@@ -236,7 +250,8 @@ def _catch_rate_block(baseline: EvalReport, improved: EvalReport) -> str:
         "could plausibly inspect on a single draft.\n\n"
         "**Catchable categories:**\n"
         f"{scope_lines}\n\n"
-        f"**Catch-rate:** baseline {_rate(baseline)} · improved {_rate(improved)}\n\n"
+        f"**Catch-rate:** {baseline_label.lower()} {_rate(baseline)} · "
+        f"{improved_label.lower()} {_rate(improved)}\n\n"
         f"{miss_line}"
     )
 
@@ -245,6 +260,8 @@ def render_card(
     baseline: EvalReport,
     improved: EvalReport,
     regressions: list[dict[str, Any]] | None = None,
+    baseline_label: str = "Baseline",
+    improved_label: str = "Improved",
 ) -> str:
     """Render the markdown eval card from two validated reports.
 
@@ -252,6 +269,12 @@ def render_card(
     ``scripts/incident_to_regression.py``); when present, a small
     "Regression Seeds" section is rendered alongside the quality
     metrics.
+
+    ``baseline_label`` / ``improved_label`` control the column-header and
+    section-heading text. Defaults are ``"Baseline"`` and ``"Improved"`` so
+    every existing card target renders byte-equivalent output. Pass e.g.
+    ``"Reference"`` / ``"Candidate"`` for an LLM-candidate comparison card
+    where neither side is the deliberately-weak baseline.
     """
 
     workflows = sorted(
@@ -263,14 +286,26 @@ def render_card(
     grader_table = _grader_table(
         baseline.aggregate_grader_pass_rates,
         improved.aggregate_grader_pass_rates,
+        baseline_label=baseline_label,
+        improved_label=improved_label,
     )
-    label_table = _label_table(baseline.failure_label_counts, improved.failure_label_counts)
+    label_table = _label_table(
+        baseline.failure_label_counts,
+        improved.failure_label_counts,
+        baseline_label=baseline_label,
+        improved_label=improved_label,
+    )
     failing_block = _failing_case_block(baseline.per_case)
     improved_failing_block = _failing_case_block(improved.per_case)
-    operational_block = _operational_block(baseline, improved)
+    operational_block = _operational_block(
+        baseline,
+        improved,
+        baseline_label=baseline_label,
+        improved_label=improved_label,
+    )
 
     summary_table = (
-        "| Field | Baseline | Improved |\n"
+        f"| Field | {baseline_label} | {improved_label} |\n"
         "|---|---|---|\n"
         f"| Agent-system profile | `{baseline.agent_system_version}` | `{improved.agent_system_version}` |\n"
         f"| Dataset | `{baseline.dataset_path}` | `{improved.dataset_path}` |\n"
@@ -280,39 +315,76 @@ def render_card(
         f"| Report version | `{baseline.version}` | `{improved.version}` |"
     )
 
-    improved_failure_labels_in_baseline = sorted(baseline.failure_label_counts)
-    fix_bullets = []
-    if "POLICY_MISS" in improved_failure_labels_in_baseline:
+    # The deterministic fix-bullet block describes the *known* deltas between
+    # the canonical baseline_v0 (deliberately weak) and improved_v0
+    # (policy-compliant) profiles. For any other profile pair — e.g. an LLM
+    # candidate compared against improved_v0 — those specific deltas do not
+    # apply, so we emit a generic, non-overclaiming note instead.
+    deterministic_pair = (
+        baseline.agent_system_version == "baseline_v0"
+        and improved.agent_system_version == "improved_v0"
+    )
+    fix_bullets: list[str] = []
+    if deterministic_pair:
+        improved_failure_labels_in_baseline = sorted(baseline.failure_label_counts)
+        if "POLICY_MISS" in improved_failure_labels_in_baseline:
+            fix_bullets.append(
+                "Restores the synthetic partner-fallback policy citation "
+                "(`FL-PARTNER-FALLBACK-002`) on cases the baseline omitted."
+            )
+        if "TOOL_MISUSE" in improved_failure_labels_in_baseline:
+            fix_bullets.append(
+                "Calls `lookup_partner_config` even on healthy aggregator routes when "
+                "an institution + partner are present (the baseline skipped this)."
+            )
+        if "UNSAFE_CUSTOMER_COMMS" in improved_failure_labels_in_baseline:
+            fix_bullets.append(
+                "Removes the baseline's real-time-data overpromise from customer-facing "
+                "copy; the improved draft uses hedged language only."
+            )
+        if "EVALUATOR_MISS" in improved_failure_labels_in_baseline:
+            fix_bullets.append(
+                "Closes runtime evaluator gaps the baseline left open — the offline "
+                "catch-rate grader was firing `EVALUATOR_MISS` on the baseline and "
+                "the improved profile clears it."
+            )
+        if not fix_bullets:
+            fix_bullets.append(
+                "No baseline failures were surfaced by the offline graders, so no specific "
+                "fixes are claimed. Add adversarial cases before claiming improvement."
+            )
+    else:
         fix_bullets.append(
-            "Restores the synthetic partner-fallback policy citation "
-            "(`FL-PARTNER-FALLBACK-002`) on cases the baseline omitted."
-        )
-    if "TOOL_MISUSE" in improved_failure_labels_in_baseline:
-        fix_bullets.append(
-            "Calls `lookup_partner_config` even on healthy aggregator routes when "
-            "an institution + partner are present (the baseline skipped this)."
-        )
-    if "UNSAFE_CUSTOMER_COMMS" in improved_failure_labels_in_baseline:
-        fix_bullets.append(
-            "Removes the baseline's real-time-data overpromise from customer-facing "
-            "copy; the improved draft uses hedged language only."
-        )
-    if "EVALUATOR_MISS" in improved_failure_labels_in_baseline:
-        fix_bullets.append(
-            "Closes runtime evaluator gaps the baseline left open — the offline "
-            "catch-rate grader was firing `EVALUATOR_MISS` on the baseline and "
-            "the improved profile clears it."
-        )
-    if not fix_bullets:
-        fix_bullets.append(
-            "No baseline failures were surfaced by the offline graders, so no specific "
-            "fixes are claimed. Add adversarial cases before claiming improvement."
+            f"`{improved.agent_system_version}` produced its own draft text on the same "
+            "deterministic decision graph as "
+            f"`{baseline.agent_system_version}`; specific behavioral deltas surface in the "
+            "failure-label and grader tables above. No claim is made about model safety, "
+            "pilot readiness, or production behavior from this card."
         )
 
     fixes_block = "\n".join(f"- {bullet}" for bullet in fix_bullets)
 
-    catch_rate_block = _catch_rate_block(baseline, improved)
+    catch_rate_block = _catch_rate_block(
+        baseline,
+        improved,
+        baseline_label=baseline_label,
+        improved_label=improved_label,
+    )
     regression_block = _regression_seeds_block(regressions or [])
+
+    closing_paragraph = (
+        "This is a synthetic deterministic change set; it demonstrates the eval\n"
+        "loop closing on planted failures. Do not infer pilot, production, or\n"
+        "regulatory acceptance from this delta — the baseline failures were\n"
+        "authored as targets for this lab."
+        if deterministic_pair
+        else (
+            "This card compares two profiles on the same synthetic dataset. The\n"
+            f"`{improved.agent_system_version}` profile is positioned as the candidate; "
+            f"`{baseline.agent_system_version}` is the reference. No model-safety,\n"
+            "pilot-readiness, or production-readiness claim is made by this document."
+        )
+    )
 
     return f"""# Local Eval Card — Financial Links Vertical Slice
 
@@ -344,22 +416,19 @@ def render_card(
 
 {regression_block}
 
-## What failed in baseline
+## What failed in {baseline_label.lower()}
 
 {failing_block}
 
-## What failed in improved
+## What failed in {improved_label.lower()}
 
 {improved_failing_block}
 
-## What changed in improved profile
+## What changed in {improved_label.lower()} profile
 
 {fixes_block}
 
-This is a synthetic deterministic change set; it demonstrates the eval
-loop closing on planted failures. Do not infer pilot, production, or
-regulatory acceptance from this delta — the baseline failures were
-authored as targets for this lab.
+{closing_paragraph}
 
 ## Operational metrics
 
@@ -388,13 +457,21 @@ def generate_eval_card(
     improved_report: Path,
     out: Path,
     regressions: Path | None = None,
+    baseline_label: str = "Baseline",
+    improved_label: str = "Improved",
 ) -> Path:
     baseline = _load_report(Path(baseline_report))
     improved = _load_report(Path(improved_report))
     _validate_pair(baseline, improved)
     regression_records = _load_regressions(Path(regressions) if regressions else None)
 
-    markdown = render_card(baseline, improved, regression_records)
+    markdown = render_card(
+        baseline,
+        improved,
+        regression_records,
+        baseline_label=baseline_label,
+        improved_label=improved_label,
+    )
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(markdown)
@@ -421,6 +498,25 @@ def main(argv: list[str] | None = None) -> int:
             "linked records."
         ),
     )
+    parser.add_argument(
+        "--baseline-label",
+        default="Baseline",
+        help=(
+            "Column-header / section-heading label for the first report. "
+            "Defaults to 'Baseline' so the existing deterministic cards "
+            "render byte-equivalent output. Use e.g. 'Reference' when "
+            "neither profile is the deliberately-weak baseline."
+        ),
+    )
+    parser.add_argument(
+        "--improved-label",
+        default="Improved",
+        help=(
+            "Column-header / section-heading label for the second report. "
+            "Defaults to 'Improved'. Use e.g. 'Candidate' for an LLM "
+            "candidate comparison card."
+        ),
+    )
     args = parser.parse_args(argv)
 
     out_path = generate_eval_card(
@@ -428,6 +524,8 @@ def main(argv: list[str] | None = None) -> int:
         improved_report=args.improved_report,
         out=args.out,
         regressions=args.regressions,
+        baseline_label=args.baseline_label,
+        improved_label=args.improved_label,
     )
     print(f"OK: wrote eval card -> {out_path}")
     return 0

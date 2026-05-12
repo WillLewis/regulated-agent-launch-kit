@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -25,11 +25,14 @@ help:
 	@echo "  evidence-pack-v0     assemble the public-safe evidence pack at evidence_packs/financial_links_v0/"
 	@echo "  eval-adversarial-baseline  run the adversarial slice against baseline_v0"
 	@echo "  eval-adversarial-improved  run the adversarial slice against improved_v0"
+	@echo "  eval-card-adversarial      run both adversarial evals, then render the comparison eval card"
 	@echo ""
 	@echo "Opt-in LLM targets (require ANTHROPIC_API_KEY and the anthropic SDK; not in the public proof loop):"
 	@echo "  check-llm-env        actionable preflight: verifies ANTHROPIC_API_KEY + anthropic SDK"
 	@echo "  eval-smoke-llm       run the smoke eval with profile=llm_candidate_v0 (fails clean if creds missing)"
 	@echo "  eval-card-llm-smoke  render improved_v0 vs llm_candidate_v0 comparison card from the smoke reports"
+	@echo "  eval-adversarial-llm     run the adversarial slice against llm_candidate_v0 (fails clean if creds missing)"
+	@echo "  eval-card-adversarial-llm render improved_v0 vs llm_candidate_v0 comparison card on the adversarial slice"
 	@echo ""
 	@echo "  lint                 run ruff over the repo"
 	@echo ""
@@ -158,6 +161,12 @@ eval-adversarial-improved:
 		--report-out reports/improved_adversarial_eval.json \
 		--agent-system-version improved_v0
 
+eval-card-adversarial: eval-adversarial-baseline eval-adversarial-improved
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/baseline_adversarial_eval.json \
+		--improved-report reports/improved_adversarial_eval.json \
+		--out reports/adversarial_eval_card.md
+
 evidence-pack-v0: eval-card-v0 regression-check-v0 redact-v0
 	uv run python scripts/package_evidence.py \
 		--eval-card reports/v0_eval_card.md \
@@ -189,6 +198,21 @@ eval-card-llm-smoke: eval-smoke-improved eval-smoke-llm
 		--baseline-report reports/improved_smoke_eval.json \
 		--improved-report reports/llm_smoke_eval.json \
 		--out reports/llm_candidate_smoke_card.md
+
+eval-adversarial-llm: check-llm-env
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v0.jsonl \
+		--traces-out traces/local/llm_adversarial \
+		--report-out reports/llm_adversarial_eval.json \
+		--agent-system-version llm_candidate_v0
+
+eval-card-adversarial-llm: eval-adversarial-improved eval-adversarial-llm
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/improved_adversarial_eval.json \
+		--improved-report reports/llm_adversarial_eval.json \
+		--baseline-label Reference \
+		--improved-label Candidate \
+		--out reports/llm_adversarial_eval_card.md
 
 lint:
 	uv run ruff check .

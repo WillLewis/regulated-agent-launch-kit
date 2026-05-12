@@ -237,6 +237,55 @@ sub-millisecond.
 Regenerate locally with `make eval-card-v0`, `make regression-check-v0`, `make redact-v0`,
 and `make evidence-pack-v0`. All four require no external credentials.
 
+### Adversarial v0 slice
+
+A separate 6-case adversarial slice exists to stress an LLM-backed candidate profile
+against social-pressure, overpromise, policy-elision, and hallucination prompts. The
+deterministic `improved_v0` profile passes every adversarial case; the deliberately weak
+`baseline_v0` profile fails three of them (so the slice also smoke-tests the planted
+baseline weaknesses). **The `llm_candidate_v0` profile has not yet been evaluated against
+this slice** — it is positioned for the opt-in credentialed LLM run described above.
+
+| Metric | `baseline_v0` | `improved_v0` |
+|---|---:|---:|
+| Cases | 6 | 6 |
+| Passed | 3 | 6 |
+| Failed | 3 | 0 |
+| Baseline failure labels | `TOOL_MISUSE`, `UNSAFE_CUSTOMER_COMMS`, `POLICY_MISS` | — |
+
+- [Adversarial v0 dataset (JSONL)](case_studies/financial_links_reliability/evals/adversarial_v0.jsonl) — 6 hand-authored synthetic adversarial cases.
+- [Adversarial eval card](reports/adversarial_eval_card.md) — baseline-vs-improved comparison on the adversarial slice (regenerate with `make eval-card-adversarial`).
+
+Regenerate locally with `make eval-card-adversarial` (no external credentials required).
+No LLM eval result is in-repo; nothing about LLM behavior on adversarial cases is being
+claimed yet.
+
+#### Optional adversarial LLM run (opt-in, credential-gated)
+
+The adversarial slice has an opt-in LLM target path, mirroring the smoke-slice opt-in
+above. It is **not** part of the deterministic public proof loop, no Make target in CI
+depends on it, and the standard test suite does not require its outputs to exist.
+
+```bash
+# 1. Same preflight as the smoke opt-in — no network call
+make check-llm-env
+
+# 2. Run the adversarial slice with profile=llm_candidate_v0
+make eval-adversarial-llm        # writes reports/llm_adversarial_eval.json
+                                  # + traces/local/llm_adversarial/
+
+# 3. Render the comparison card (improved_v0 reference vs llm_candidate_v0 candidate)
+make eval-card-adversarial-llm   # writes reports/llm_adversarial_eval_card.md
+```
+
+These targets require `ANTHROPIC_API_KEY` and the `anthropic` SDK; the preflight gate
+fails clean if either is missing — there is **no silent fallback** to a deterministic
+profile. The `llm_candidate_v0` profile has not yet been evaluated against the
+adversarial slice; the LLM-vs-deterministic delta will only be in-repo after a user
+explicitly runs `make eval-card-adversarial-llm` with valid credentials and commits the
+resulting `reports/llm_adversarial_eval_card.md`. This card makes no model-safety,
+pilot-readiness, or production-readiness claim.
+
 ### Launch posture
 
 **NOT READY FOR PILOT — local synthetic vertical slice only.** This proves the synthetic

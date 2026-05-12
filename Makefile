@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -11,6 +11,7 @@ help:
 	@echo "  test                 run the full pytest suite"
 	@echo "  scaffold-test        run only the scaffold contract test"
 	@echo "  dataset-test         validate synthetic Financial Links JSONL datasets"
+	@echo "  dataset-test-adversarial validate the adversarial v0 JSONL slice"
 	@echo "  eval-smoke           run the local offline eval on the smoke slice (improved profile)"
 	@echo "  eval-smoke-baseline  run the smoke eval against the deliberately weak baseline profile"
 	@echo "  eval-smoke-improved  run the smoke eval against the policy-compliant improved profile"
@@ -22,6 +23,8 @@ help:
 	@echo "  regression-check-v0  validate regressions_v0.jsonl and assert improved_v0 passes every regression"
 	@echo "  redact-v0            redact the three baseline v0 failing traces under traces/redacted/baseline_v0/"
 	@echo "  evidence-pack-v0     assemble the public-safe evidence pack at evidence_packs/financial_links_v0/"
+	@echo "  eval-adversarial-baseline  run the adversarial slice against baseline_v0"
+	@echo "  eval-adversarial-improved  run the adversarial slice against improved_v0"
 	@echo ""
 	@echo "Opt-in LLM targets (require ANTHROPIC_API_KEY and the anthropic SDK; not in the public proof loop):"
 	@echo "  check-llm-env        actionable preflight: verifies ANTHROPIC_API_KEY + anthropic SDK"
@@ -45,6 +48,9 @@ scaffold-test:
 dataset-test:
 	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/data/cases_v0.jsonl
 	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/smoke.jsonl
+
+dataset-test-adversarial:
+	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/adversarial_v0.jsonl
 
 eval-smoke:
 	uv run python scripts/run_eval.py \
@@ -137,6 +143,20 @@ redact-v0: eval-v0-baseline
 		--policy configs/redaction_policy.yaml \
 		--output traces/redacted/baseline_v0/case_fl_v0_010.redacted.json \
 		--report-out traces/redacted/baseline_v0/case_fl_v0_010.redaction_report.json
+
+eval-adversarial-baseline:
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v0.jsonl \
+		--traces-out traces/local/baseline_adversarial \
+		--report-out reports/baseline_adversarial_eval.json \
+		--agent-system-version baseline_v0
+
+eval-adversarial-improved:
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v0.jsonl \
+		--traces-out traces/local/improved_adversarial \
+		--report-out reports/improved_adversarial_eval.json \
+		--agent-system-version improved_v0
 
 evidence-pack-v0: eval-card-v0 regression-check-v0 redact-v0
 	uv run python scripts/package_evidence.py \

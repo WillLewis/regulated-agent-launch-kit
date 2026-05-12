@@ -89,9 +89,9 @@ authored as targets for this lab.
 |---|---:|---:|
 | Total est. cost (USD) | 0.0 | 0.0 |
 | Cases counted | 10 | 10 |
-| `L1` measured mean (ms) | 1 | 1 |
-| `L2` measured mean (ms) | 0 | 0 |
-| `L3` measured mean (ms) | 0 | 0 |
+| `L1` measured mean (ms) | 6 | 6 |
+| `L2` measured mean (ms) | 3 | 2 |
+| `L3` measured mean (ms) | 3 | 2 |
 
 Cost is a deterministic `0.0` placeholder — the current Phase 3 runner
 makes no model calls. Latency is wall-clock for the deterministic

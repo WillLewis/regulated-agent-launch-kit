@@ -1,5 +1,5 @@
 {
-  "trace_id": "0579e468-ddd8-4bba-88a6-4d8d896eb966",
+  "trace_id": "2f90ec71-e265-4ba9-9bb8-da2b798600f9",
   "dataset_id": "financial_links_reliability_v0",
   "case_id": "case_fl_v0_009",
   "workflow": "financial_links_reliability",
@@ -8,7 +8,12 @@
   "policy_version": "financial_links_policies_v0",
   "orchestrator_decision": "FinancialLinksReliabilityAgent",
   "specialist_path": [
-    "FinancialLinksReliabilityAgent"
+    "IntakeNormalizer",
+    "OrchestratorAgent",
+    "FinancialLinksReliabilityAgent",
+    "EvaluatorNode",
+    "HumanApprovalNode",
+    "FinalResponseComposer"
   ],
   "handoff": {
     "case_id": "case_fl_v0_009",
@@ -287,6 +292,6 @@
     }
   ],
   "failure_labels": [],
-  "latency_ms": 0,
+  "latency_ms": 3,
   "est_cost_usd": 0.0
 }

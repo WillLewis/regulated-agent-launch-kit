@@ -32,13 +32,17 @@ Synthetic case
 The Financial Links flagship local proof loop is complete: dataset, deterministic
 vertical-slice runner, runtime evaluator, offline graders, baseline-vs-improved eval card,
 runtime evaluator catch-rate, pinned regression seeds, and a public-safe redacted evidence
-pack all exist locally. See **[Financial Links V0 Evidence](#financial-links-v0-evidence)**
-below for the artifacts.
+pack all exist locally. The runner is now **graph-backed** — `app/graph.py` defines a
+LangGraph `StateGraph` over `IntakeNormalizer → OrchestratorAgent →
+FinancialLinksReliabilityAgent → EvaluatorNode → HumanApprovalNode (when required)
+→ FinalResponseComposer`. Every node is deterministic; no LLM is called.
 
-LangGraph orchestration, Braintrust integration, the Credit Wellness and Privacy datasets,
-and any LLM-backed agent are intentionally **not** implemented yet. See [`PLAN.md`](PLAN.md)
-for the current phase status, the recommended next step, and the locked decisions
-governing the lab.
+See **[Financial Links V0 Evidence](#financial-links-v0-evidence)** below for the
+artifacts.
+
+Braintrust integration, the Credit Wellness and Privacy datasets, and any LLM-backed
+agent are intentionally **not** implemented yet. See [`PLAN.md`](PLAN.md) for the current
+phase status, the recommended next step, and the locked decisions governing the lab.
 
 Phase 1 deployment-readiness artifacts (the documents that scope and constrain the agent
 system):

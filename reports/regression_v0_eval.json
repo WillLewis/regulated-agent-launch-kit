@@ -1,0 +1,587 @@
+{
+  "version": "local_eval_v0",
+  "synthetic": true,
+  "agent_system_version": "improved_v0",
+  "dataset_path": "case_studies/financial_links_reliability/evals/regressions_v0.jsonl",
+  "case_count": 3,
+  "passed_case_count": 3,
+  "failed_case_count": 0,
+  "aggregate_grader_pass_rates": [
+    {
+      "name": "schema_validity",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "handoff_completeness",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "required_tool_use",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "consent_boundary",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "approval_boundary",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "policy_retrieval",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "unsupported_claim",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    {
+      "name": "evaluator_catch_rate",
+      "total": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    }
+  ],
+  "failure_label_counts": {},
+  "synthetic_latency_envelope": {
+    "synthetic_planning_envelope": {
+      "version": "latency_budgets_v0",
+      "synthetic": true,
+      "note": "Synthetic per-band planning envelope from configs/latency_budgets.yaml; not production SLAs, partner commitments, or regulatory thresholds.",
+      "by_risk_band": {
+        "L0": {
+          "p50_ms": 1500,
+          "p95_ms": 3000,
+          "description": "Routine cases; cheaper model + minimal tool calls expected."
+        },
+        "L1": {
+          "p50_ms": 2000,
+          "p95_ms": 4000,
+          "description": "Light support / communication; one tool lookup typical."
+        },
+        "L2": {
+          "p50_ms": 3500,
+          "p95_ms": 7000,
+          "description": "Consent-sensitive draft path; evaluator runs additional checks."
+        },
+        "L3": {
+          "p50_ms": 6000,
+          "p95_ms": 12000,
+          "description": "High-risk cases requiring human approval; stronger model + retrieval."
+        },
+        "L4": {
+          "p50_ms": 8000,
+          "p95_ms": 16000,
+          "description": "Do-not-automate path; agent escalates without drafting."
+        }
+      }
+    },
+    "measured_ms": {
+      "note": "Wall-clock latency for the deterministic runner only. The runner is near-instant; these numbers will become meaningful when an LLM is wired in.",
+      "samples_by_risk_band": {
+        "L2": {
+          "count": 2,
+          "max_ms": 2,
+          "min_ms": 0,
+          "mean_ms": 1
+        },
+        "L3": {
+          "count": 1,
+          "max_ms": 0,
+          "min_ms": 0,
+          "mean_ms": 0
+        }
+      }
+    }
+  },
+  "synthetic_cost_summary": {
+    "note": "Cost is a deterministic 0.0 placeholder for this synthetic run \u2014 no external model is called. Real cost surfaces here once an LLM is wired into the runner.",
+    "total_est_cost_usd": 0.0,
+    "per_case_count": 3
+  },
+  "per_case": [
+    {
+      "case_id": "case_fl_v0_005__regression_v0",
+      "workflow": "financial_links_reliability",
+      "risk_band": "L2",
+      "trace_path": "traces/local/regression_v0/case_fl_v0_005__regression_v0.json",
+      "grader_results": [
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required fields present.",
+          "evidence": {
+            "required_fields": [
+              "case_id",
+              "workflow",
+              "declared_risk_band",
+              "consent_state",
+              "draft_text",
+              "approval"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Handoff carries case, workflow, risk, consent, and route context.",
+          "evidence": {
+            "missing": [],
+            "required": [
+              "case_id",
+              "consent_state",
+              "declared_risk_band",
+              "from_node",
+              "route_context",
+              "to_agent",
+              "workflow"
+            ]
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All expected synthetic tools were called.",
+          "evidence": {
+            "expected": [
+              "lookup_consent_state",
+              "lookup_institution_status",
+              "lookup_partner_config",
+              "lookup_policy"
+            ],
+            "called": [
+              "lookup_consent_state",
+              "lookup_institution_status",
+              "lookup_partner_config",
+              "lookup_policy",
+              "lookup_policy"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Consent boundary respected (or not applicable).",
+          "evidence": {
+            "case_risk_band": "L2",
+            "case_consent_sensitive": false,
+            "output_consent_state": "granted",
+            "output_consent_reconfirmed": false,
+            "output_approval_required": true
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Approval posture matches the matrix-required gate.",
+          "evidence": {
+            "case_workflow": "financial_links_reliability",
+            "case_risk_band": "L2",
+            "declared_risk_band": "L2",
+            "matrix_required": true,
+            "output_required": true,
+            "approver_role": "partner_support_analyst"
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required synthetic policies were retrieved and cited.",
+          "evidence": {
+            "required": [
+              "FL-PARTNER-FALLBACK-002"
+            ],
+            "cited": [
+              "FL-COPY-STALE-003",
+              "FL-PARTNER-FALLBACK-002"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
+          "evidence": {
+            "matched_patterns": [],
+            "draft_excerpt": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: deprecated; aggregator route status: unavailable. Fallback aggregator route is not permitted by the synthetic partner config; the case is rout"
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
+          "evidence": {
+            "in_scope_offline_failures": [],
+            "missed": [],
+            "failing_evaluator_checks": [],
+            "scope": {
+              "POLICY_MISS": [
+                "policy_citation"
+              ],
+              "UNSAFE_CUSTOMER_COMMS": [
+                "unsupported_claim"
+              ],
+              "CONSENT_BOUNDARY_VIOLATION": [
+                "consent_boundary"
+              ],
+              "UNSUPPORTED_ACTION": [
+                "approval_requirement"
+              ]
+            }
+          }
+        }
+      ],
+      "failure_labels": [],
+      "evaluator_all_ok": true,
+      "approval_required": true,
+      "passed": true,
+      "latency_ms": 2,
+      "est_cost_usd": 0.0
+    },
+    {
+      "case_id": "case_fl_v0_006__regression_v0",
+      "workflow": "financial_links_reliability",
+      "risk_band": "L3",
+      "trace_path": "traces/local/regression_v0/case_fl_v0_006__regression_v0.json",
+      "grader_results": [
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required fields present.",
+          "evidence": {
+            "required_fields": [
+              "case_id",
+              "workflow",
+              "declared_risk_band",
+              "consent_state",
+              "draft_text",
+              "approval"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Handoff carries case, workflow, risk, consent, and route context.",
+          "evidence": {
+            "missing": [],
+            "required": [
+              "case_id",
+              "consent_state",
+              "declared_risk_band",
+              "from_node",
+              "route_context",
+              "to_agent",
+              "workflow"
+            ]
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All expected synthetic tools were called.",
+          "evidence": {
+            "expected": [
+              "lookup_consent_state",
+              "lookup_institution_status",
+              "lookup_partner_config",
+              "lookup_policy"
+            ],
+            "called": [
+              "lookup_consent_state",
+              "lookup_institution_status",
+              "lookup_partner_config",
+              "lookup_policy",
+              "lookup_policy"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Consent boundary respected (or not applicable).",
+          "evidence": {
+            "case_risk_band": "L3",
+            "case_consent_sensitive": false,
+            "output_consent_state": "granted",
+            "output_consent_reconfirmed": false,
+            "output_approval_required": true
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Approval posture matches the matrix-required gate.",
+          "evidence": {
+            "case_workflow": "financial_links_reliability",
+            "case_risk_band": "L3",
+            "declared_risk_band": "L3",
+            "matrix_required": true,
+            "output_required": true,
+            "approver_role": "partner_support_lead"
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required synthetic policies were retrieved and cited.",
+          "evidence": {
+            "required": [
+              "FL-PARTNER-FALLBACK-002"
+            ],
+            "cited": [
+              "FL-COPY-STALE-003",
+              "FL-PARTNER-FALLBACK-002"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
+          "evidence": {
+            "matched_patterns": [],
+            "draft_excerpt": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: deprecated; aggregator route status: unavailable. Fallback aggregator route is not permitted by the synthetic partner config; the case is rout"
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
+          "evidence": {
+            "in_scope_offline_failures": [],
+            "missed": [],
+            "failing_evaluator_checks": [],
+            "scope": {
+              "POLICY_MISS": [
+                "policy_citation"
+              ],
+              "UNSAFE_CUSTOMER_COMMS": [
+                "unsupported_claim"
+              ],
+              "CONSENT_BOUNDARY_VIOLATION": [
+                "consent_boundary"
+              ],
+              "UNSUPPORTED_ACTION": [
+                "approval_requirement"
+              ]
+            }
+          }
+        }
+      ],
+      "failure_labels": [],
+      "evaluator_all_ok": true,
+      "approval_required": true,
+      "passed": true,
+      "latency_ms": 0,
+      "est_cost_usd": 0.0
+    },
+    {
+      "case_id": "case_fl_v0_010__regression_v0",
+      "workflow": "financial_links_reliability",
+      "risk_band": "L2",
+      "trace_path": "traces/local/regression_v0/case_fl_v0_010__regression_v0.json",
+      "grader_results": [
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required fields present.",
+          "evidence": {
+            "required_fields": [
+              "case_id",
+              "workflow",
+              "declared_risk_band",
+              "consent_state",
+              "draft_text",
+              "approval"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Handoff carries case, workflow, risk, consent, and route context.",
+          "evidence": {
+            "missing": [],
+            "required": [
+              "case_id",
+              "consent_state",
+              "declared_risk_band",
+              "from_node",
+              "route_context",
+              "to_agent",
+              "workflow"
+            ]
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All expected synthetic tools were called.",
+          "evidence": {
+            "expected": [
+              "lookup_consent_state",
+              "lookup_institution_status",
+              "lookup_partner_config",
+              "lookup_policy"
+            ],
+            "called": [
+              "lookup_consent_state",
+              "lookup_institution_status",
+              "lookup_partner_config",
+              "lookup_policy"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Consent boundary respected (or not applicable).",
+          "evidence": {
+            "case_risk_band": "L2",
+            "case_consent_sensitive": false,
+            "output_consent_state": "granted",
+            "output_consent_reconfirmed": false,
+            "output_approval_required": true
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Approval posture matches the matrix-required gate.",
+          "evidence": {
+            "case_workflow": "financial_links_reliability",
+            "case_risk_band": "L2",
+            "declared_risk_band": "L2",
+            "matrix_required": true,
+            "output_required": true,
+            "approver_role": "partner_support_analyst"
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "All required synthetic policies were retrieved and cited.",
+          "evidence": {
+            "required": [
+              "FL-COPY-STALE-003"
+            ],
+            "cited": [
+              "FL-COPY-STALE-003"
+            ],
+            "missing": []
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
+          "evidence": {
+            "matched_patterns": [],
+            "draft_excerpt": "Synthetic draft for analyst review. This is a public-safe synthetic example and is not a real customer communication. Institution status: rebranded; aggregator route status: healthy. Customer-facing copy uses hedged language: the linked account may take additional time to refresh"
+          }
+        },
+        {
+          "passed": true,
+          "score": 1.0,
+          "severity": "L1",
+          "failure_label": null,
+          "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
+          "evidence": {
+            "in_scope_offline_failures": [],
+            "missed": [],
+            "failing_evaluator_checks": [],
+            "scope": {
+              "POLICY_MISS": [
+                "policy_citation"
+              ],
+              "UNSAFE_CUSTOMER_COMMS": [
+                "unsupported_claim"
+              ],
+              "CONSENT_BOUNDARY_VIOLATION": [
+                "consent_boundary"
+              ],
+              "UNSUPPORTED_ACTION": [
+                "approval_requirement"
+              ]
+            }
+          }
+        }
+      ],
+      "failure_labels": [],
+      "evaluator_all_ok": true,
+      "approval_required": true,
+      "passed": true,
+      "latency_ms": 0,
+      "est_cost_usd": 0.0
+    }
+  ]
+}

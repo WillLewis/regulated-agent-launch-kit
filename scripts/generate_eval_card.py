@@ -170,6 +170,41 @@ def _operational_block(baseline: EvalReport, improved: EvalReport) -> str:
     return "\n".join(lines)
 
 
+def _load_regressions(regressions_path: Path | None) -> list[dict[str, Any]]:
+    if regressions_path is None:
+        return []
+    if not regressions_path.exists():
+        raise SystemExit(f"regressions file not found: {regressions_path}")
+    records: list[dict[str, Any]] = []
+    for line_no, raw in enumerate(regressions_path.read_text().splitlines(), start=1):
+        if not raw.strip():
+            continue
+        try:
+            records.append(json.loads(raw))
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"{regressions_path}: line {line_no}: invalid JSON ({exc})")
+    return records
+
+
+def _regression_seeds_block(regressions: list[dict[str, Any]]) -> str:
+    if not regressions:
+        return "_No regression seeds linked into this card._"
+    lines = [
+        "| Regression case | Source case | Labels at capture | Source profile | Review status |",
+        "|---|---|---|---|---|",
+    ]
+    for record in regressions:
+        labels = ", ".join(f"`{label}`" for label in record.get("failure_labels", [])) or "_(none)_"
+        lines.append(
+            f"| `{record.get('regression_case_id', record.get('case_id', '?'))}` "
+            f"| `{record.get('source_case_id', '?')}` "
+            f"| {labels} "
+            f"| `{record.get('source_agent_system_version', '?')}` "
+            f"| `{record.get('review_status', 'pending_review')}` |"
+        )
+    return "\n".join(lines)
+
+
 def _catch_rate_block(baseline: EvalReport, improved: EvalReport) -> str:
     """Render the runtime evaluator catch-rate subsection."""
 
@@ -206,8 +241,18 @@ def _catch_rate_block(baseline: EvalReport, improved: EvalReport) -> str:
     )
 
 
-def render_card(baseline: EvalReport, improved: EvalReport) -> str:
-    """Render the markdown eval card from two validated reports."""
+def render_card(
+    baseline: EvalReport,
+    improved: EvalReport,
+    regressions: list[dict[str, Any]] | None = None,
+) -> str:
+    """Render the markdown eval card from two validated reports.
+
+    ``regressions`` is an optional list of regression-seed records (see
+    ``scripts/incident_to_regression.py``); when present, a small
+    "Regression Seeds" section is rendered alongside the quality
+    metrics.
+    """
 
     workflows = sorted(
         {case.workflow for case in baseline.per_case}
@@ -267,6 +312,7 @@ def render_card(baseline: EvalReport, improved: EvalReport) -> str:
     fixes_block = "\n".join(f"- {bullet}" for bullet in fix_bullets)
 
     catch_rate_block = _catch_rate_block(baseline, improved)
+    regression_block = _regression_seeds_block(regressions or [])
 
     return f"""# Local Eval Card — Financial Links Vertical Slice
 
@@ -293,6 +339,10 @@ def render_card(baseline: EvalReport, improved: EvalReport) -> str:
 ### Runtime evaluator catch-rate
 
 {catch_rate_block}
+
+## Regression seeds
+
+{regression_block}
 
 ## What failed in baseline
 
@@ -337,12 +387,14 @@ def generate_eval_card(
     baseline_report: Path,
     improved_report: Path,
     out: Path,
+    regressions: Path | None = None,
 ) -> Path:
     baseline = _load_report(Path(baseline_report))
     improved = _load_report(Path(improved_report))
     _validate_pair(baseline, improved)
+    regression_records = _load_regressions(Path(regressions) if regressions else None)
 
-    markdown = render_card(baseline, improved)
+    markdown = render_card(baseline, improved, regression_records)
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(markdown)
@@ -359,12 +411,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--baseline-report", required=True, type=Path)
     parser.add_argument("--improved-report", required=True, type=Path)
     parser.add_argument("--out", required=True, type=Path)
+    parser.add_argument(
+        "--regressions",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to a regressions_v0.jsonl file. If supplied "
+            "the card gets a 'Regression Seeds' section listing the "
+            "linked records."
+        ),
+    )
     args = parser.parse_args(argv)
 
     out_path = generate_eval_card(
         baseline_report=args.baseline_report,
         improved_report=args.improved_report,
         out=args.out,
+        regressions=args.regressions,
     )
     print(f"OK: wrote eval card -> {out_path}")
     return 0

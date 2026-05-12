@@ -99,7 +99,7 @@
       "samples_by_risk_band": {
         "L1": {
           "count": 3,
-          "max_ms": 2,
+          "max_ms": 4,
           "min_ms": 0,
           "mean_ms": 1
         },
@@ -275,7 +275,7 @@
       "evaluator_all_ok": true,
       "approval_required": false,
       "passed": true,
-      "latency_ms": 2,
+      "latency_ms": 4,
       "est_cost_usd": 0.0
     },
     {

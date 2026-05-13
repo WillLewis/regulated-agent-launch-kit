@@ -183,6 +183,71 @@ def _operational_summary(report: EvalReport) -> dict[str, Any]:
     }
 
 
+def _comparison_by_band(report: EvalReport) -> dict[str, dict[str, Any]]:
+    """Pull ``comparison_by_risk_band`` off the report, defaulting to {}.
+
+    Reports written before the latency-vs-budget block was introduced
+    won't carry this key; the card must still render in that case.
+    """
+
+    return (
+        report.synthetic_latency_envelope.get("comparison_by_risk_band", {})
+        if report.synthetic_latency_envelope
+        else {}
+    )
+
+
+def _latency_vs_budget_block(
+    baseline: EvalReport,
+    improved: EvalReport,
+    baseline_label: str = "Baseline",
+    improved_label: str = "Improved",
+) -> str:
+    """Render the side-by-side latency-vs-budget table.
+
+    Returns an explanatory placeholder when neither report carries a
+    ``comparison_by_risk_band`` block (legacy reports), so existing
+    callers don't crash.
+    """
+
+    b_by_band = _comparison_by_band(baseline)
+    i_by_band = _comparison_by_band(improved)
+    if not b_by_band and not i_by_band:
+        return (
+            "_No latency-vs-budget comparison available for this card; "
+            "regenerate the underlying eval reports with the current "
+            "`evals/run.py` to surface it._"
+        )
+
+    bands = sorted(set(b_by_band) | set(i_by_band))
+    header = (
+        f"| Risk band | {baseline_label} verdict | {baseline_label} mean (ms) | "
+        f"{improved_label} verdict | {improved_label} mean (ms) | "
+        f"Synthetic p50 / p95 budget (ms) |"
+    )
+    sep = "|---|---|---:|---|---:|---|"
+    rows: list[str] = [header, sep]
+    for band in bands:
+        b_row = b_by_band.get(band, {})
+        i_row = i_by_band.get(band, {})
+        # The two profiles run against the same dataset, so the budget
+        # is the same for both — pick whichever side has it.
+        p50 = b_row.get("p50_ms") or i_row.get("p50_ms")
+        p95 = b_row.get("p95_ms") or i_row.get("p95_ms")
+        budget_cell = f"{p50} / {p95}" if (p50 is not None and p95 is not None) else "_no budget_"
+        rows.append(
+            "| `{band}` | `{b_verdict}` | {b_mean} | `{i_verdict}` | {i_mean} | {budget} |".format(
+                band=band,
+                b_verdict=b_row.get("verdict", "_n/a_"),
+                b_mean=b_row.get("measured_mean_ms", "—"),
+                i_verdict=i_row.get("verdict", "_n/a_"),
+                i_mean=i_row.get("measured_mean_ms", "—"),
+                budget=budget_cell,
+            )
+        )
+    return "\n".join(rows)
+
+
 def _operational_block(
     baseline: EvalReport,
     improved: EvalReport,
@@ -327,6 +392,12 @@ def render_card(
     failing_block = _failing_case_block(baseline.per_case)
     improved_failing_block = _failing_case_block(improved.per_case)
     operational_block = _operational_block(
+        baseline,
+        improved,
+        baseline_label=baseline_label,
+        improved_label=improved_label,
+    )
+    latency_vs_budget_block = _latency_vs_budget_block(
         baseline,
         improved,
         baseline_label=baseline_label,
@@ -507,6 +578,15 @@ def render_card(
 ## Operational metrics
 
 {operational_block}
+
+### Latency vs synthetic budget
+
+{latency_vs_budget_block}
+
+Verdicts are categorical: `within_p50`, `between_p50_and_p95`,
+`exceeds_p95`, or `no_budget`. Budgets come from
+`configs/latency_budgets.yaml` and are **synthetic planning envelopes**
+— not production SLAs, partner commitments, or regulatory thresholds.
 
 {operational_rider}
 

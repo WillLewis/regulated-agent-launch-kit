@@ -184,6 +184,62 @@ def _load_latency_envelope() -> dict[str, Any]:
     }
 
 
+# Verdict labels for the latency-vs-budget comparison. Kept as plain
+# strings (no emoji) so they're safe to surface in markdown tables and
+# in machine-readable JSON consumers.
+LATENCY_VERDICT_WITHIN_P50: str = "within_p50"
+LATENCY_VERDICT_BETWEEN: str = "between_p50_and_p95"
+LATENCY_VERDICT_EXCEEDS_P95: str = "exceeds_p95"
+LATENCY_VERDICT_NO_BUDGET: str = "no_budget"
+
+
+def _compute_latency_vs_budget(
+    samples_by_band: dict[str, list[int]],
+    envelope_by_band: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """Build the per-band comparison block.
+
+    For each band with measured samples, returns the measured mean/max,
+    the synthetic p50/p95 envelope (if any), a categorical verdict, and
+    ``mean_vs_p95_ratio`` (rounded). Bands with no samples are omitted
+    so readers don't see misleading zero rows. Bands with samples but
+    no budget surface as ``no_budget`` with ``p50_ms`` / ``p95_ms``
+    / ``mean_vs_p95_ratio`` set to ``None`` — visible drift between the
+    eval and the envelope file.
+    """
+
+    comparison: dict[str, dict[str, Any]] = {}
+    for band, samples in samples_by_band.items():
+        if not samples:
+            continue
+        mean_ms = int(round(statistics.fmean(samples)))
+        max_ms = max(samples)
+        budget = envelope_by_band.get(band) or {}
+        p50 = budget.get("p50_ms")
+        p95 = budget.get("p95_ms")
+        if p50 is None or p95 is None:
+            verdict = LATENCY_VERDICT_NO_BUDGET
+            ratio: float | None = None
+        else:
+            if mean_ms <= p50:
+                verdict = LATENCY_VERDICT_WITHIN_P50
+            elif mean_ms <= p95:
+                verdict = LATENCY_VERDICT_BETWEEN
+            else:
+                verdict = LATENCY_VERDICT_EXCEEDS_P95
+            ratio = round(mean_ms / p95, 3) if p95 else None
+        comparison[band] = {
+            "count": len(samples),
+            "measured_mean_ms": mean_ms,
+            "measured_max_ms": max_ms,
+            "p50_ms": p50,
+            "p95_ms": p95,
+            "verdict": verdict,
+            "mean_vs_p95_ratio": ratio,
+        }
+    return comparison
+
+
 def run_eval(
     dataset_path: Path,
     traces_out: Path,
@@ -288,8 +344,9 @@ def run_eval(
         "per_case_count": len(per_case),
     }
 
+    envelope = _load_latency_envelope()
     latency_summary = {
-        "synthetic_planning_envelope": _load_latency_envelope(),
+        "synthetic_planning_envelope": envelope,
         "measured_ms": {
             "note": (
                 "Wall-clock latency for the deterministic runner only. The runner "
@@ -306,6 +363,17 @@ def run_eval(
                 for band, samples in latency_samples_by_band.items()
             },
         },
+        "comparison_by_risk_band": _compute_latency_vs_budget(
+            latency_samples_by_band,
+            envelope.get("by_risk_band", {}),
+        ),
+        "comparison_note": (
+            "Per-band comparison of measured mean latency to the synthetic "
+            "planning envelope (p50/p95). Verdicts are categorical: within_p50, "
+            "between_p50_and_p95, exceeds_p95, or no_budget. Budgets are "
+            "synthetic planning envelopes — not production SLAs, partner "
+            "commitments, or regulatory thresholds."
+        ),
     }
 
     report = EvalReport(

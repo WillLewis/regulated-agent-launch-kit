@@ -1,0 +1,56 @@
+version: llm_cost_rates_v0
+
+# Anthropic public list-price rates per model, used by
+# `app/agents/llm_adapter.py` to convert `response.usage` tokens into an
+# estimated USD cost on each `llm_candidate_v0` invocation. The number
+# that surfaces on a trace / eval report / eval card is therefore
+# `(input_tokens * input_usd_per_mtok + output_tokens * output_usd_per_mtok)
+# / 1_000_000`.
+#
+# Discipline:
+#
+# - These are Anthropic's PUBLIC LIST prices. They are NOT
+#   partner-negotiated, enterprise-discounted, or batch-API rates. Do
+#   not use this table to forecast enterprise spend or to make a
+#   pricing claim to a partner.
+# - These are USD per **million** tokens, matching how Anthropic
+#   publishes them. The adapter divides by 1_000_000 before reporting.
+# - Prompt-caching and batch-API discounts are intentionally NOT
+#   modeled here — the synthetic lab does not exercise either today.
+# - If the runner is pointed at a model not in `models`, the adapter
+#   falls back to `fallback_model` and the trace records
+#   `cost_estimation_note: "fallback_rate_used"`. An unknown model with
+#   no fallback raises `LLMAdapterConfigError`.
+#
+# Update this file when Anthropic changes published prices or when this
+# lab points at a new model. The `as_of` date below is the snapshot
+# date; any production-style use should re-verify against
+# https://www.anthropic.com/pricing.
+
+as_of: "2026-05-13"
+source: "Anthropic public list prices (https://www.anthropic.com/pricing)"
+currency: USD
+per_tokens: 1_000_000
+
+# Default model the adapter assumes when `model` is unset and neither
+# `AGENT_MODEL_DEFAULT` env var nor a call-site override is provided.
+default_model: claude-sonnet-4-5
+
+# Model the adapter falls back to when the runner is pointed at a model
+# the rate table doesn't know. The fallback is intentionally a
+# mid-tier model so the cost estimate doesn't silently under-report.
+fallback_model: claude-sonnet-4-5
+
+models:
+  claude-opus-4-7:
+    input_usd_per_mtok: 15.0
+    output_usd_per_mtok: 75.0
+  claude-sonnet-4-6:
+    input_usd_per_mtok: 3.0
+    output_usd_per_mtok: 15.0
+  claude-sonnet-4-5:
+    input_usd_per_mtok: 3.0
+    output_usd_per_mtok: 15.0
+  claude-haiku-4-5:
+    input_usd_per_mtok: 0.8
+    output_usd_per_mtok: 4.0

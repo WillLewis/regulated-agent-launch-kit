@@ -198,6 +198,11 @@ def handle(
     # same gates as the improved profile. The adapter raises
     # LLMAdapterConfigError when credentials/SDK are missing — there is
     # no silent fallback to improved_v0.
+    est_cost_usd = 0.0
+    llm_input_tokens = 0
+    llm_output_tokens = 0
+    llm_model: str | None = None
+    llm_cost_estimation_note: str | None = None
     if is_llm_candidate:
         prompt = _build_llm_prompt(
             case=case,
@@ -208,7 +213,13 @@ def handle(
             approval=approval,
             deterministic_draft=draft_text,
         )
-        draft_text = _llm_adapter.generate_financial_links_draft(prompt)
+        llm_response = _llm_adapter.generate_financial_links_draft(prompt)
+        draft_text = llm_response.text
+        est_cost_usd = llm_response.est_cost_usd
+        llm_input_tokens = llm_response.input_tokens
+        llm_output_tokens = llm_response.output_tokens
+        llm_model = llm_response.model
+        llm_cost_estimation_note = llm_response.cost_estimation_note
 
     prohibited_avoided = ["force_completion_without_consent"]
     if partner_out and partner_out.get("scope") == "fallback_blocked":
@@ -232,6 +243,11 @@ def handle(
         approval=approval,
         evidence_sufficiency=evidence_sufficient,
         prohibited_actions_avoided=prohibited_avoided,
+        est_cost_usd=est_cost_usd,
+        llm_input_tokens=llm_input_tokens,
+        llm_output_tokens=llm_output_tokens,
+        llm_model=llm_model,
+        llm_cost_estimation_note=llm_cost_estimation_note,
     )
 
 

@@ -153,6 +153,12 @@ class AgentOutput(BaseModel):
     First-class consent fields (PLAN.md R1) and a Pydantic-enforced
     approval decision (PLAN.md R8/R9) keep the runtime evaluator and the
     offline graders honest about the same facts.
+
+    ``est_cost_usd`` is populated only when the specialist routes draft
+    generation through the LLM adapter (``llm_candidate_v0``). The
+    deterministic profiles report ``0.0``. The runner threads this
+    value onto the resulting :class:`TraceRecord` so the eval report's
+    ``synthetic_cost_summary`` aggregates it without special-casing.
     """
 
     case_id: str
@@ -166,6 +172,11 @@ class AgentOutput(BaseModel):
     approval: ApprovalDecision
     evidence_sufficiency: bool = False
     prohibited_actions_avoided: list[str] = Field(default_factory=list)
+    est_cost_usd: float = 0.0
+    llm_input_tokens: int = 0
+    llm_output_tokens: int = 0
+    llm_model: str | None = None
+    llm_cost_estimation_note: str | None = None
 
 
 class EvaluatorCheck(BaseModel):

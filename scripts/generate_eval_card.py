@@ -409,13 +409,14 @@ def render_card(
     )
     operational_rider = (
         (
-            "Cost is currently surfaced as `0.0` because the `llm_candidate_v0`\n"
-            "adapter does not yet capture `response.usage` tokens — capturing real\n"
-            "cost is a tracked follow-up. Latency is wall-clock end-to-end for the\n"
-            "graph node path, which now includes a real LLM call on at least one\n"
-            "profile. Per-band targets in `configs/latency_budgets.yaml` are\n"
-            "**synthetic planning envelopes**, not production SLAs, partner\n"
-            "commitments, or regulatory thresholds."
+            "Cost is estimated from `response.usage` tokens via Anthropic's public\n"
+            "list-price rate table (`configs/llm_cost_rates.yaml`). It is **not**\n"
+            "a partner-negotiated or enterprise-discounted rate; treat it as a\n"
+            "lower-bound forecasting signal, not a billing number. Latency is\n"
+            "wall-clock end-to-end for the graph node path, which now includes a\n"
+            "real LLM call on at least one profile. Per-band targets in\n"
+            "`configs/latency_budgets.yaml` are **synthetic planning envelopes**,\n"
+            "not production SLAs, partner commitments, or regulatory thresholds."
         )
         if llm_in_play
         else (

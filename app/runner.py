@@ -90,7 +90,7 @@ def run_case(
         grader_results=[],
         failure_labels=[],
         latency_ms=0,
-        est_cost_usd=0.0,
+        est_cost_usd=agent_output.est_cost_usd,
     )
 
     return RunResult(trace=trace, agent_output=agent_output)

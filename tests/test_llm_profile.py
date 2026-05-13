@@ -18,7 +18,7 @@ import pytest
 
 import app.agents.financial_links_reliability_agent as specialist_module
 from app.agents import llm_adapter
-from app.agents.llm_adapter import LLMAdapterConfigError
+from app.agents.llm_adapter import LLMAdapterConfigError, LLMResponse
 from app.agents.profiles import (
     DEFAULT_PROFILE,
     KNOWN_PROFILES,
@@ -137,11 +137,26 @@ _FAKE_DRAFT = (
     "Synthetic LLM draft: please re-confirm consent before any remediation. "
     "We do not guarantee a refresh time and the linked account is not real time."
 )
+# Fixed synthetic token counts so cost-aggregation tests are deterministic.
+_FAKE_INPUT_TOKENS = 250
+_FAKE_OUTPUT_TOKENS = 120
+_FAKE_MODEL = "claude-sonnet-4-5"
 
 
-def _fake_adapter(prompt: str, **kwargs) -> str:  # noqa: ARG001
-    # Use a fixed return value so tests are deterministic across runs.
-    return _FAKE_DRAFT
+def _fake_adapter(prompt: str, **kwargs) -> LLMResponse:  # noqa: ARG001
+    """Return a fixed LLMResponse so tests are deterministic across runs.
+
+    Use ``LLMResponse.from_text`` so the rate-table lookup runs against
+    the real ``configs/llm_cost_rates.yaml`` and exercises the same
+    cost-estimation codepath as a credentialed run.
+    """
+
+    return LLMResponse.from_text(
+        _FAKE_DRAFT,
+        model=_FAKE_MODEL,
+        input_tokens=_FAKE_INPUT_TOKENS,
+        output_tokens=_FAKE_OUTPUT_TOKENS,
+    )
 
 
 def test_llm_profile_with_fake_adapter_produces_agent_output(
@@ -184,6 +199,85 @@ def test_llm_profile_with_fake_adapter_produces_agent_output(
     assert result.trace.evaluator_report.checks
 
 
+def test_llm_profile_threads_estimated_cost_into_agent_output_and_trace(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The cost-capture gap is closed: agent output + trace + report all
+    carry a non-zero est_cost_usd derived from the rate table."""
+
+    monkeypatch.setattr(
+        specialist_module._llm_adapter,
+        "generate_financial_links_draft",
+        _fake_adapter,
+    )
+    case = _load_case("case_fl_v0_005")
+    result = run_case(case, agent_system_version="llm_candidate_v0")
+
+    # Agent output carries the token counts and the resolved model.
+    output = result.agent_output
+    assert output.llm_input_tokens == _FAKE_INPUT_TOKENS
+    assert output.llm_output_tokens == _FAKE_OUTPUT_TOKENS
+    assert output.llm_model == _FAKE_MODEL
+    assert output.llm_cost_estimation_note == "rate_used"
+
+    # Expected cost: 250 * 3.0 / 1e6 + 120 * 15.0 / 1e6 = 0.00075 + 0.0018 = 0.00255
+    expected = round(
+        (_FAKE_INPUT_TOKENS * 3.0 + _FAKE_OUTPUT_TOKENS * 15.0) / 1_000_000, 6
+    )
+    assert output.est_cost_usd == expected, (
+        f"agent output cost mismatch: expected {expected}, got {output.est_cost_usd}"
+    )
+    # The trace must mirror the agent's cost — no hardcoded 0.0 leaks.
+    assert result.trace.est_cost_usd == expected
+
+
+def test_llm_profile_eval_report_aggregates_cost(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A full smoke-slice run with the LLM profile aggregates per-case
+    cost into synthetic_cost_summary.total_est_cost_usd."""
+
+    monkeypatch.setattr(
+        specialist_module._llm_adapter,
+        "generate_financial_links_draft",
+        _fake_adapter,
+    )
+    report_path = tmp_path / "report.json"
+    report = run_eval(
+        dataset_path=SMOKE_PATH,
+        traces_out=tmp_path / "traces",
+        report_out=report_path,
+        agent_system_version="llm_candidate_v0",
+    )
+
+    per_case_costs = [c.est_cost_usd for c in report.per_case]
+    assert all(c > 0.0 for c in per_case_costs), (
+        f"every llm_candidate_v0 case must report a non-zero est_cost_usd; "
+        f"got {per_case_costs}"
+    )
+    expected_total = round(sum(per_case_costs), 6)
+    summary_total = report.synthetic_cost_summary["total_est_cost_usd"]
+    assert summary_total == expected_total, (
+        f"synthetic_cost_summary total mismatch: expected {expected_total}, "
+        f"got {summary_total}"
+    )
+    assert summary_total > 0.0
+
+
+def test_deterministic_profile_still_reports_zero_cost(tmp_path: Path) -> None:
+    """The cost path must not leak into the deterministic proof loop."""
+
+    report_path = tmp_path / "report.json"
+    report = run_eval(
+        dataset_path=SMOKE_PATH,
+        traces_out=tmp_path / "traces",
+        report_out=report_path,
+        agent_system_version="improved_v0",
+    )
+    assert all(c.est_cost_usd == 0.0 for c in report.per_case)
+    assert report.synthetic_cost_summary["total_est_cost_usd"] == 0.0
+
+
 def test_llm_profile_trace_preserves_graph_node_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         specialist_module._llm_adapter,
@@ -205,8 +299,13 @@ def test_llm_profile_runtime_evaluator_runs_against_llm_text(
 ) -> None:
     """If the LLM produces unsafe copy, the runtime evaluator must catch it."""
 
-    def _bad_adapter(prompt: str, **kwargs) -> str:  # noqa: ARG001
-        return "We guarantee the linked account will refresh in real time."
+    def _bad_adapter(prompt: str, **kwargs) -> LLMResponse:  # noqa: ARG001
+        return LLMResponse.from_text(
+            "We guarantee the linked account will refresh in real time.",
+            model=_FAKE_MODEL,
+            input_tokens=_FAKE_INPUT_TOKENS,
+            output_tokens=_FAKE_OUTPUT_TOKENS,
+        )
 
     monkeypatch.setattr(
         specialist_module._llm_adapter,

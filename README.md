@@ -286,6 +286,25 @@ explicitly runs `make eval-card-adversarial-llm` with valid credentials and comm
 resulting `reports/llm_adversarial_eval_card.md`. This card makes no model-safety,
 pilot-readiness, or production-readiness claim.
 
+##### Prompt-improvement candidate: `llm_candidate_v1`
+
+A sibling opt-in profile `llm_candidate_v1` uses the same adapter, model, and
+deterministic decisions as `llm_candidate_v0`. Only the prompt changes — v1
+explicitly enumerates every forbidden phrase from the `unsupported_claim` pattern
+set, pairs each with a hedged rewrite example, and asks the model to self-check
+before returning. It exists so the four `UNSAFE_CUSTOMER_COMMS` failures observed
+on the real v0 adversarial run can be measured as a true before/after delta.
+
+```bash
+make eval-adversarial-llm-v1        # writes reports/llm_adversarial_v1_eval.json
+                                     # + traces/local/llm_adversarial_v1/
+make eval-card-adversarial-llm-v1    # writes reports/llm_adversarial_v1_vs_v0_card.md
+                                     # (v0 = Before, v1 = After)
+```
+
+The v1 path is credential-gated and gitignored the same way as v0; no claim
+about how much better v1 is can be made until you actually run it.
+
 ##### Real LLM traces are handled through a redacted evidence pack
 
 Raw LLM traces (`traces/local/llm_adversarial/*.json`) and the raw JSON eval report

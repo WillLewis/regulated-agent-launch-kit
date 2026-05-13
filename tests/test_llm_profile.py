@@ -378,15 +378,15 @@ def test_run_case_cli_accepts_llm_profile_as_choice() -> None:
 # ---------------------------------------------------------------------------
 
 def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
-    """`llm_candidate_v0` may only be invoked inside opt-in LLM targets.
+    """Any ``llm_candidate_*`` profile may only be invoked inside opt-in
+    LLM targets.
 
-    The deterministic public proof loop must never request the LLM
+    The deterministic public proof loop must never request an LLM
     profile by name. The targets that legitimately do are
-    ``eval-smoke-llm`` and ``eval-adversarial-llm`` (plus the
-    ``check-llm-env`` preflight, whose recipe doesn't name the profile;
-    the card-rendering targets ``eval-card-llm-smoke`` and
-    ``eval-card-adversarial-llm`` reference report paths but do not
-    invoke the LLM profile directly).
+    ``eval-smoke-llm``, ``eval-adversarial-llm``, and
+    ``eval-adversarial-llm-v1`` (plus the ``check-llm-env`` preflight,
+    whose recipe doesn't name the profile; the card-rendering targets
+    reference report paths but do not invoke an LLM profile directly).
     """
 
     import re
@@ -412,7 +412,11 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         "eval-card-llm-smoke",
         "eval-adversarial-llm",
         "eval-card-adversarial-llm",
+        "eval-adversarial-llm-v1",
+        "eval-card-adversarial-llm-v1",
     }
+
+    llm_profile_token = re.compile(r"llm_candidate_v\d+")
 
     def _is_invocation(step: str) -> bool:
         """Skip @echo / printf documentation lines; only real recipe lines count."""
@@ -422,7 +426,7 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
             return False
         if stripped.startswith("@printf") or stripped.startswith("printf "):
             return False
-        return "llm_candidate_v0" in step
+        return bool(llm_profile_token.search(step))
 
     offenders = {
         target: [step for step in recipe if _is_invocation(step)]
@@ -431,6 +435,6 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         and any(_is_invocation(step) for step in recipe)
     }
     assert not offenders, (
-        f"deterministic Make targets must not invoke llm_candidate_v0; "
-        f"found offenders: {sorted(offenders)}"
+        f"deterministic Make targets must not invoke any llm_candidate_v* "
+        f"profile; found offenders: {sorted(offenders)}"
     )

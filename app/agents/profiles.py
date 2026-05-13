@@ -20,6 +20,14 @@ generates the customer-facing ``draft_text`` via the
 of the public proof loop, and is not the default. Approval boundaries
 remain deterministic; the LLM never decides who must approve a case.
 
+``LLM_CANDIDATE_V1`` is a *prompt-improvement* sibling of
+``LLM_CANDIDATE_V0``. Same adapter, same model, same cost-capture
+path, same deterministic decisions — only the prompt changes. v1
+exists so the four ``UNSAFE_CUSTOMER_COMMS`` failures the real-LLM
+adversarial run surfaced on v0 can be measured as a true before/after
+delta. Like v0, it is opt-in and credential-gated; no Make target in
+the public proof loop invokes it.
+
 Profile strings are stable so they can be written into
 ``TraceRecord.agent_system_version``, surfaced in eval reports, and
 filtered on without parsing. Add new profiles by extending the enum
@@ -37,6 +45,7 @@ class AgentSystemProfile(str, Enum):
     BASELINE_V0 = "baseline_v0"
     IMPROVED_V0 = "improved_v0"
     LLM_CANDIDATE_V0 = "llm_candidate_v0"
+    LLM_CANDIDATE_V1 = "llm_candidate_v1"
 
 
 KNOWN_PROFILES: frozenset[str] = frozenset(profile.value for profile in AgentSystemProfile)

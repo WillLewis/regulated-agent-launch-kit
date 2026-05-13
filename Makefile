@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -35,6 +35,8 @@ help:
 	@echo "  eval-card-adversarial-llm render improved_v0 vs llm_candidate_v0 comparison card on the adversarial slice"
 	@echo "  redact-llm-adversarial   redact every raw LLM adversarial trace under traces/redacted/llm_adversarial/"
 	@echo "  evidence-pack-llm-adversarial  assemble the public-safe LLM evidence pack at evidence_packs/financial_links_llm_v0/"
+	@echo "  eval-adversarial-llm-v1  run the adversarial slice against llm_candidate_v1 (improved prompt)"
+	@echo "  eval-card-adversarial-llm-v1  render the llm_candidate_v0 (Before) vs llm_candidate_v1 (After) prompt-improvement card"
 	@echo ""
 	@echo "  lint                 run ruff over the repo"
 	@echo ""
@@ -243,6 +245,29 @@ evidence-pack-llm-adversarial: redact-llm-adversarial
 		--redacted-traces traces/redacted/llm_adversarial \
 		--policy configs/redaction_policy.yaml \
 		--out evidence_packs/financial_links_llm_v0
+
+# ---- Opt-in LLM prompt-improvement candidate (v1) ---------------------------
+# llm_candidate_v1 uses the same adapter, model, and deterministic
+# decisions as llm_candidate_v0; only the prompt changes. The v1 prompt
+# explicitly lists every forbidden phrase from the unsupported_claim
+# pattern set and pairs each with a hedged rewrite example. The card
+# target compares llm_candidate_v0 (Before) against llm_candidate_v1
+# (After) so the prompt-improvement delta is directly readable.
+
+eval-adversarial-llm-v1: check-llm-env
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v0.jsonl \
+		--traces-out traces/local/llm_adversarial_v1 \
+		--report-out reports/llm_adversarial_v1_eval.json \
+		--agent-system-version llm_candidate_v1
+
+eval-card-adversarial-llm-v1: eval-adversarial-llm eval-adversarial-llm-v1
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/llm_adversarial_eval.json \
+		--improved-report reports/llm_adversarial_v1_eval.json \
+		--baseline-label Before \
+		--improved-label After \
+		--out reports/llm_adversarial_v1_vs_v0_card.md
 
 lint:
 	uv run ruff check .

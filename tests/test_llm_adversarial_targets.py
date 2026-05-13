@@ -47,8 +47,71 @@ ADVERSARIAL_PATH = (
 
 def test_makefile_has_adversarial_llm_targets() -> None:
     makefile = MAKEFILE.read_text()
-    for target in ("eval-adversarial-llm:", "eval-card-adversarial-llm:"):
+    for target in (
+        "eval-adversarial-llm:",
+        "eval-card-adversarial-llm:",
+        "eval-adversarial-llm-v1:",
+        "eval-card-adversarial-llm-v1:",
+    ):
         assert target in makefile, f"Makefile missing target {target!r}"
+
+
+def test_eval_adversarial_llm_v1_depends_on_check_llm_env() -> None:
+    makefile = MAKEFILE.read_text()
+    match = re.search(
+        r"^eval-adversarial-llm-v1:\s*([^\n]*)$", makefile, flags=re.MULTILINE
+    )
+    assert match is not None, "eval-adversarial-llm-v1 target not found"
+    prereqs = match.group(1).split()
+    assert "check-llm-env" in prereqs, (
+        "eval-adversarial-llm-v1 must list check-llm-env as a prerequisite; "
+        f"got {prereqs}"
+    )
+
+
+def test_eval_card_adversarial_llm_v1_compares_v0_to_v1() -> None:
+    makefile = MAKEFILE.read_text()
+    match = re.search(
+        r"^eval-card-adversarial-llm-v1:\s*([^\n]*)$", makefile, flags=re.MULTILINE
+    )
+    assert match is not None, "eval-card-adversarial-llm-v1 target not found"
+    prereqs = match.group(1).split()
+    # The Before/After card target must depend on both LLM runs so
+    # neither side is stale.
+    assert "eval-adversarial-llm" in prereqs, (
+        f"v1 card must depend on the v0 LLM eval (Before); got {prereqs}"
+    )
+    assert "eval-adversarial-llm-v1" in prereqs, (
+        f"v1 card must depend on the v1 LLM eval (After); got {prereqs}"
+    )
+
+    # Recipe must wire Before/After labels and write the canonical card path.
+    pattern = re.compile(
+        r"^eval-card-adversarial-llm-v1:[^\n]*\n((?:\t[^\n]*\n)+)",
+        re.MULTILINE,
+    )
+    body_match = pattern.search(makefile)
+    assert body_match is not None, "eval-card-adversarial-llm-v1 recipe not found"
+    body = body_match.group(1)
+    assert "reports/llm_adversarial_eval.json" in body
+    assert "reports/llm_adversarial_v1_eval.json" in body
+    assert "--baseline-label Before" in body
+    assert "--improved-label After" in body
+    assert "reports/llm_adversarial_v1_vs_v0_card.md" in body
+
+
+def test_eval_adversarial_llm_v1_runs_the_right_profile_and_paths() -> None:
+    makefile = MAKEFILE.read_text()
+    pattern = re.compile(
+        r"^eval-adversarial-llm-v1:[^\n]*\n((?:\t[^\n]*\n)+)", re.MULTILINE
+    )
+    match = pattern.search(makefile)
+    assert match is not None, "eval-adversarial-llm-v1 recipe not found"
+    body = match.group(1)
+    assert "case_studies/financial_links_reliability/evals/adversarial_v0.jsonl" in body
+    assert "traces/local/llm_adversarial_v1" in body
+    assert "reports/llm_adversarial_v1_eval.json" in body
+    assert "llm_candidate_v1" in body
 
 
 def test_eval_adversarial_llm_depends_on_check_llm_env() -> None:
@@ -150,11 +213,16 @@ _DETERMINISTIC_TARGETS: tuple[str, ...] = (
 
 
 def test_no_deterministic_target_depends_on_adversarial_llm_targets() -> None:
-    """The credential-free public proof loop must not pull in either of the
-    new opt-in adversarial LLM targets."""
+    """The credential-free public proof loop must not pull in any of the
+    opt-in adversarial LLM targets (v0 or v1)."""
 
     makefile = MAKEFILE.read_text()
-    forbidden_prereqs = {"eval-adversarial-llm", "eval-card-adversarial-llm"}
+    forbidden_prereqs = {
+        "eval-adversarial-llm",
+        "eval-card-adversarial-llm",
+        "eval-adversarial-llm-v1",
+        "eval-card-adversarial-llm-v1",
+    }
 
     for target in _DETERMINISTIC_TARGETS:
         pattern = rf"^{re.escape(target)}\s*([^\n]*)$"
@@ -250,17 +318,23 @@ def test_plan_marks_adversarial_llm_path_prepared_but_not_executed() -> None:
 _LLM_ADVERSARIAL_OUTPUT_PATHS: tuple[str, ...] = (
     "reports/llm_adversarial_eval.json",
     "reports/llm_adversarial_eval_card.md",
+    "reports/llm_adversarial_v1_eval.json",
+    "reports/llm_adversarial_v1_vs_v0_card.md",
     "traces/local/llm_adversarial",
+    "traces/local/llm_adversarial_v1",
 )
 
 # Paths that must NEVER be tracked by git — they embed raw LLM draft
 # text and are republished only through the redacted evidence pack at
-# evidence_packs/financial_links_llm_v0/. The corrected card
-# (reports/llm_adversarial_eval_card.md) is intentionally NOT in this
-# list: it has no raw payloads and carries the LLM-aware disclaimer.
+# evidence_packs/financial_links_llm_v0/. The corrected cards
+# (reports/llm_adversarial_eval_card.md and the v0-vs-v1 comparison
+# card) are intentionally NOT in this list: they have no raw payloads
+# and carry the LLM-aware disclaimer.
 _RAW_LLM_ADVERSARIAL_PATHS: tuple[str, ...] = (
     "reports/llm_adversarial_eval.json",
+    "reports/llm_adversarial_v1_eval.json",
     "traces/local/llm_adversarial",
+    "traces/local/llm_adversarial_v1",
 )
 
 

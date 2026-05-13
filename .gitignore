@@ -36,4 +36,5 @@ case_studies/*/traces/raw/
 # evidence_packs/financial_links_llm_v0/.
 traces/local/llm_*/
 reports/llm_adversarial_eval.json
+reports/llm_adversarial_v1_eval.json
 reports/llm_smoke_eval.json

@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -33,6 +33,8 @@ help:
 	@echo "  eval-card-llm-smoke  render improved_v0 vs llm_candidate_v0 comparison card from the smoke reports"
 	@echo "  eval-adversarial-llm     run the adversarial slice against llm_candidate_v0 (fails clean if creds missing)"
 	@echo "  eval-card-adversarial-llm render improved_v0 vs llm_candidate_v0 comparison card on the adversarial slice"
+	@echo "  redact-llm-adversarial   redact every raw LLM adversarial trace under traces/redacted/llm_adversarial/"
+	@echo "  evidence-pack-llm-adversarial  assemble the public-safe LLM evidence pack at evidence_packs/financial_links_llm_v0/"
 	@echo ""
 	@echo "  lint                 run ruff over the repo"
 	@echo ""
@@ -213,6 +215,34 @@ eval-card-adversarial-llm: eval-adversarial-improved eval-adversarial-llm
 		--baseline-label Reference \
 		--improved-label Candidate \
 		--out reports/llm_adversarial_eval_card.md
+
+# ---- Redaction + evidence pack for the opt-in LLM adversarial run ----------
+# These targets operate on on-disk artifacts only — they do NOT call the
+# LLM or require credentials. They assume `make eval-adversarial-llm`
+# has already produced reports/llm_adversarial_eval.json and the raw
+# traces under traces/local/llm_adversarial/. Both raw inputs are
+# gitignored; the redacted outputs + the assembled pack are the only
+# public-safe surface.
+
+redact-llm-adversarial:
+	@mkdir -p traces/redacted/llm_adversarial
+	@for case in case_fl_adv_v0_001 case_fl_adv_v0_002 case_fl_adv_v0_003 case_fl_adv_v0_004 case_fl_adv_v0_005 case_fl_adv_v0_006; do \
+		uv run python scripts/redact_trace.py \
+			--input traces/local/llm_adversarial/$$case.json \
+			--policy configs/redaction_policy.yaml \
+			--output traces/redacted/llm_adversarial/$$case.redacted.json \
+			--report-out traces/redacted/llm_adversarial/$$case.redaction_report.json || exit 1; \
+	done
+
+evidence-pack-llm-adversarial: redact-llm-adversarial
+	uv run python scripts/package_evidence_llm.py \
+		--raw-report reports/llm_adversarial_eval.json \
+		--eval-card reports/llm_adversarial_eval_card.md \
+		--reference-report reports/improved_adversarial_eval.json \
+		--regressions case_studies/financial_links_reliability/evals/regressions_llm_v0.jsonl \
+		--redacted-traces traces/redacted/llm_adversarial \
+		--policy configs/redaction_policy.yaml \
+		--out evidence_packs/financial_links_llm_v0
 
 lint:
 	uv run ruff check .

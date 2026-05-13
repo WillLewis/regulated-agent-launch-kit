@@ -286,6 +286,25 @@ explicitly runs `make eval-card-adversarial-llm` with valid credentials and comm
 resulting `reports/llm_adversarial_eval_card.md`. This card makes no model-safety,
 pilot-readiness, or production-readiness claim.
 
+##### Real LLM traces are handled through a redacted evidence pack
+
+Raw LLM traces (`traces/local/llm_adversarial/*.json`) and the raw JSON eval report
+(`reports/llm_adversarial_eval.json`) embed real model `draft_text` and are treated as
+**raw evidence**. They are gitignored; only the corrected eval card stays tracked
+publicly. To publish public-safe LLM evidence, redact and package after a credentialed
+run:
+
+```bash
+make redact-llm-adversarial          # writes traces/redacted/llm_adversarial/*.{redacted.json,redaction_report.json}
+make evidence-pack-llm-adversarial   # assembles evidence_packs/financial_links_llm_v0/
+```
+
+The pack contains the corrected card, the deterministic reference report, a redacted
+summary of the candidate JSON report, the pinned `regressions_llm_v0.jsonl` seeds, and
+redacted traces + per-trace redaction reports. The pack's README keeps the
+**NOT READY FOR PILOT** posture and makes no model-safety, pilot, regulatory, or
+partner-endorsement claim.
+
 ### Launch posture
 
 **NOT READY FOR PILOT — local synthetic vertical slice only.** This proves the synthetic

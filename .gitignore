@@ -27,3 +27,13 @@ traces/raw/
 case_studies/*/traces/raw/
 .claude/logs/
 .claude/worktrees/
+
+# Real-LLM evidence. The opt-in llm_candidate_v0 path produces raw
+# model traces and a JSON eval report that embeds raw draft excerpts;
+# both are treated as raw evidence and must not ship in the public
+# repo. Publish only redacted artifacts under
+# traces/redacted/llm_adversarial/ and the assembled evidence pack at
+# evidence_packs/financial_links_llm_v0/.
+traces/local/llm_*/
+reports/llm_adversarial_eval.json
+reports/llm_smoke_eval.json

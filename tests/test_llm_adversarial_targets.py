@@ -245,19 +245,37 @@ def test_plan_marks_adversarial_llm_path_prepared_but_not_executed() -> None:
 # Standard suite must not require the adversarial LLM artifacts
 # ---------------------------------------------------------------------------
 
+# Paths that other tests must not depend on (they're produced only by
+# a real LLM run).
 _LLM_ADVERSARIAL_OUTPUT_PATHS: tuple[str, ...] = (
     "reports/llm_adversarial_eval.json",
     "reports/llm_adversarial_eval_card.md",
     "traces/local/llm_adversarial",
 )
 
+# Paths that must NEVER be tracked by git — they embed raw LLM draft
+# text and are republished only through the redacted evidence pack at
+# evidence_packs/financial_links_llm_v0/. The corrected card
+# (reports/llm_adversarial_eval_card.md) is intentionally NOT in this
+# list: it has no raw payloads and carries the LLM-aware disclaimer.
+_RAW_LLM_ADVERSARIAL_PATHS: tuple[str, ...] = (
+    "reports/llm_adversarial_eval.json",
+    "traces/local/llm_adversarial",
+)
+
 
 def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
-    """No other test in the suite may depend on the LLM-only adversarial artifacts."""
+    """No other test in the suite may depend on the LLM-only adversarial artifacts.
 
-    me = Path(__file__).name
+    ``tests/test_evidence_pack_llm.py`` is exempt because it builds its
+    own fixtures in ``tmp_path`` and uses the ``traces/local/...`` path
+    string solely to verify the pack script refuses raw-trace inputs —
+    it never reads from the real on-disk location.
+    """
+
+    exempt = {Path(__file__).name, "test_evidence_pack_llm.py"}
     for test_file in TESTS_DIR.glob("**/*.py"):
-        if test_file.name == me:
+        if test_file.name in exempt:
             continue
         content = test_file.read_text()
         for forbidden in _LLM_ADVERSARIAL_OUTPUT_PATHS:
@@ -267,21 +285,30 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
             )
 
 
-def test_adversarial_llm_artifacts_are_not_committed() -> None:
-    """No LLM-adversarial output may be tracked by git.
+def test_raw_llm_adversarial_outputs_are_not_committed() -> None:
+    """Raw LLM-adversarial outputs may never be tracked by git.
 
-    The opt-in LLM path produces these locally once credentials are
-    present, so it's expected for the files to exist on disk after a
-    run. The invariant the public proof loop relies on is that none of
-    them are *committed* — they would otherwise become public evidence
-    that hasn't been redacted yet. ``git ls-files`` is the source of
-    truth for that.
+    The opt-in LLM path produces real model traces under
+    ``traces/local/llm_adversarial/`` and a JSON eval report at
+    ``reports/llm_adversarial_eval.json`` that embeds raw ``draft_text``
+    / ``draft_excerpt`` content. Both are treated as raw evidence and
+    are gitignored. They must be republished only through the redacted
+    pack at ``evidence_packs/financial_links_llm_v0/``. ``git ls-files``
+    is the source of truth for tracking state.
+
+    The corrected card (``reports/llm_adversarial_eval_card.md``) is
+    explicitly NOT in scope — it carries no raw payloads and is allowed
+    to be tracked publicly with its LLM-aware disclaimer.
     """
 
     import subprocess
 
+    # ``git ls-files`` on a directory path returns all files tracked
+    # under it. Use ``traces/local/llm_adversarial`` (no trailing
+    # ``/*``) so the check catches anything inside without depending on
+    # shell expansion.
     result = subprocess.run(
-        ["git", "-C", str(ROOT), "ls-files", "--", *_LLM_ADVERSARIAL_OUTPUT_PATHS],
+        ["git", "-C", str(ROOT), "ls-files", "--", *_RAW_LLM_ADVERSARIAL_PATHS],
         capture_output=True,
         text=True,
         check=False,
@@ -289,8 +316,9 @@ def test_adversarial_llm_artifacts_are_not_committed() -> None:
     assert result.returncode == 0, result.stderr
     tracked = [line for line in result.stdout.splitlines() if line.strip()]
     assert tracked == [], (
-        "git is tracking LLM-adversarial outputs that must remain local "
-        f"until redacted/packaged: {tracked}"
+        "git is tracking raw LLM-adversarial outputs that embed raw model "
+        "draft text. Untrack them with `git rm --cached` and rely on the "
+        f"redacted evidence pack instead. Tracked: {tracked}"
     )
 
 

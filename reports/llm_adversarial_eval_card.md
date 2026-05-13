@@ -1,6 +1,6 @@
 # Local Eval Card — Financial Links Vertical Slice
 
-> This card is generated from synthetic local eval runs. Identifiers, policies, partner configurations, and risk bands are fabricated for this lab. No production-readiness, regulatory, or partner claim is made by this document. Numbers reflect a deterministic Phase 3 Financial Links runner with no LLM call.
+> This card is generated from synthetic local eval runs. Identifiers, policies, partner configurations, and risk bands are fabricated for this lab. No production-readiness, regulatory, partner, or model-safety claim is made by this document. At least one profile compared here calls a real LLM via the credential-gated `llm_candidate_v0` path; only `draft_text` is model-generated — tool calls, policy citations, approval boundary, and prohibited-action avoidance remain deterministic.
 
 ## Summary
 
@@ -85,9 +85,11 @@ pilot-readiness, or production-readiness claim is made by this document.
 | `L2` measured mean (ms) | 2 | 8123 |
 | `L3` measured mean (ms) | 14 | 10509 |
 
-Cost is a deterministic `0.0` placeholder — the current Phase 3 runner
-makes no model calls. Latency is wall-clock for the deterministic
-runner only. Per-band targets in `configs/latency_budgets.yaml` are
+Cost is currently surfaced as `0.0` because the `llm_candidate_v0`
+adapter does not yet capture `response.usage` tokens — capturing real
+cost is a tracked follow-up. Latency is wall-clock end-to-end for the
+graph node path, which now includes a real LLM call on at least one
+profile. Per-band targets in `configs/latency_budgets.yaml` are
 **synthetic planning envelopes**, not production SLAs, partner
 commitments, or regulatory thresholds.
 
@@ -95,8 +97,9 @@ commitments, or regulatory thresholds.
 
 **NOT READY FOR PILOT — local synthetic vertical slice only; proceed to evaluator catch-rate and regression-loop work.**
 
-Specifically: this lab still owes an `EvaluatorNode` catch-rate grader,
-a regression loop that pins failing traces as future test cases, an
-LLM-backed agent (so cost and latency become meaningful), redacted
-evidence packs, and pilot-readiness review artifacts before any
-launch-readiness recommendation could be made.
+Specifically: this card compares an LLM-backed profile against the
+deterministic reference on a single synthetic adversarial slice. It
+owes: LLM cost capture, a redacted evidence pack covering the LLM
+traces, pinned regression seeds for any new model failures, and
+pilot-readiness review artifacts before any launch-readiness
+recommendation could be made.

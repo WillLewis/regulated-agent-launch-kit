@@ -45,6 +45,35 @@ SYNTHETIC_DISCLAIMER = (
     "Financial Links runner with no LLM call."
 )
 
+LLM_SYNTHETIC_DISCLAIMER = (
+    "This card is generated from synthetic local eval runs. Identifiers, "
+    "policies, partner configurations, and risk bands are fabricated for "
+    "this lab. No production-readiness, regulatory, partner, or "
+    "model-safety claim is made by this document. At least one profile "
+    "compared here calls a real LLM via the credential-gated "
+    "`llm_candidate_v0` path; only `draft_text` is model-generated — "
+    "tool calls, policy citations, approval boundary, and prohibited-"
+    "action avoidance remain deterministic."
+)
+
+
+LLM_PROFILE_PREFIX = "llm_"
+
+
+def _is_llm_profile(agent_system_version: str) -> bool:
+    """True when the named profile routes draft text through the LLM adapter.
+
+    The convention is that any profile whose ``agent_system_version`` starts
+    with ``llm_`` is credential-gated and calls an external model (see
+    ``app/agents/llm_adapter.py``). Today that's ``llm_candidate_v0``; future
+    LLM profiles must keep the prefix so this check stays correct without
+    edits.
+    """
+
+    return bool(agent_system_version) and agent_system_version.startswith(
+        LLM_PROFILE_PREFIX
+    )
+
 
 def _load_report(path: Path) -> EvalReport:
     if not path.exists():
@@ -372,6 +401,50 @@ def render_card(
     )
     regression_block = _regression_seeds_block(regressions or [])
 
+    llm_in_play = _is_llm_profile(baseline.agent_system_version) or _is_llm_profile(
+        improved.agent_system_version
+    )
+    top_disclaimer = (
+        LLM_SYNTHETIC_DISCLAIMER if llm_in_play else SYNTHETIC_DISCLAIMER
+    )
+    operational_rider = (
+        (
+            "Cost is currently surfaced as `0.0` because the `llm_candidate_v0`\n"
+            "adapter does not yet capture `response.usage` tokens — capturing real\n"
+            "cost is a tracked follow-up. Latency is wall-clock end-to-end for the\n"
+            "graph node path, which now includes a real LLM call on at least one\n"
+            "profile. Per-band targets in `configs/latency_budgets.yaml` are\n"
+            "**synthetic planning envelopes**, not production SLAs, partner\n"
+            "commitments, or regulatory thresholds."
+        )
+        if llm_in_play
+        else (
+            "Cost is a deterministic `0.0` placeholder — the current Phase 3 runner\n"
+            "makes no model calls. Latency is wall-clock for the deterministic\n"
+            "runner only. Per-band targets in `configs/latency_budgets.yaml` are\n"
+            "**synthetic planning envelopes**, not production SLAs, partner\n"
+            "commitments, or regulatory thresholds."
+        )
+    )
+    launch_posture_rider = (
+        (
+            "Specifically: this card compares an LLM-backed profile against the\n"
+            "deterministic reference on a single synthetic adversarial slice. It\n"
+            "owes: LLM cost capture, a redacted evidence pack covering the LLM\n"
+            "traces, pinned regression seeds for any new model failures, and\n"
+            "pilot-readiness review artifacts before any launch-readiness\n"
+            "recommendation could be made."
+        )
+        if llm_in_play
+        else (
+            "Specifically: this lab still owes an `EvaluatorNode` catch-rate grader,\n"
+            "a regression loop that pins failing traces as future test cases, an\n"
+            "LLM-backed agent (so cost and latency become meaningful), redacted\n"
+            "evidence packs, and pilot-readiness review artifacts before any\n"
+            "launch-readiness recommendation could be made."
+        )
+    )
+
     closing_paragraph = (
         "This is a synthetic deterministic change set; it demonstrates the eval\n"
         "loop closing on planted failures. Do not infer pilot, production, or\n"
@@ -388,7 +461,7 @@ def render_card(
 
     return f"""# Local Eval Card — Financial Links Vertical Slice
 
-> {SYNTHETIC_DISCLAIMER}
+> {top_disclaimer}
 
 ## Summary
 
@@ -434,21 +507,13 @@ def render_card(
 
 {operational_block}
 
-Cost is a deterministic `0.0` placeholder — the current Phase 3 runner
-makes no model calls. Latency is wall-clock for the deterministic
-runner only. Per-band targets in `configs/latency_budgets.yaml` are
-**synthetic planning envelopes**, not production SLAs, partner
-commitments, or regulatory thresholds.
+{operational_rider}
 
 ## Launch posture
 
 **{LAUNCH_POSTURE}**
 
-Specifically: this lab still owes an `EvaluatorNode` catch-rate grader,
-a regression loop that pins failing traces as future test cases, an
-LLM-backed agent (so cost and latency become meaningful), redacted
-evidence packs, and pilot-readiness review artifacts before any
-launch-readiness recommendation could be made.
+{launch_posture_rider}
 """
 
 

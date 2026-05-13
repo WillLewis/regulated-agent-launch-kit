@@ -268,21 +268,30 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
 
 
 def test_adversarial_llm_artifacts_are_not_committed() -> None:
-    """Standard repo state should not include the LLM adversarial outputs."""
+    """No LLM-adversarial output may be tracked by git.
 
-    for relative in _LLM_ADVERSARIAL_OUTPUT_PATHS:
-        path = ROOT / relative
-        if relative.endswith("llm_adversarial"):
-            if path.exists():
-                assert path.is_dir() and not any(path.iterdir()), (
-                    f"{relative} exists with contents; standard suite assumes "
-                    "no LLM adversarial eval has been run."
-                )
-        else:
-            assert not path.exists(), (
-                f"{relative} is committed/present; standard suite assumes no "
-                "LLM adversarial eval has been run."
-            )
+    The opt-in LLM path produces these locally once credentials are
+    present, so it's expected for the files to exist on disk after a
+    run. The invariant the public proof loop relies on is that none of
+    them are *committed* — they would otherwise become public evidence
+    that hasn't been redacted yet. ``git ls-files`` is the source of
+    truth for that.
+    """
+
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-files", "--", *_LLM_ADVERSARIAL_OUTPUT_PATHS],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    tracked = [line for line in result.stdout.splitlines() if line.strip()]
+    assert tracked == [], (
+        "git is tracking LLM-adversarial outputs that must remain local "
+        f"until redacted/packaged: {tracked}"
+    )
 
 
 # ---------------------------------------------------------------------------

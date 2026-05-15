@@ -141,22 +141,28 @@ def test_readme_links_to_adversarial_dataset_and_card() -> None:
     assert "reports/adversarial_eval_card.md" in readme
 
 
-def test_readme_states_llm_profile_not_yet_evaluated() -> None:
-    """README must make clear that no LLM eval result is in-repo."""
+def test_readme_acknowledges_llm_signal_or_absence() -> None:
+    """README must explicitly frame the LLM signal — either flagging
+    that no run has occurred yet, OR documenting the first credentialed
+    run as honest signal (not a readiness claim). Either framing is
+    acceptable; what's not acceptable is silence."""
 
     readme = README.read_text()
     lower = readme.lower()
-    # Accept any of a few honest framings of the same fact.
+    # Accept either the "no run yet" framing OR the "first credentialed
+    # run committed" framing.
     candidates = (
         "has not yet been evaluated",
         "not yet been evaluated",
         "no llm eval result is in-repo",
         "no llm eval result is in repo",
         "nothing about llm behavior on adversarial cases is being",
+        "first credentialed llm run",
+        "first credentialed run",
     )
     assert any(c in lower for c in candidates), (
-        f"README must state the LLM profile has not been evaluated yet; "
-        f"none of {candidates!r} found"
+        f"README must explicitly frame the LLM signal (either 'not yet "
+        f"evaluated' or 'first credentialed run'); none of {candidates!r} found"
     )
 
 

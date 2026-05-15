@@ -95,9 +95,9 @@
       "samples_by_risk_band": {
         "L3": {
           "count": 1,
-          "max_ms": 14,
-          "min_ms": 14,
-          "mean_ms": 14
+          "max_ms": 16,
+          "min_ms": 16,
+          "mean_ms": 16
         },
         "L1": {
           "count": 3,
@@ -112,7 +112,37 @@
           "mean_ms": 2
         }
       }
-    }
+    },
+    "comparison_by_risk_band": {
+      "L3": {
+        "count": 1,
+        "measured_mean_ms": 16,
+        "measured_max_ms": 16,
+        "p50_ms": 6000,
+        "p95_ms": 12000,
+        "verdict": "within_p50",
+        "mean_vs_p95_ratio": 0.001
+      },
+      "L1": {
+        "count": 3,
+        "measured_mean_ms": 2,
+        "measured_max_ms": 2,
+        "p50_ms": 2000,
+        "p95_ms": 4000,
+        "verdict": "within_p50",
+        "mean_vs_p95_ratio": 0.001
+      },
+      "L2": {
+        "count": 2,
+        "measured_mean_ms": 2,
+        "measured_max_ms": 2,
+        "p50_ms": 3500,
+        "p95_ms": 7000,
+        "verdict": "within_p50",
+        "mean_vs_p95_ratio": 0.0
+      }
+    },
+    "comparison_note": "Per-band comparison of measured mean latency to the synthetic planning envelope (p50/p95). Verdicts are categorical: within_p50, between_p50_and_p95, exceeds_p95, or no_budget. Budgets are synthetic planning envelopes \u2014 not production SLAs, partner commitments, or regulatory thresholds."
   },
   "synthetic_cost_summary": {
     "note": "Cost is a deterministic 0.0 placeholder for this synthetic run \u2014 no external model is called. Real cost surfaces here once an LLM is wired into the runner.",
@@ -271,7 +301,7 @@
       "evaluator_all_ok": true,
       "approval_required": true,
       "passed": true,
-      "latency_ms": 14,
+      "latency_ms": 16,
       "est_cost_usd": 0.0
     },
     {

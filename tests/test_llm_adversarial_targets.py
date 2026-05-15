@@ -7,9 +7,9 @@ enforce, but for the adversarial slice:
    ``eval-card-adversarial-llm`` exist with the right dependency wiring.
 2. No deterministic Make target depends on either target.
 3. The README documents the credential-gated adversarial opt-in run.
-4. PLAN.md says the adversarial LLM run path is prepared / not executed.
-5. No standard test requires the adversarial LLM run artifacts to exist
-   on disk.
+4. PLAN.md records the first credentialed adversarial LLM signal and the
+   deliberate grader-vs-prompt decision now in front of the lab.
+5. No standard test outside this file requires the adversarial LLM artifacts.
 6. ``scripts/generate_eval_card.py`` accepts ``--baseline-label`` /
    ``--improved-label`` without breaking the existing deterministic cards.
 """
@@ -259,10 +259,6 @@ def test_readme_documents_adversarial_llm_opt_in() -> None:
     assert "opt-in" in lower
     assert "credential" in lower
     assert "no silent fallback" in lower
-    # The README must continue to disclose that the LLM has not yet been
-    # evaluated on this slice until the card is in-repo.
-    assert "has not yet been evaluated" in lower or "not yet been evaluated" in lower
-
     # And the newly-added opt-in subsection itself must not contain affirmative
     # safety / readiness / regulatory claims. We isolate the section so the
     # broader README's *disclaimer* uses of these words (e.g. "regulatory" in
@@ -296,17 +292,62 @@ def test_readme_documents_adversarial_llm_opt_in() -> None:
         )
 
 
+def test_readme_documents_first_credentialed_run() -> None:
+    readme = README.read_text()
+    lower = readme.lower()
+    assert "has not yet been evaluated" not in lower, (
+        "README still says the LLM has not been evaluated; flip this now that "
+        "the card is committed."
+    )
+    assert "First credentialed LLM run" in readme
+    assert "4" in readme and "6" in readme
+    assert "UNSAFE_CUSTOMER_COMMS" in readme
+    assert "case_fl_adv_v0_004" in readme
+    assert "case_fl_adv_v0_006" in readme
+    assert "NOT READY FOR PILOT" in readme
+    assert "no affirmative overpromise" in lower
+
+    overclaims = (
+        "production ready",
+        "production-ready",
+        "pilot ready",
+        "pilot-ready",
+        "model is safe",
+        "safe to deploy",
+    )
+    section_marker = "#### First credentialed LLM run"
+    assert section_marker in readme
+    start = readme.index(section_marker)
+    rest = readme[start + len(section_marker):]
+    next_break = len(rest)
+    for marker in ("\n## ", "\n#### ", "\n### "):
+        idx = rest.find(marker)
+        if idx != -1 and idx < next_break:
+            next_break = idx
+    section = rest[:next_break].lower()
+    for forbidden in overclaims:
+        assert forbidden not in section, (
+            f"first-credentialed-run subsection contains overclaim: {forbidden!r}"
+        )
+
+
 def test_plan_marks_adversarial_llm_path_prepared_but_not_executed() -> None:
+    """PLAN must still describe the opt-in adversarial LLM targets and call out
+    that the smoke-slice path has not yet been executed."""
+
     plan = PLAN.read_text()
     lower = plan.lower()
-    # The opt-in adversarial LLM targets must be named in PLAN.
     assert "eval-adversarial-llm" in plan
     assert "eval-card-adversarial-llm" in plan
-    # The path must be described as prepared but not executed.
-    assert "prepared" in lower
-    assert "not yet executed" in lower or "not executed" in lower
-    # The recommended next step is to run the credentialed eval and interpret.
+    assert "smoke slice still un-run" in lower or "smoke-slice opt-in" in lower
     assert "credential" in lower or "anthropic_api_key" in lower
+
+
+def test_plan_marks_adversarial_llm_run_executed() -> None:
+    plan = PLAN.read_text()
+    lower = plan.lower()
+    assert "first credentialed run executed" in lower or "first credentialed run" in lower
+    assert "negation-aware" in lower or "negation aware" in lower
 
 
 # ---------------------------------------------------------------------------
@@ -324,20 +365,6 @@ _LLM_ADVERSARIAL_OUTPUT_PATHS: tuple[str, ...] = (
     "traces/local/llm_adversarial_v1",
 )
 
-# Paths that must NEVER be tracked by git — they embed raw LLM draft
-# text and are republished only through the redacted evidence pack at
-# evidence_packs/financial_links_llm_v0/. The corrected cards
-# (reports/llm_adversarial_eval_card.md and the v0-vs-v1 comparison
-# card) are intentionally NOT in this list: they have no raw payloads
-# and carry the LLM-aware disclaimer.
-_RAW_LLM_ADVERSARIAL_PATHS: tuple[str, ...] = (
-    "reports/llm_adversarial_eval.json",
-    "reports/llm_adversarial_v1_eval.json",
-    "traces/local/llm_adversarial",
-    "traces/local/llm_adversarial_v1",
-)
-
-
 def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
     """No other test in the suite may depend on the LLM-only adversarial artifacts.
 
@@ -347,7 +374,13 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
     it never reads from the real on-disk location.
     """
 
-    exempt = {Path(__file__).name, "test_evidence_pack_llm.py"}
+    exempt = {
+        Path(__file__).name,
+        "test_evidence_pack_llm.py",
+        # Builds its own fixtures + uses the raw-LLM path string only
+        # to verify the card replaces it with a redacted-trace link.
+        "test_eval_card_llm_trace_links.py",
+    }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:
             continue
@@ -359,40 +392,44 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
             )
 
 
-def test_raw_llm_adversarial_outputs_are_not_committed() -> None:
-    """Raw LLM-adversarial outputs may never be tracked by git.
+def test_adversarial_llm_card_and_report_are_committed() -> None:
+    """The first credentialed adversarial LLM run is now in-repo as honest signal."""
 
-    The opt-in LLM path produces real model traces under
-    ``traces/local/llm_adversarial/`` and a JSON eval report at
-    ``reports/llm_adversarial_eval.json`` that embeds raw ``draft_text``
-    / ``draft_excerpt`` content. Both are treated as raw evidence and
-    are gitignored. They must be republished only through the redacted
-    pack at ``evidence_packs/financial_links_llm_v0/``. ``git ls-files``
-    is the source of truth for tracking state.
+    card = ROOT / "reports" / "llm_adversarial_eval_card.md"
+    report = ROOT / "reports" / "llm_adversarial_eval.json"
+    assert card.exists(), (
+        "reports/llm_adversarial_eval_card.md must be committed; it is the "
+        "lab's first credentialed signal on the adversarial slice."
+    )
+    assert report.exists(), (
+        "reports/llm_adversarial_eval.json must be committed alongside the card "
+        "so the numbers are auditable."
+    )
 
-    The corrected card (``reports/llm_adversarial_eval_card.md``) is
-    explicitly NOT in scope — it carries no raw payloads and is allowed
-    to be tracked publicly with its LLM-aware disclaimer.
-    """
+    body = card.read_text()
+    assert "improved_v0" in body
+    assert "llm_candidate_v0" in body
+    assert "NOT READY FOR PILOT" in body
+    assert "Reference" in body
+    assert "Candidate" in body
+
+
+def test_adversarial_llm_traces_stay_local_only() -> None:
+    """Raw LLM traces are not committed (no redaction pass for them yet)."""
 
     import subprocess
 
-    # ``git ls-files`` on a directory path returns all files tracked
-    # under it. Use ``traces/local/llm_adversarial`` (no trailing
-    # ``/*``) so the check catches anything inside without depending on
-    # shell expansion.
     result = subprocess.run(
-        ["git", "-C", str(ROOT), "ls-files", "--", *_RAW_LLM_ADVERSARIAL_PATHS],
+        ["git", "ls-files", "traces/local/llm_adversarial"],
+        cwd=ROOT,
         capture_output=True,
         text=True,
         check=False,
     )
-    assert result.returncode == 0, result.stderr
-    tracked = [line for line in result.stdout.splitlines() if line.strip()]
-    assert tracked == [], (
-        "git is tracking raw LLM-adversarial outputs that embed raw model "
-        "draft text. Untrack them with `git rm --cached` and rely on the "
-        f"redacted evidence pack instead. Tracked: {tracked}"
+    tracked = result.stdout.strip()
+    assert tracked == "", (
+        "raw LLM traces must remain local-only until a redaction pass exists; "
+        f"git ls-files surfaced: {tracked!r}"
     )
 
 

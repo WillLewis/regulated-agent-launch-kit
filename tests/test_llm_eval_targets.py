@@ -214,10 +214,22 @@ def test_readme_documents_optional_llm_run() -> None:
 
 
 def test_plan_marks_llm_run_path_prepared_but_not_executed() -> None:
+    """The smoke-slice LLM opt-in (`make eval-card-llm-smoke`) is still
+    un-executed. PLAN must say so even after the adversarial-slice
+    credentialed run has been committed.
+    """
+
     plan = PLAN.read_text()
     lower = plan.lower()
-    assert "prepared" in lower
-    assert "not yet executed" in lower or "not executed" in lower
+    assert (
+        "smoke-slice opt-in" in lower
+        or "smoke slice still un-run" in lower
+        or "smoke slice un-run" in lower
+    ), (
+        "PLAN must call out that the smoke-slice LLM opt-in has not been run "
+        "(the adversarial-slice credentialed run is in-repo, but the smoke "
+        "path still isn't)."
+    )
 
 
 # ---------------------------------------------------------------------------

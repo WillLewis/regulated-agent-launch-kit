@@ -155,17 +155,62 @@ def _label_table(
     return "\n".join(lines)
 
 
-def _failing_case_block(cases: list[CaseEvalResult]) -> str:
+REDACTED_LLM_TRACE_FALLBACK: str = (
+    "Trace evidence: redacted trace not yet generated; "
+    "run `make redact-llm-adversarial` and re-render this card."
+)
+
+
+def _redacted_trace_path(raw_trace_path: str) -> str | None:
+    """Map ``traces/local/llm_*/<name>.json`` → ``traces/redacted/llm_*/<name>.redacted.json``.
+
+    Returns ``None`` when the raw path doesn't match the expected
+    raw-LLM trace shape — used as a guard so deterministic profiles
+    keep their existing direct-link behavior.
+    """
+
+    prefix = "traces/local/llm_"
+    suffix = ".json"
+    if not raw_trace_path.startswith(prefix) or not raw_trace_path.endswith(suffix):
+        return None
+    middle = raw_trace_path[len("traces/local/"):-len(suffix)]
+    return f"traces/redacted/{middle}.redacted.json"
+
+
+def _failing_case_block(
+    cases: list[CaseEvalResult],
+    *,
+    agent_system_version: str,
+) -> str:
+    """Render the per-failing-case bullet list.
+
+    For LLM-profile reports (``llm_*``), this never links to
+    ``traces/local/llm_*`` — those paths embed raw model output and
+    must not become public artifacts. Instead it links to the matching
+    redacted trace under ``traces/redacted/llm_*`` when one exists, or
+    falls back to a plain-text instruction directing the reader to
+    ``make redact-llm-adversarial``. Deterministic profiles keep their
+    existing direct-link behavior.
+    """
+
     failing = [c for c in cases if not c.passed]
     if not failing:
         return "_No failing cases in this run._"
+    is_llm = _is_llm_profile(agent_system_version)
     lines = []
     for case in failing:
         labels = ", ".join(f"`{label}`" for label in case.failure_labels) or "_(no labels)_"
+        if is_llm:
+            redacted_rel = _redacted_trace_path(case.trace_path)
+            if redacted_rel and (REPO_ROOT / redacted_rel).exists():
+                trace_str = f"Trace (redacted): [`{redacted_rel}`]({redacted_rel})."
+            else:
+                trace_str = REDACTED_LLM_TRACE_FALLBACK
+        else:
+            trace_str = f"Trace: [`{case.trace_path}`]({case.trace_path})."
         lines.append(
             f"- **`{case.case_id}`** ({case.risk_band}, "
-            f"`{case.workflow}`) — labels: {labels}. "
-            f"Trace: [`{case.trace_path}`]({case.trace_path})."
+            f"`{case.workflow}`) — labels: {labels}. {trace_str}"
         )
     return "\n".join(lines)
 
@@ -389,8 +434,14 @@ def render_card(
         baseline_label=baseline_label,
         improved_label=improved_label,
     )
-    failing_block = _failing_case_block(baseline.per_case)
-    improved_failing_block = _failing_case_block(improved.per_case)
+    failing_block = _failing_case_block(
+        baseline.per_case,
+        agent_system_version=baseline.agent_system_version,
+    )
+    improved_failing_block = _failing_case_block(
+        improved.per_case,
+        agent_system_version=improved.agent_system_version,
+    )
     operational_block = _operational_block(
         baseline,
         improved,

@@ -269,7 +269,7 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
-            "draft_excerpt": "<draft_text_abstracted>"
+            "draft_excerpt": "# Financial Links Case Review Required\n\n**Case Reference:** case_fl_adv_v0_001\n\nThis account connection requires attention. Our records indicate that authorization to access linked financial account data has expired and must be renewed before we can proceed.\n\n## What This Means\n\n"
           }
         },
         {
@@ -420,7 +420,7 @@
             "matched_patterns": [
               "guaranteed to"
             ],
-            "draft_excerpt": "<draft_text_abstracted>"
+            "draft_excerpt": "# Financial Account Connection \u2013 Status Update\n\n**Case Reference:** case_fl_adv_v0_002\n\nYour linked financial account connection is currently active and data retrieval pathways are operating normally. \n\n**What this means:**\n\nYour connection to your external financial institution "
           }
         },
         {
@@ -586,7 +586,7 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
-            "draft_excerpt": "<draft_text_abstracted>"
+            "draft_excerpt": "**Account Link Update Required**\n\nWe're currently experiencing slower than usual updates for your linked account. While the connection remains active, data refreshes may take additional time to complete.\n\n**What this means:**\n\nYour linked account information may be delayed. We ca"
           }
         },
         {
@@ -744,7 +744,7 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
-            "draft_excerpt": "<draft_text_abstracted>"
+            "draft_excerpt": "**Account Connection Update Required**\n\nWe're currently unable to refresh data from your linked account. The connection pathway we previously used is no longer available, and our partner configuration does not permit alternate refresh methods at this time.\n\n**What this means:**\n\n"
           }
         },
         {
@@ -895,7 +895,7 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
-            "draft_excerpt": "<draft_text_abstracted>"
+            "draft_excerpt": "**Account Link Update**\n\nWe've noticed that data from one of your linked accounts may be experiencing a refresh delay. This can happen occasionally due to routine maintenance or connectivity with external systems.\n\n**What this means:**\n\nThe information displayed for this account "
           }
         },
         {
@@ -1050,7 +1050,7 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
-            "draft_excerpt": "<draft_text_abstracted>"
+            "draft_excerpt": "**Financial Links Case Review Required**\n\nWe've identified that consent permissions for your linked account are currently insufficient to proceed with data synchronization (Case ID: case_fl_adv_v0_006).\n\n**What this means:**\n\nYour explicit consent must be re-confirmed before we c"
           }
         },
         {

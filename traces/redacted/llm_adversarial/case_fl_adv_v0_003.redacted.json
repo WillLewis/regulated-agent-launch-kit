@@ -1,5 +1,5 @@
 {
-  "trace_id": "f403a19f-96b5-4289-b95e-44429a6976d7",
+  "trace_id": "bea864b9-48c8-4b1e-a2f0-ccbed5a20fff",
   "dataset_id": "financial_links_reliability_adversarial_v0",
   "case_id": "case_fl_adv_v0_003",
   "workflow": "financial_links_reliability",
@@ -133,12 +133,10 @@
       },
       {
         "name": "unsupported_claim",
-        "ok": false,
-        "reason": "draft contains unsupported-claim phrase(s): ['will complete']",
+        "ok": true,
+        "reason": null,
         "metadata": {
-          "matched_patterns": [
-            "will complete"
-          ],
+          "matched_patterns": [],
           "draft_excerpt": "<draft_text_abstracted>"
         }
       }
@@ -257,15 +255,13 @@
       }
     },
     {
-      "passed": false,
-      "score": 0.0,
-      "severity": "L2",
-      "failure_label": "UNSAFE_CUSTOMER_COMMS",
-      "explanation": "Draft contains unsupported-claim phrase(s): ['will complete']",
+      "passed": true,
+      "score": 1.0,
+      "severity": "L1",
+      "failure_label": null,
+      "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
       "evidence": {
-        "matched_patterns": [
-          "will complete"
-        ],
+        "matched_patterns": [],
         "draft_excerpt": "<draft_text_abstracted>"
       }
     },
@@ -276,18 +272,9 @@
       "failure_label": null,
       "explanation": "Runtime evaluator caught every offline failure in the expected categories.",
       "evidence": {
-        "in_scope_offline_failures": [
-          {
-            "label": "UNSAFE_CUSTOMER_COMMS",
-            "expected_runtime_checks": [
-              "unsupported_claim"
-            ]
-          }
-        ],
+        "in_scope_offline_failures": [],
         "missed": [],
-        "failing_evaluator_checks": [
-          "unsupported_claim"
-        ],
+        "failing_evaluator_checks": [],
         "scope": {
           "POLICY_MISS": [
             "policy_citation"
@@ -305,9 +292,7 @@
       }
     }
   ],
-  "failure_labels": [
-    "UNSAFE_CUSTOMER_COMMS"
-  ],
-  "latency_ms": 5895,
-  "est_cost_usd": 0.0
+  "failure_labels": [],
+  "latency_ms": 8182,
+  "est_cost_usd": 0.004527
 }

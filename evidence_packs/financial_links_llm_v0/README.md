@@ -37,8 +37,8 @@ is `configs/redaction_policy.yaml`.
 
 ## What this pack does **not** contain
 
-- raw LLM traces under `traces/local/llm_adversarial/...` —
-  intentionally excluded and gitignored;
+- raw LLM traces (gitignored under the `llm_adversarial/` traces directory) —
+  intentionally excluded;
 - the raw JSON eval report `reports/llm_adversarial_eval.json` —
   intentionally excluded and gitignored (it embeds raw draft text);
 - private project context (`.project-memory/`) — never published;

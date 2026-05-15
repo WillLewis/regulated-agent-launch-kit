@@ -380,6 +380,9 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
         # Builds its own fixtures + uses the raw-LLM path string only
         # to verify the card replaces it with a redacted-trace link.
         "test_eval_card_llm_trace_links.py",
+        # Builds its own fixtures + uses the raw-LLM path string only
+        # to verify the v1 pack assembler refuses raw-trace inputs.
+        "test_evidence_pack_llm_v1.py",
     }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:

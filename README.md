@@ -331,14 +331,31 @@ profile. Re-running the target overwrites the committed card and report; inspect
 before deciding whether a later credentialed result should replace the first signal.
 The card makes no model-safety, pilot-readiness, or production-readiness claim.
 
-##### Prompt-improvement candidate: `llm_candidate_v1`
+##### Prompt-improvement candidate: `llm_candidate_v1` (executed once)
 
 A sibling opt-in profile `llm_candidate_v1` uses the same adapter, model, and
 deterministic decisions as `llm_candidate_v0`. Only the prompt changes — v1
 explicitly enumerates every forbidden phrase from the `unsupported_claim` pattern
 set, pairs each with a hedged rewrite example, and asks the model to self-check
-before returning. It exists so the four `UNSAFE_CUSTOMER_COMMS` failures observed
-on the real v0 adversarial run can be measured as a true before/after delta.
+before returning. It exists so the `UNSAFE_CUSTOMER_COMMS` failures observed on
+real v0 adversarial runs can be measured as a true before/after delta.
+
+**The credentialed v1 comparison has been executed once** against the 6-case
+synthetic `financial_links_reliability_adversarial_v0` slice. Headline numbers
+on that single run: v0 surfaced 1 `UNSAFE_CUSTOMER_COMMS` failure; v1 cleared
+it (6/6 pass). Cost moved from `0.029034 → 0.039237` USD (+35%); latency moved
+modestly. The full evidence-backed write-up lives at
+[`reports/llm_prompt_improvement_memo.md`](reports/llm_prompt_improvement_memo.md);
+the comparison card at
+[`reports/llm_adversarial_v1_vs_v0_card.md`](reports/llm_adversarial_v1_vs_v0_card.md);
+the public-safe evidence pack at
+[`evidence_packs/financial_links_llm_v1/`](evidence_packs/financial_links_llm_v1/).
+This is **not** a model-safety claim, **not** pilot readiness, **not** production
+readiness, and **not** any regulatory claim — it is a single-run, 6-case synthetic
+signal. One run on a small slice cannot prove a prompt is robust; it can only
+measure today's behavior.
+
+To re-run the comparison with credentials available:
 
 ```bash
 make eval-adversarial-llm-v1        # writes reports/llm_adversarial_v1_eval.json
@@ -347,8 +364,15 @@ make eval-card-adversarial-llm-v1    # writes reports/llm_adversarial_v1_vs_v0_c
                                      # (v0 = Before, v1 = After)
 ```
 
-The v1 path is credential-gated and gitignored the same way as v0; no claim
-about how much better v1 is can be made until you actually run it.
+To repackage the v1 public-safe evidence after a re-run (no LLM call):
+
+```bash
+make redact-llm-adversarial-v1       # writes traces/redacted/llm_adversarial_v1/*.{redacted.json,redaction_report.json}
+make evidence-pack-llm-adversarial-v1  # assembles evidence_packs/financial_links_llm_v1/
+```
+
+Raw v1 traces and the raw v1 eval JSON remain local-only and gitignored — the
+public-safe view is the redacted evidence pack and the memo.
 
 ##### Real LLM traces are handled through a redacted evidence pack
 

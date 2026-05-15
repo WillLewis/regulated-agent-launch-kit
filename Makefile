@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -37,6 +37,8 @@ help:
 	@echo "  evidence-pack-llm-adversarial  assemble the public-safe LLM evidence pack at evidence_packs/financial_links_llm_v0/"
 	@echo "  eval-adversarial-llm-v1  run the adversarial slice against llm_candidate_v1 (improved prompt)"
 	@echo "  eval-card-adversarial-llm-v1  render the llm_candidate_v0 (Before) vs llm_candidate_v1 (After) prompt-improvement card"
+	@echo "  redact-llm-adversarial-v1  redact every raw v1 LLM trace under traces/redacted/llm_adversarial_v1/ (no LLM call)"
+	@echo "  evidence-pack-llm-adversarial-v1  assemble the public-safe v1 evidence pack at evidence_packs/financial_links_llm_v1/ (no LLM call)"
 	@echo ""
 	@echo "  lint                 run ruff over the repo"
 	@echo ""
@@ -268,6 +270,55 @@ eval-card-adversarial-llm-v1: eval-adversarial-llm eval-adversarial-llm-v1
 		--baseline-label Before \
 		--improved-label After \
 		--out reports/llm_adversarial_v1_vs_v0_card.md
+
+# ---- v1 redaction + evidence pack -----------------------------------------
+# These targets operate on on-disk artifacts only — they do NOT call the
+# LLM. They assume `make eval-card-adversarial-llm-v1` has already
+# produced reports/llm_adversarial_v1_eval.json and the raw v1 traces
+# under traces/local/llm_adversarial_v1/. Both raw inputs are
+# gitignored; the redacted outputs + the assembled pack are the only
+# public-safe surface for the v1 prompt-improvement loop.
+
+redact-llm-adversarial-v1:
+	@if [ ! -d traces/local/llm_adversarial_v1 ]; then \
+		echo "ERROR: traces/local/llm_adversarial_v1/ not found."; \
+		echo "  Hint: run \`make eval-card-adversarial-llm-v1\` (credentialed) first."; \
+		exit 1; \
+	fi
+	@if [ ! -f reports/llm_adversarial_v1_eval.json ]; then \
+		echo "ERROR: reports/llm_adversarial_v1_eval.json not found."; \
+		echo "  Hint: run \`make eval-card-adversarial-llm-v1\` (credentialed) first."; \
+		exit 1; \
+	fi
+	@mkdir -p traces/redacted/llm_adversarial_v1
+	@for case in case_fl_adv_v0_001 case_fl_adv_v0_002 case_fl_adv_v0_003 case_fl_adv_v0_004 case_fl_adv_v0_005 case_fl_adv_v0_006; do \
+		uv run python scripts/redact_trace.py \
+			--input traces/local/llm_adversarial_v1/$$case.json \
+			--policy configs/redaction_policy.yaml \
+			--output traces/redacted/llm_adversarial_v1/$$case.redacted.json \
+			--report-out traces/redacted/llm_adversarial_v1/$$case.redaction_report.json || exit 1; \
+	done
+
+evidence-pack-llm-adversarial-v1: redact-llm-adversarial-v1
+	@if [ ! -f reports/llm_adversarial_v1_eval.json ]; then \
+		echo "ERROR: reports/llm_adversarial_v1_eval.json not found."; \
+		echo "  Hint: run \`make eval-card-adversarial-llm-v1\` (credentialed) first."; \
+		exit 1; \
+	fi
+	@if [ ! -f reports/llm_adversarial_eval.json ]; then \
+		echo "ERROR: reports/llm_adversarial_eval.json not found (Before report)."; \
+		echo "  Hint: run \`make eval-adversarial-llm\` (credentialed) first."; \
+		exit 1; \
+	fi
+	uv run python scripts/package_evidence_llm_v1.py \
+		--raw-v0-report reports/llm_adversarial_eval.json \
+		--raw-v1-report reports/llm_adversarial_v1_eval.json \
+		--eval-card reports/llm_adversarial_v1_vs_v0_card.md \
+		--regressions case_studies/financial_links_reliability/evals/regressions_llm_v0.jsonl \
+		--redacted-traces traces/redacted/llm_adversarial_v1 \
+		--policy configs/redaction_policy.yaml \
+		--improvement-memo reports/llm_prompt_improvement_memo.md \
+		--out evidence_packs/financial_links_llm_v1
 
 lint:
 	uv run ruff check .

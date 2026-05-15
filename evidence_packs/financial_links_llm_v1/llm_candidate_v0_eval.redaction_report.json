@@ -1,0 +1,55 @@
+{
+  "version": "redaction_report_v0",
+  "synthetic": true,
+  "policy_version": "redaction_policy_v0",
+  "removed_paths": [],
+  "abstracted_paths": [
+    "$.per_case[0].grader_results[6].evidence.draft_excerpt",
+    "$.per_case[1].grader_results[6].evidence.draft_excerpt",
+    "$.per_case[2].grader_results[6].evidence.draft_excerpt",
+    "$.per_case[3].grader_results[6].evidence.draft_excerpt",
+    "$.per_case[4].grader_results[6].evidence.draft_excerpt",
+    "$.per_case[5].grader_results[6].evidence.draft_excerpt"
+  ],
+  "preserved_top_level_fields": [
+    "agent_system_version"
+  ],
+  "preserve_fields_missing": [
+    "trace_id",
+    "dataset_id",
+    "case_id",
+    "workflow",
+    "risk_band",
+    "policy_version",
+    "orchestrator_decision",
+    "specialist_path",
+    "handoff",
+    "tool_calls",
+    "evaluator_report",
+    "approval",
+    "grader_results",
+    "failure_labels",
+    "latency_ms",
+    "est_cost_usd"
+  ],
+  "uncovered_top_level_fields": [
+    "version",
+    "synthetic",
+    "dataset_path",
+    "case_count",
+    "passed_case_count",
+    "failed_case_count",
+    "aggregate_grader_pass_rates",
+    "failure_label_counts",
+    "synthetic_latency_envelope",
+    "synthetic_cost_summary",
+    "per_case"
+  ],
+  "summary": {
+    "removed_count": 0,
+    "abstracted_count": 6,
+    "preserved_count": 1,
+    "preserve_missing_count": 16,
+    "uncovered_count": 11
+  }
+}

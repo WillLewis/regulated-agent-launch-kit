@@ -28,9 +28,12 @@ case_studies/*/traces/raw/
 .claude/logs/
 .claude/worktrees/
 
-# Real-LLM raw traces stay local unless a redaction pass packages them.
-# The first v0 adversarial report JSON is tracked as an audit artifact;
-# raw per-case traces remain excluded from version control.
+# Real-LLM raw evidence stays local unless a redaction pass packages
+# it. Raw per-case traces and raw per-run JSON eval reports both embed
+# raw model `draft_text` / `draft_excerpt` content and are treated as
+# raw evidence. The public-safe view is the redacted summary inside
+# evidence_packs/financial_links_llm_v*/ and the matching cards/memos.
 traces/local/llm_*/
+reports/llm_adversarial_eval.json
 reports/llm_adversarial_v1_eval.json
 reports/llm_smoke_eval.json

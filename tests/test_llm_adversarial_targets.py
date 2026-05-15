@@ -383,6 +383,10 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
         # Builds its own fixtures + uses the raw-LLM path string only
         # to verify the v1 pack assembler refuses raw-trace inputs.
         "test_evidence_pack_llm_v1.py",
+        # Asserts the raw-LLM eval JSONs stay gitignored — references
+        # the path strings only to assert non-tracking, never to read
+        # the files.
+        "test_llm_prompt_improvement_memo.py",
     }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:
@@ -395,18 +399,45 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
             )
 
 
-def test_adversarial_llm_card_and_report_are_committed() -> None:
-    """The first credentialed adversarial LLM run is now in-repo as honest signal."""
+def test_adversarial_llm_card_is_committed_and_report_is_not() -> None:
+    """The first credentialed adversarial LLM run lives as public-safe
+    signal: the corrected card is tracked (no raw drafts, no raw trace
+    links); the raw JSON eval report stays local-only because it
+    embeds raw model `draft_excerpt` content. The public-safe view of
+    the report is the redacted summary inside the LLM evidence pack."""
+
+    import subprocess
 
     card = ROOT / "reports" / "llm_adversarial_eval_card.md"
-    report = ROOT / "reports" / "llm_adversarial_eval.json"
     assert card.exists(), (
         "reports/llm_adversarial_eval_card.md must be committed; it is the "
         "lab's first credentialed signal on the adversarial slice."
     )
-    assert report.exists(), (
-        "reports/llm_adversarial_eval.json must be committed alongside the card "
-        "so the numbers are auditable."
+
+    # The card is tracked.
+    tracked = subprocess.run(
+        ["git", "ls-files", "reports/llm_adversarial_eval_card.md"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    assert tracked == "reports/llm_adversarial_eval_card.md"
+
+    # The raw JSON report must NOT be tracked — it carries raw
+    # `draft_excerpt` payloads. The redacted summary inside
+    # evidence_packs/financial_links_llm_v0/ is the public-safe view.
+    raw_tracked = subprocess.run(
+        ["git", "ls-files", "reports/llm_adversarial_eval.json"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    assert raw_tracked == "", (
+        "reports/llm_adversarial_eval.json must remain local-only — it "
+        "embeds raw LLM draft text. Public-safe view: "
+        "evidence_packs/financial_links_llm_v0/llm_candidate_eval.redacted.json."
     )
 
     body = card.read_text()

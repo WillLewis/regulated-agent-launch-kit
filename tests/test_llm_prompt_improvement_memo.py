@@ -144,6 +144,48 @@ def test_plan_marks_v1_executed_once_without_overclaim() -> None:
 # ---------------------------------------------------------------------------
 
 
+def test_no_raw_llm_evidence_is_tracked_by_git() -> None:
+    """Raw LLM evidence must stay local. ``reports/llm_*_eval.json``
+    files embed raw model output (in ``draft_excerpt`` evidence
+    blocks); ``traces/local/llm_*/`` files embed full draft / final
+    response payloads. Both are gitignored. The public-safe view is
+    the redacted summary + redacted traces inside the LLM evidence
+    packs, plus the corrected cards."""
+
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "ls-files", "traces/local/llm_*", "reports/llm_*_eval.json"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    tracked = [line for line in result.stdout.splitlines() if line.strip()]
+    assert tracked == [], (
+        "raw LLM evidence is tracked by git; untrack with `git rm --cached` "
+        "and confirm `.gitignore` covers the path. Tracked: "
+        f"{tracked}"
+    )
+
+
+def test_gitignore_excludes_raw_llm_eval_reports() -> None:
+    """Defense-in-depth: the gitignore must explicitly cover both the
+    v0 and v1 raw LLM eval JSON reports, not just the trace dir. If a
+    future eval script writes to a similar path we still want it
+    excluded."""
+
+    gitignore = (ROOT / ".gitignore").read_text()
+    for required in (
+        "traces/local/llm_*",
+        "reports/llm_adversarial_eval.json",
+        "reports/llm_adversarial_v1_eval.json",
+    ):
+        assert required in gitignore, (
+            f".gitignore must list {required!r} so raw LLM evidence stays local"
+        )
+
+
 def test_no_tracked_markdown_links_raw_local_llm_paths() -> None:
     """Defense-in-depth: re-run the substring scan across every tracked
     markdown file. The two previous turns enforced this; keep the

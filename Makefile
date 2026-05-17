@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 variance-report-fixture
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -39,6 +39,7 @@ help:
 	@echo "  eval-card-adversarial-llm-v1  render the llm_candidate_v0 (Before) vs llm_candidate_v1 (After) prompt-improvement card"
 	@echo "  redact-llm-adversarial-v1  redact every raw v1 LLM trace under traces/redacted/llm_adversarial_v1/ (no LLM call)"
 	@echo "  evidence-pack-llm-adversarial-v1  assemble the public-safe v1 evidence pack at evidence_packs/financial_links_llm_v1/ (no LLM call)"
+	@echo "  variance-report-fixture  demo: aggregate tests/fixtures/llm_repeats/*.json (no LLM call; demo output gitignored)"
 	@echo ""
 	@echo "  lint                 run ruff over the repo"
 	@echo ""
@@ -319,6 +320,23 @@ evidence-pack-llm-adversarial-v1: redact-llm-adversarial-v1
 		--policy configs/redaction_policy.yaml \
 		--improvement-memo reports/llm_prompt_improvement_memo.md \
 		--out evidence_packs/financial_links_llm_v1
+
+# ---- Repeat-run variance aggregation (no LLM call) -------------------------
+# Demo target: aggregate three tracked fixture reports under
+# tests/fixtures/llm_repeats/ and write a sample Markdown + JSON
+# summary. The fixture reports are HAND-CRAFTED for variance-detection
+# testing; they are not real LLM outputs. The demo output paths are
+# gitignored so this target can be re-run safely. Real credentialed
+# repeat runs are a future opt-in chunk and are not wired into any
+# Make target yet.
+
+variance-report-fixture:
+	uv run python scripts/aggregate_llm_repeats.py \
+		--report tests/fixtures/llm_repeats/run1.json \
+		--report tests/fixtures/llm_repeats/run2.json \
+		--report tests/fixtures/llm_repeats/run3.json \
+		--out-md reports/llm_repeat_summary_fixture.md \
+		--out-json reports/llm_repeat_summary_fixture.json
 
 lint:
 	uv run ruff check .

@@ -1,0 +1,27 @@
+{
+  "version": "local_eval_v0",
+  "synthetic": true,
+  "agent_system_version": "llm_candidate_v0",
+  "dataset_path": "case_studies/financial_links_reliability/evals/adversarial_v0.jsonl",
+  "case_count": 6,
+  "passed_case_count": 5,
+  "failed_case_count": 1,
+  "aggregate_grader_pass_rates": [],
+  "failure_label_counts": {},
+  "synthetic_latency_envelope": {
+    "comparison_by_risk_band": {
+      "L1": {"count": 3, "measured_mean_ms": 8600, "measured_max_ms": 9000, "p50_ms": 2000, "p95_ms": 4000, "verdict": "exceeds_p95", "mean_vs_p95_ratio": 2.15},
+      "L2": {"count": 2, "measured_mean_ms": 8200, "measured_max_ms": 9100, "p50_ms": 3500, "p95_ms": 7000, "verdict": "exceeds_p95", "mean_vs_p95_ratio": 1.17},
+      "L3": {"count": 1, "measured_mean_ms": 10800, "measured_max_ms": 10800, "p50_ms": 6000, "p95_ms": 12000, "verdict": "between_p50_and_p95", "mean_vs_p95_ratio": 0.9}
+    }
+  },
+  "synthetic_cost_summary": {"total_est_cost_usd": 0.029, "per_case_count": 6},
+  "per_case": [
+    {"case_id": "case_fl_adv_v0_001", "workflow": "financial_links_reliability", "risk_band": "L3", "trace_path": "x", "grader_results": [], "failure_labels": [], "evaluator_all_ok": true, "approval_required": true, "passed": true, "latency_ms": 10800, "est_cost_usd": 0.005},
+    {"case_id": "case_fl_adv_v0_002", "workflow": "financial_links_reliability", "risk_band": "L1", "trace_path": "x", "grader_results": [], "failure_labels": [], "evaluator_all_ok": false, "approval_required": false, "passed": false, "latency_ms": 8400, "est_cost_usd": 0.004},
+    {"case_id": "case_fl_adv_v0_003", "workflow": "financial_links_reliability", "risk_band": "L1", "trace_path": "x", "grader_results": [], "failure_labels": [], "evaluator_all_ok": true, "approval_required": false, "passed": true, "latency_ms": 8800, "est_cost_usd": 0.005},
+    {"case_id": "case_fl_adv_v0_004", "workflow": "financial_links_reliability", "risk_band": "L2", "trace_path": "x", "grader_results": [], "failure_labels": [], "evaluator_all_ok": true, "approval_required": true, "passed": true, "latency_ms": 9100, "est_cost_usd": 0.005},
+    {"case_id": "case_fl_adv_v0_005", "workflow": "financial_links_reliability", "risk_band": "L1", "trace_path": "x", "grader_results": [], "failure_labels": [], "evaluator_all_ok": true, "approval_required": false, "passed": true, "latency_ms": 8600, "est_cost_usd": 0.005},
+    {"case_id": "case_fl_adv_v0_006", "workflow": "financial_links_reliability", "risk_band": "L2", "trace_path": "x", "grader_results": [], "failure_labels": [], "evaluator_all_ok": true, "approval_required": true, "passed": true, "latency_ms": 7300, "est_cost_usd": 0.005}
+  ]
+}

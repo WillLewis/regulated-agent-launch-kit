@@ -37,3 +37,10 @@ traces/local/llm_*/
 reports/llm_adversarial_eval.json
 reports/llm_adversarial_v1_eval.json
 reports/llm_smoke_eval.json
+
+# Repeat-run aggregation demo outputs from the variance-report-fixture
+# Make target. The fixture inputs under tests/fixtures/llm_repeats/ are
+# tracked; the rendered demo outputs are not, so the target can be
+# re-run without polluting the tree.
+reports/llm_repeat_summary_fixture.md
+reports/llm_repeat_summary_fixture.json

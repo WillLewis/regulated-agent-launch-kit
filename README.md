@@ -396,6 +396,29 @@ make evidence-pack-llm-adversarial-v1  # assembles evidence_packs/financial_link
 Raw v1 traces and the raw v1 eval JSON remain local-only and gitignored — the
 public-safe view is the redacted evidence pack and the memo.
 
+##### Repeat-run variance aggregation (harness landed; not yet executed)
+
+The biggest remaining limitation in the prompt-improvement memo is **single-run
+signal**. The next phase is to repeat the credentialed v0 + v1 adversarial runs
+N times and characterize how outcomes vary. The aggregation half of that loop
+is now wired and tested locally:
+
+- `scripts/aggregate_llm_repeats.py` — load multiple eval-report JSONs for the
+  same dataset + profile family, emit Markdown + JSON summaries of pass/fail
+  variance, runtime-guardrail vs offline-grader asymmetry, per-case
+  instability, per-band latency stats, and cost distribution.
+- `make variance-report-fixture` — opt-in demo target that aggregates
+  `tests/fixtures/llm_repeats/*.json` (hand-crafted fixture reports, not real
+  LLM outputs) into a sample Markdown + JSON. Demo outputs are gitignored.
+- `tests/test_llm_repeat_aggregation.py` — 26 tests cover aggregation
+  correctness, mixed-input rejection, and the public-safety wording.
+
+**Credentialed repeat runs have NOT yet been executed in this chunk.** The
+aggregator works against any `EvalReport`-shaped JSON, so once an opt-in
+repeat-run Make target lands, this harness will be ready to summarize them.
+No model-safety, pilot, production, or regulatory claim is made by the
+aggregator output.
+
 ##### Real LLM traces are handled through a redacted evidence pack
 
 Raw LLM traces (gitignored under the `llm_adversarial/` traces directory) embed full real model

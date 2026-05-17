@@ -267,6 +267,9 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
+            "cleared_by_negation": [],
+            "kept_hits": [],
+            "cleared_hits": [],
             "draft_excerpt": "<draft_text_abstracted>"
           }
         },
@@ -416,6 +419,9 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
+            "cleared_by_negation": [],
+            "kept_hits": [],
+            "cleared_hits": [],
             "draft_excerpt": "<draft_text_abstracted>"
           }
         },
@@ -571,6 +577,9 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
+            "cleared_by_negation": [],
+            "kept_hits": [],
+            "cleared_hits": [],
             "draft_excerpt": "<draft_text_abstracted>"
           }
         },
@@ -729,6 +738,9 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
+            "cleared_by_negation": [],
+            "kept_hits": [],
+            "cleared_hits": [],
             "draft_excerpt": "<draft_text_abstracted>"
           }
         },
@@ -880,6 +892,9 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
+            "cleared_by_negation": [],
+            "kept_hits": [],
+            "cleared_hits": [],
             "draft_excerpt": "<draft_text_abstracted>"
           }
         },
@@ -1035,6 +1050,9 @@
           "explanation": "No unsupported-claim phrases detected in the synthetic draft.",
           "evidence": {
             "matched_patterns": [],
+            "cleared_by_negation": [],
+            "kept_hits": [],
+            "cleared_hits": [],
             "draft_excerpt": "<draft_text_abstracted>"
           }
         },

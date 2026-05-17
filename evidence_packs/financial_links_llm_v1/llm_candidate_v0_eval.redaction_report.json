@@ -5,6 +5,7 @@
   "removed_paths": [],
   "abstracted_paths": [
     "$.per_case[0].grader_results[6].evidence.draft_excerpt",
+    "$.per_case[1].grader_results[6].evidence.cleared_hits[0].draft_excerpt",
     "$.per_case[1].grader_results[6].evidence.draft_excerpt",
     "$.per_case[2].grader_results[6].evidence.draft_excerpt",
     "$.per_case[3].grader_results[6].evidence.draft_excerpt",
@@ -47,7 +48,7 @@
   ],
   "summary": {
     "removed_count": 0,
-    "abstracted_count": 6,
+    "abstracted_count": 7,
     "preserved_count": 1,
     "preserve_missing_count": 16,
     "uncovered_count": 11

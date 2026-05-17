@@ -60,6 +60,24 @@ LLM_SYNTHETIC_DISCLAIMER = (
 LLM_PROFILE_PREFIX = "llm_"
 
 
+LLM_RUNTIME_OFFLINE_ASYMMETRY_NOTE: str = (
+    "**Why a case can be marked failed with zero failure labels.** The "
+    "runtime evaluator (`app/evaluator.py::unsupported_claim_check`) is a "
+    "conservative substring guardrail and fires whenever a draft contains "
+    "any phrase from its small canonical pattern list — even inside a "
+    "negation. The offline grader "
+    "(`evals/graders.py::grade_unsupported_claim`) is negation-aware and "
+    "clears same-sentence negated hits. On a case where the runtime "
+    "guardrail fires on hedged-but-negated language that the offline "
+    "grader clears, the overall case is marked failed (because "
+    "`evaluator_all_ok` is false) but `failure_labels` is empty. Inspect "
+    "the per-case `unsupported_claim` grader evidence's "
+    "`cleared_by_negation` field for the cleared patterns. This "
+    "guardrail-vs-audit asymmetry is intentional and is **not** an "
+    "`EVALUATOR_MISS`."
+)
+
+
 def _is_llm_profile(agent_system_version: str) -> bool:
     """True when the named profile routes draft text through the LLM adapter.
 
@@ -529,6 +547,14 @@ def render_card(
     top_disclaimer = (
         LLM_SYNTHETIC_DISCLAIMER if llm_in_play else SYNTHETIC_DISCLAIMER
     )
+    # On LLM-paired cards the runtime guardrail can fire on hedged-but-
+    # negated language that the negation-aware offline grader clears,
+    # so a case can show up as "failed" with zero failure_labels.
+    # Inject a short explainer near the failing-case section. Deterministic
+    # cards omit the block.
+    asymmetry_block = (
+        f"\n{LLM_RUNTIME_OFFLINE_ASYMMETRY_NOTE}\n" if llm_in_play else ""
+    )
     operational_rider = (
         (
             "Cost is estimated from `response.usage` tokens via Anthropic's public\n"
@@ -611,7 +637,7 @@ def render_card(
 ## Regression seeds
 
 {regression_block}
-
+{asymmetry_block}
 ## What failed in {baseline_label.lower()}
 
 {failing_block}

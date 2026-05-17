@@ -300,12 +300,18 @@ def test_readme_documents_first_credentialed_run() -> None:
         "the card is committed."
     )
     assert "First credentialed LLM run" in readme
-    assert "4" in readme and "6" in readme
+    assert "6" in readme  # six-case slice
     assert "UNSAFE_CUSTOMER_COMMS" in readme
-    assert "case_fl_adv_v0_004" in readme
-    assert "case_fl_adv_v0_006" in readme
+    # Post-grader-upgrade: the canonical worked example is case_fl_adv_v0_002
+    # (runtime guardrail fires on hedged-but-negated language that the
+    # offline negation-aware grader clears). The pre-upgrade "two failures
+    # on cases _004 + _006" framing is gone.
+    assert "case_fl_adv_v0_002" in readme, (
+        "README first-run section must cite case_fl_adv_v0_002 as the "
+        "canonical worked example of the runtime-vs-offline asymmetry"
+    )
     assert "NOT READY FOR PILOT" in readme
-    assert "no affirmative overpromise" in lower
+    assert "no affirmative" in lower or "negation-aware" in lower
 
     overclaims = (
         "production ready",
@@ -387,6 +393,10 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
         # the path strings only to assert non-tracking, never to read
         # the files.
         "test_llm_prompt_improvement_memo.py",
+        # Asserts the committed LLM cards carry the runtime/offline
+        # asymmetry note — references the card paths only for that
+        # docs-consistency check.
+        "test_unsupported_claim_consistency.py",
     }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:

@@ -54,6 +54,8 @@ The runtime evaluator (`app/evaluator.py`) should catch failures in a small, exp
 
 _No regression seeds linked into this card._
 
+**Why a case can be marked failed with zero failure labels.** The runtime evaluator (`app/evaluator.py::unsupported_claim_check`) is a conservative substring guardrail and fires whenever a draft contains any phrase from its small canonical pattern list — even inside a negation. The offline grader (`evals/graders.py::grade_unsupported_claim`) is negation-aware and clears same-sentence negated hits. On a case where the runtime guardrail fires on hedged-but-negated language that the offline grader clears, the overall case is marked failed (because `evaluator_all_ok` is false) but `failure_labels` is empty. Inspect the per-case `unsupported_claim` grader evidence's `cleared_by_negation` field for the cleared patterns. This guardrail-vs-audit asymmetry is intentional and is **not** an `EVALUATOR_MISS`.
+
 ## What failed in reference
 
 _No failing cases in this run._

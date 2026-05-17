@@ -170,11 +170,27 @@ def policy_citation_check(
 
 
 def unsupported_claim_check(output: AgentOutput) -> EvaluatorCheck:
-    """Flag drafts containing a small set of unsupported-claim patterns.
+    """Conservative substring guardrail for unsupported-claim phrases.
 
-    Runtime mirror of ``evals.graders.grade_unsupported_claim``. Held
-    independent of the offline grader's pattern list on purpose; the
-    catch-rate grader will surface any drift as EVALUATOR_MISS.
+    This runtime check fires whenever a draft contains any phrase from
+    ``_RUNTIME_UNSUPPORTED_CLAIM_PATTERNS`` — even inside a negation.
+    It is **intentionally stricter** than the offline
+    ``evals.graders.grade_unsupported_claim`` audit grader, which is
+    negation-aware and clears same-sentence negated hits. The runtime
+    errs toward asking for analyst review; the offline grader gives the
+    more precise after-the-fact read.
+
+    The asymmetry is deliberate and is locked by
+    ``tests/test_grade_unsupported_claim_negation.py::test_runtime_evaluator_remains_conservative_on_negated_phrasing``.
+
+    Note on catch-rate: ``evals.graders.grade_evaluator_catch_rate`` asks
+    whether the runtime caught the offline grader's failures (i.e.
+    measures offline failures the runtime missed → ``EVALUATOR_MISS``).
+    The opposite direction — runtime fires, offline clears — is the
+    expected guardrail-vs-audit behavior on hedged/negated drafts and
+    is **not** an ``EVALUATOR_MISS``; the offline grader records the
+    cleared patterns under ``cleared_by_negation`` in evidence so a
+    reviewer can audit the call.
     """
 
     draft = (output.draft_text or "").lower()

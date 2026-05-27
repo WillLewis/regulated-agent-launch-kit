@@ -16,6 +16,8 @@ artifact below is generated from on-disk inputs:
 - `llm_candidate_v1_eval.redacted.json` — v1 (After) JSON eval report with raw draft text abstracted and IDs removed.
 - `llm_candidate_v1_eval.redaction_report.json` — Redaction report for the v1 JSON eval.
 - `regressions_llm_v0.jsonl` — Pinned pending_review regression seeds derived from v0 failures; still useful context for the improvement loop.
+- `repeat_run_summary.md` — Public-safe repeat-run variance summary aggregated from credentialed repeat-run capture (no raw draft text, no raw trace paths).
+- `repeat_run_summary.json` — Machine-readable repeat-run variance summary (per-run pass/fail, runtime-vs-offline asymmetry, per-case instability, latency by band, cost distribution).
 - `traces/redacted/case_fl_adv_v0_001.redacted.json` — Redacted synthetic v1 LLM trace.
 - `traces/redacted/case_fl_adv_v0_002.redacted.json` — Redacted synthetic v1 LLM trace.
 - `traces/redacted/case_fl_adv_v0_003.redacted.json` — Redacted synthetic v1 LLM trace.
@@ -61,9 +63,15 @@ candidate's redacted JSON eval summary. The redaction policy used is
 5. `regressions_llm_v0.jsonl` lists the pending-review regression seeds
    that captured v0 failure modes; they remain useful context for the
    improvement loop.
-6. `traces/redacted/*.redacted.json` show the synthetic v1 trace shape
+6. `repeat_run_summary.md` / `repeat_run_summary.json` (when present)
+   are the public-safe aggregated outputs of a credentialed repeat-run
+   capture (N runs × the same adversarial slice for each profile).
+   They describe run-to-run variance — pass/fail per run, runtime-vs-
+   offline asymmetry, per-case instability, per-band latency, and cost
+   distribution — without any raw draft text or raw trace path.
+7. `traces/redacted/*.redacted.json` show the synthetic v1 trace shape
    an analyst can reason about without raw model output.
-7. `manifest.json` is the machine-readable index.
+8. `manifest.json` is the machine-readable index.
 
 ## Launch posture
 

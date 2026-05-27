@@ -364,3 +364,107 @@ def test_committed_v1_pack_has_no_raw_trace_paths_if_present() -> None:
     for path in COMMITTED_V1_PACK.rglob("*"):
         rel = path.relative_to(COMMITTED_V1_PACK).as_posix()
         assert "traces/local/" not in rel, f"raw-trace path leak: {rel}"
+
+
+# ---------------------------------------------------------------------------
+# Optional repeat-run summary integration
+# ---------------------------------------------------------------------------
+
+
+def _write_public_safe_summary(dirpath: Path) -> tuple[Path, Path]:
+    dirpath.mkdir(parents=True, exist_ok=True)
+    md = dirpath / "summary.md"
+    md.write_text(
+        "# LLM Repeat-Run Variance Summary\n\n"
+        "> Synthetic local eval runs only. NOT READY FOR PILOT.\n\n"
+        "## Pass / fail variance\n\n"
+        "| Metric | Per-run sequence |\n"
+        "|---|---|\n"
+        "| Passed | [5, 6] |\n"
+        "| Failed | [1, 0] |\n\n"
+        "**NOT READY FOR PILOT — synthetic slice.**\n"
+    )
+    js = dirpath / "summary.json"
+    js.write_text(
+        json.dumps(
+            {
+                "version": "llm_repeat_summary_v0",
+                "synthetic": True,
+                "not_ready_for_pilot": True,
+                "run_count": 2,
+                "profile_family": ["llm_candidate_v0"],
+                "pass_per_run": [5, 6],
+            },
+            indent=2,
+        )
+    )
+    return md, js
+
+
+def test_v1_pack_with_repeat_summary_indexes_and_ships_files(
+    tmp_path: Path, synthetic_v1_pack_inputs: dict[str, Path]
+) -> None:
+    md, js = _write_public_safe_summary(tmp_path / "summary_inputs")
+    out = tmp_path / "pack_with_repeats"
+    package_llm_v1_evidence(
+        out=out,
+        repeat_summary_md=md,
+        repeat_summary_json=js,
+        **synthetic_v1_pack_inputs,
+    )
+    assert (out / "repeat_run_summary.md").exists()
+    assert (out / "repeat_run_summary.json").exists()
+    manifest = json.loads((out / "manifest.json").read_text())
+    paths = {entry["path"] for entry in manifest["files"]}
+    assert "repeat_run_summary.md" in paths
+    assert "repeat_run_summary.json" in paths
+
+
+def test_v1_pack_refuses_repeat_summary_md_with_raw_paths(
+    tmp_path: Path, synthetic_v1_pack_inputs: dict[str, Path]
+) -> None:
+    md, js = _write_public_safe_summary(tmp_path / "summary_inputs")
+    md.write_text(md.read_text() + "\nleaked: traces/local/llm_adversarial/foo.json\n")
+    out = tmp_path / "pack_leak"
+    with pytest.raises(SystemExit) as exc:
+        package_llm_v1_evidence(
+            out=out,
+            repeat_summary_md=md,
+            repeat_summary_json=js,
+            **synthetic_v1_pack_inputs,
+        )
+    assert "traces/local/llm_" in str(exc.value)
+
+
+def test_v1_pack_refuses_repeat_summary_md_without_not_ready_for_pilot(
+    tmp_path: Path, synthetic_v1_pack_inputs: dict[str, Path]
+) -> None:
+    md, js = _write_public_safe_summary(tmp_path / "summary_inputs")
+    md.write_text("# repeat summary\n\n(no posture line)\n")
+    out = tmp_path / "pack_no_posture"
+    with pytest.raises(SystemExit) as exc:
+        package_llm_v1_evidence(
+            out=out,
+            repeat_summary_md=md,
+            repeat_summary_json=js,
+            **synthetic_v1_pack_inputs,
+        )
+    assert "NOT READY FOR PILOT" in str(exc.value)
+
+
+def test_v1_pack_refuses_repeat_summary_json_without_not_ready_flag(
+    tmp_path: Path, synthetic_v1_pack_inputs: dict[str, Path]
+) -> None:
+    md, js = _write_public_safe_summary(tmp_path / "summary_inputs")
+    payload = json.loads(js.read_text())
+    payload["not_ready_for_pilot"] = False
+    js.write_text(json.dumps(payload, indent=2))
+    out = tmp_path / "pack_bad_json"
+    with pytest.raises(SystemExit) as exc:
+        package_llm_v1_evidence(
+            out=out,
+            repeat_summary_md=md,
+            repeat_summary_json=js,
+            **synthetic_v1_pack_inputs,
+        )
+    assert "not_ready_for_pilot" in str(exc.value)

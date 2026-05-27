@@ -161,9 +161,15 @@ candidate's redacted JSON eval summary. The redaction policy used is
 5. `regressions_llm_v0.jsonl` lists the pending-review regression seeds
    that captured v0 failure modes; they remain useful context for the
    improvement loop.
-6. `traces/redacted/*.redacted.json` show the synthetic v1 trace shape
+6. `repeat_run_summary.md` / `repeat_run_summary.json` (when present)
+   are the public-safe aggregated outputs of a credentialed repeat-run
+   capture (N runs × the same adversarial slice for each profile).
+   They describe run-to-run variance — pass/fail per run, runtime-vs-
+   offline asymmetry, per-case instability, per-band latency, and cost
+   distribution — without any raw draft text or raw trace path.
+7. `traces/redacted/*.redacted.json` show the synthetic v1 trace shape
    an analyst can reason about without raw model output.
-7. `manifest.json` is the machine-readable index.
+8. `manifest.json` is the machine-readable index.
 
 ## Launch posture
 
@@ -186,6 +192,8 @@ def package_llm_v1_evidence(
     policy: Path,
     out: Path,
     improvement_memo: Path | None = None,
+    repeat_summary_md: Path | None = None,
+    repeat_summary_json: Path | None = None,
 ) -> Path:
     raw_v0_report = _require_file(raw_v0_report, "raw-v0-report")
     raw_v1_report = _require_file(raw_v1_report, "raw-v1-report")
@@ -273,6 +281,24 @@ def package_llm_v1_evidence(
         "Pinned pending_review regression seeds derived from v0 failures; "
         "still useful context for the improvement loop.",
     )
+    if repeat_summary_md is not None and repeat_summary_md.exists():
+        _guard_repeat_summary_md(repeat_summary_md)
+        _add_copy(
+            repeat_summary_md,
+            "repeat_run_summary.md",
+            "Public-safe repeat-run variance summary aggregated from "
+            "credentialed repeat-run capture (no raw draft text, no raw "
+            "trace paths).",
+        )
+    if repeat_summary_json is not None and repeat_summary_json.exists():
+        _guard_repeat_summary_json(repeat_summary_json)
+        _add_copy(
+            repeat_summary_json,
+            "repeat_run_summary.json",
+            "Machine-readable repeat-run variance summary (per-run pass/fail, "
+            "runtime-vs-offline asymmetry, per-case instability, latency by "
+            "band, cost distribution).",
+        )
 
     for trace_path in redacted_trace_files:
         _add_copy(
@@ -303,6 +329,54 @@ def package_llm_v1_evidence(
 
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
     return out
+
+
+_REPEAT_SUMMARY_FORBIDDEN_SUBSTRINGS: tuple[str, ...] = (
+    "traces/local/llm_",
+    "RAW MODEL OUTPUT",
+    "draft_text",
+    "draft_excerpt",
+)
+
+
+def _guard_repeat_summary_md(path: Path) -> None:
+    """Refuse to ship a repeat-summary md that leaks raw paths or raw
+    draft text. The aggregator already enforces this, but this is
+    defense-in-depth at packaging time."""
+
+    text = path.read_text()
+    for needle in _REPEAT_SUMMARY_FORBIDDEN_SUBSTRINGS:
+        if needle in text:
+            raise SystemExit(
+                f"refusing to ship repeat-summary markdown containing "
+                f"forbidden substring {needle!r}: {path}"
+            )
+    if "NOT READY FOR PILOT" not in text:
+        raise SystemExit(
+            "refusing to ship repeat-summary markdown missing the "
+            f"NOT READY FOR PILOT posture line: {path}"
+        )
+
+
+def _guard_repeat_summary_json(path: Path) -> None:
+    payload = json.loads(path.read_text())
+    if not isinstance(payload, dict):
+        raise SystemExit(
+            f"repeat-summary JSON must be a JSON object: {path}"
+        )
+    if payload.get("not_ready_for_pilot") is not True:
+        raise SystemExit(
+            "refusing to ship repeat-summary JSON without "
+            f"not_ready_for_pilot=true: {path}"
+        )
+    # Re-serialize and check for forbidden substrings.
+    blob = json.dumps(payload)
+    for needle in _REPEAT_SUMMARY_FORBIDDEN_SUBSTRINGS:
+        if needle in blob:
+            raise SystemExit(
+                f"refusing to ship repeat-summary JSON containing "
+                f"forbidden substring {needle!r}: {path}"
+            )
 
 
 def _guard_no_raw_paths(manifest: dict[str, Any]) -> None:
@@ -352,6 +426,26 @@ def main(argv: list[str] | None = None) -> int:
             "it's copied into the pack as improvement_memo.md."
         ),
     )
+    parser.add_argument(
+        "--repeat-summary-md",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to the public-safe repeat-run variance Markdown "
+            "summary. When present, it's copied into the pack as "
+            "repeat_run_summary.md after a public-safety substring guard."
+        ),
+    )
+    parser.add_argument(
+        "--repeat-summary-json",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to the machine-readable repeat-run variance JSON "
+            "summary. When present, it's copied into the pack as "
+            "repeat_run_summary.json after a public-safety guard."
+        ),
+    )
     args = parser.parse_args(argv)
 
     pack_root = package_llm_v1_evidence(
@@ -363,6 +457,8 @@ def main(argv: list[str] | None = None) -> int:
         policy=args.policy,
         out=args.out,
         improvement_memo=args.improvement_memo,
+        repeat_summary_md=args.repeat_summary_md,
+        repeat_summary_json=args.repeat_summary_json,
     )
     print(f"OK: assembled v1 LLM evidence pack -> {pack_root}")
     return 0

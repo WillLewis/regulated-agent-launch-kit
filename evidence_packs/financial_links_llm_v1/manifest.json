@@ -44,6 +44,16 @@
       "source": "case_studies/financial_links_reliability/evals/regressions_llm_v0.jsonl"
     },
     {
+      "path": "repeat_run_summary.md",
+      "purpose": "Public-safe repeat-run variance summary aggregated from credentialed repeat-run capture (no raw draft text, no raw trace paths).",
+      "source": "reports/llm_repeat_summary.md"
+    },
+    {
+      "path": "repeat_run_summary.json",
+      "purpose": "Machine-readable repeat-run variance summary (per-run pass/fail, runtime-vs-offline asymmetry, per-case instability, latency by band, cost distribution).",
+      "source": "reports/llm_repeat_summary.json"
+    },
+    {
       "path": "traces/redacted/case_fl_adv_v0_001.redacted.json",
       "purpose": "Redacted synthetic v1 LLM trace.",
       "source": "traces/redacted/llm_adversarial_v1/case_fl_adv_v0_001.redacted.json"

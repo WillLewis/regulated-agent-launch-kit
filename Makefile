@@ -324,6 +324,8 @@ evidence-pack-llm-adversarial-v1: redact-llm-adversarial-v1
 		--redacted-traces traces/redacted/llm_adversarial_v1 \
 		--policy configs/redaction_policy.yaml \
 		--improvement-memo reports/llm_prompt_improvement_memo.md \
+		--repeat-summary-md reports/llm_repeat_summary.md \
+		--repeat-summary-json reports/llm_repeat_summary.json \
 		--out evidence_packs/financial_links_llm_v1
 
 # ---- Opt-in credentialed repeat-run capture --------------------------------

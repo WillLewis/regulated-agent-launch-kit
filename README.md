@@ -413,11 +413,22 @@ is now wired and tested locally:
 - `tests/test_llm_repeat_aggregation.py` — 26 tests cover aggregation
   correctness, mixed-input rejection, and the public-safety wording.
 
-**Credentialed repeat runs have NOT yet been executed in this chunk.** The
-aggregator works against any `EvalReport`-shaped JSON, so once an opt-in
-repeat-run Make target lands, this harness will be ready to summarize them.
-No model-safety, pilot, production, or regulatory claim is made by the
-aggregator output.
+The credentialed capture half is also wired now (opt-in, costs real
+Anthropic tokens, never runs in CI):
+
+```bash
+RUNS=5 make repeat-adversarial-llm-v0   # writes reports/llm_repeats/adversarial/llm_candidate_v0/<ts>/run_<i>/ (gitignored)
+RUNS=5 make repeat-adversarial-llm-v1   # same for v1
+make repeat-adversarial-llm-summary     # aggregates every captured run -> reports/llm_repeat_summary.{md,json}
+```
+
+The capture targets depend on `check-llm-env` and fail clean without
+`ANTHROPIC_API_KEY` + the `anthropic` SDK; they refuse deterministic
+profiles by default. Raw per-run eval reports + per-run traces are
+gitignored; only the aggregated public-safe summary may be tracked
+(its no-raw-text / no-raw-trace-path invariants are locked by tests).
+No model-safety, pilot, production, or regulatory claim is made by
+the aggregator output.
 
 ##### Real LLM traces are handled through a redacted evidence pack
 

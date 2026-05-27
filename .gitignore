@@ -44,3 +44,12 @@ reports/llm_smoke_eval.json
 # re-run without polluting the tree.
 reports/llm_repeat_summary_fixture.md
 reports/llm_repeat_summary_fixture.json
+
+# Credentialed repeat-run capture outputs. Raw per-run eval reports
+# embed raw model draft text and are treated as raw evidence; raw
+# traces ditto. The aggregated public-safe summary
+# (reports/llm_repeat_summary.{md,json}) MAY be tracked because it
+# carries only counts / distributions / public-safe identifiers; the
+# aggregator's tests verify the no-raw-draft / no-raw-trace-path
+# invariant.
+reports/llm_repeats/

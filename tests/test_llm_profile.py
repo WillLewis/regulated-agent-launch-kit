@@ -414,6 +414,9 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         "eval-card-adversarial-llm",
         "eval-adversarial-llm-v1",
         "eval-card-adversarial-llm-v1",
+        # Credentialed repeat-run capture (opt-in, gated by check-llm-env).
+        "repeat-adversarial-llm-v0",
+        "repeat-adversarial-llm-v1",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

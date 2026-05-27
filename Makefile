@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 variance-report-fixture
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -40,6 +40,11 @@ help:
 	@echo "  redact-llm-adversarial-v1  redact every raw v1 LLM trace under traces/redacted/llm_adversarial_v1/ (no LLM call)"
 	@echo "  evidence-pack-llm-adversarial-v1  assemble the public-safe v1 evidence pack at evidence_packs/financial_links_llm_v1/ (no LLM call)"
 	@echo "  variance-report-fixture  demo: aggregate tests/fixtures/llm_repeats/*.json (no LLM call; demo output gitignored)"
+	@echo ""
+	@echo "Opt-in CREDENTIALED repeat-run capture (real Anthropic API calls; costs money; not in CI):"
+	@echo "  RUNS=5 make repeat-adversarial-llm-v0  capture N llm_candidate_v0 adversarial runs (RUNS defaults to 5)"
+	@echo "  RUNS=5 make repeat-adversarial-llm-v1  capture N llm_candidate_v1 adversarial runs (RUNS defaults to 5)"
+	@echo "  make repeat-adversarial-llm-summary    aggregate every captured repeat run into a public-safe summary"
 	@echo ""
 	@echo "  lint                 run ruff over the repo"
 	@echo ""
@@ -320,6 +325,55 @@ evidence-pack-llm-adversarial-v1: redact-llm-adversarial-v1
 		--policy configs/redaction_policy.yaml \
 		--improvement-memo reports/llm_prompt_improvement_memo.md \
 		--out evidence_packs/financial_links_llm_v1
+
+# ---- Opt-in credentialed repeat-run capture --------------------------------
+# These three targets are the credentialed half of the repeat-run loop.
+# They are opt-in, never run in `make test`, and cost real Anthropic
+# tokens (each run executes the full adversarial slice once). Default
+# RUNS=5; override with `RUNS=10 make repeat-adversarial-llm-v0`.
+#
+# Output layout (gitignored):
+#   reports/llm_repeats/adversarial/<profile>/<timestamp>/run_<i>/eval_report.json
+#   reports/llm_repeats/adversarial/<profile>/<timestamp>/run_<i>/traces/<case>.json
+#
+# repeat-adversarial-llm-summary aggregates EVERY eval_report.json
+# under reports/llm_repeats/adversarial/ and writes a public-safe
+# Markdown + JSON summary that may be tracked (no raw draft text, no
+# traces/local/llm_ paths — verified by tests).
+
+RUNS ?= 5
+REPEAT_OUT_DIR ?= reports/llm_repeats/adversarial
+REPEAT_SUMMARY_MD ?= reports/llm_repeat_summary.md
+REPEAT_SUMMARY_JSON ?= reports/llm_repeat_summary.json
+
+repeat-adversarial-llm-v0: check-llm-env
+	uv run python scripts/run_llm_repeats.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v0.jsonl \
+		--profile llm_candidate_v0 \
+		--runs $(RUNS) \
+		--out-dir $(REPEAT_OUT_DIR)
+
+repeat-adversarial-llm-v1: check-llm-env
+	uv run python scripts/run_llm_repeats.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v0.jsonl \
+		--profile llm_candidate_v1 \
+		--runs $(RUNS) \
+		--out-dir $(REPEAT_OUT_DIR)
+
+repeat-adversarial-llm-summary:
+	@if ! ls $(REPEAT_OUT_DIR)/*/*/run_*/eval_report.json >/dev/null 2>&1; then \
+		echo "ERROR: no captured repeat-run eval_report.json files under $(REPEAT_OUT_DIR)/"; \
+		echo "  Hint: run `RUNS=5 make repeat-adversarial-llm-v0` (credentialed) first."; \
+		exit 1; \
+	fi
+	uv run python -c "import sys, glob; \
+paths = sorted(glob.glob('$(REPEAT_OUT_DIR)/*/*/run_*/eval_report.json')); \
+from scripts.aggregate_llm_repeats import aggregate_files, render_markdown; \
+import json; from pathlib import Path; \
+summary = aggregate_files([Path(p) for p in paths], allow_mixed_profiles=True); \
+Path('$(REPEAT_SUMMARY_MD)').write_text(render_markdown(summary)); \
+Path('$(REPEAT_SUMMARY_JSON)').write_text(json.dumps(summary, indent=2)); \
+print(f'OK: aggregated {summary[\"run_count\"]} repeat runs across profiles={summary[\"profile_family\"]} -> $(REPEAT_SUMMARY_MD)')"
 
 # ---- Repeat-run variance aggregation (no LLM call) -------------------------
 # Demo target: aggregate three tracked fixture reports under

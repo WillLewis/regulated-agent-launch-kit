@@ -174,8 +174,8 @@ each, 60 total LLM draft generations, ≈$0.321 USD list-price estimated
 total. The aggregated public-safe summary lives at
 [`reports/llm_repeat_summary.md`](llm_repeat_summary.md) +
 [`reports/llm_repeat_summary.json`](llm_repeat_summary.json); raw
-per-run reports and traces remain local-only under gitignored
-`reports/llm_repeats/adversarial/<profile>/<ts>/run_<i>/`.
+per-run reports and traces stay local-only inside the gitignored
+repeat-run output directory.
 
 | Metric (N=5 per profile) | Before (`llm_candidate_v0`) | After (`llm_candidate_v1`) |
 |---|---|---|

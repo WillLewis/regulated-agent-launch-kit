@@ -297,3 +297,45 @@ def test_gitignore_excludes_raw_repeat_tree() -> None:
         ".gitignore must exclude reports/llm_repeats/ so raw per-run "
         "eval reports and traces never get tracked"
     )
+
+
+# ---------------------------------------------------------------------------
+# Tracked markdown must not embed raw repeat-run path templates
+# ---------------------------------------------------------------------------
+
+
+_FORBIDDEN_MARKDOWN_PATH_TEMPLATES: tuple[str, ...] = (
+    "reports/llm_repeats/adversarial/",
+    "run_<i>",
+    "run_*/eval_report",
+)
+
+
+def test_tracked_markdown_avoids_raw_repeat_run_path_templates() -> None:
+    """Public Markdown should not embed raw per-run path templates like
+    ``reports/llm_repeats/adversarial/<profile>/<ts>/run_<i>/``. The
+    repeat-run output directory is gitignored; tracked docs should refer
+    to it abstractly so the path layout can change without doc drift
+    and so casual readers do not see implementation paths."""
+
+    tracked = subprocess.run(
+        ["git", "ls-files", "*.md"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    leaks: list[tuple[str, str]] = []
+    for rel in tracked:
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        text = path.read_text()
+        for needle in _FORBIDDEN_MARKDOWN_PATH_TEMPLATES:
+            if needle in text:
+                leaks.append((rel, needle))
+    assert not leaks, (
+        "tracked markdown embeds raw repeat-run path templates; replace "
+        "with abstract wording (e.g. 'gitignored repeat-run output "
+        f"directory'). Hits: {leaks}"
+    )

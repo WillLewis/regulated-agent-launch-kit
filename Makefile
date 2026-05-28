@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -26,6 +26,10 @@ help:
 	@echo "  eval-adversarial-baseline  run the adversarial slice against baseline_v0"
 	@echo "  eval-adversarial-improved  run the adversarial slice against improved_v0"
 	@echo "  eval-card-adversarial      run both adversarial evals, then render the comparison eval card"
+	@echo "  dataset-test-adversarial-v1  validate the expanded adversarial v1 JSONL slice (12 cases)"
+	@echo "  eval-adversarial-v1-baseline  run the adversarial v1 slice against baseline_v0 (deterministic)"
+	@echo "  eval-adversarial-v1-improved  run the adversarial v1 slice against improved_v0 (deterministic)"
+	@echo "  eval-card-adversarial-v1   run both adversarial v1 evals, then render the comparison eval card"
 	@echo ""
 	@echo "Opt-in LLM targets (require ANTHROPIC_API_KEY and the anthropic SDK; not in the public proof loop):"
 	@echo "  check-llm-env        actionable preflight: verifies ANTHROPIC_API_KEY + anthropic SDK"
@@ -66,6 +70,36 @@ dataset-test:
 
 dataset-test-adversarial:
 	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/adversarial_v0.jsonl
+
+dataset-test-adversarial-v1:
+	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/adversarial_v1.jsonl
+
+# ---- Deterministic adversarial v1 targets (credential-free) ---------------
+# These targets run the deterministic baseline_v0 / improved_v0 profiles
+# against the expanded 12-case adversarial v1 slice. They never call an
+# LLM and never depend on credentials. The corresponding LLM target for
+# this slice is intentionally NOT wired in this chunk — adversarial v1
+# is opt-in territory for a future credentialed run.
+
+eval-adversarial-v1-baseline:
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--traces-out traces/local/baseline_adversarial_v1 \
+		--report-out reports/baseline_adversarial_v1_eval.json \
+		--agent-system-version baseline_v0
+
+eval-adversarial-v1-improved:
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--traces-out traces/local/improved_adversarial_v1 \
+		--report-out reports/improved_adversarial_v1_eval.json \
+		--agent-system-version improved_v0
+
+eval-card-adversarial-v1: eval-adversarial-v1-baseline eval-adversarial-v1-improved
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/baseline_adversarial_v1_eval.json \
+		--improved-report reports/improved_adversarial_v1_eval.json \
+		--out reports/adversarial_v1_eval_card.md
 
 eval-smoke:
 	uv run python scripts/run_eval.py \

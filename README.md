@@ -237,6 +237,38 @@ sub-millisecond.
 Regenerate locally with `make eval-card-v0`, `make regression-check-v0`, `make redact-v0`,
 and `make evidence-pack-v0`. All four require no external credentials.
 
+### Adversarial v1 slice (expanded coverage)
+
+A separate, larger **12-case** adversarial slice now lives at
+[`case_studies/financial_links_reliability/evals/adversarial_v1.jsonl`](case_studies/financial_links_reliability/evals/adversarial_v1.jsonl).
+It is **additive** — the v0 6-case slice stays unchanged and continues
+to drive the existing tracked LLM evidence — and expands the
+adversarial surface to cover paraphrased-overpromise pressure
+(`always current`, `updates instantly`, `refreshes without delay`,
+`certain to reconnect`), safe-negated calibration cases
+(`is not guaranteed`, `cannot guarantee`, `may not reflect current
+status`, `not real-time`), cross-sentence disclaimer traps,
+consent-pressure traps, policy-citation traps against
+`FL-CONSENT-001` / `FL-PARTNER-FALLBACK-002`, and missing-info
+hallucination resistance. Every case is synthetic and carries
+`category_tags` so coverage is testable.
+
+| Metric | `baseline_v0` | `improved_v0` |
+|---|---:|---:|
+| Cases | 12 | 12 |
+| Passed | 4 | 12 |
+| Failed | 8 | 0 |
+| Baseline failure labels | `TOOL_MISUSE`, `UNSAFE_CUSTOMER_COMMS`, `POLICY_MISS` | — |
+
+- [Adversarial v1 dataset (JSONL)](case_studies/financial_links_reliability/evals/adversarial_v1.jsonl) — 12 hand-authored synthetic adversarial cases.
+- [Adversarial v1 eval card](reports/adversarial_v1_eval_card.md) — baseline-vs-improved comparison on the v1 slice.
+
+Regenerate locally with `make eval-card-adversarial-v1` (no external
+credentials required). **No credentialed LLM run has been executed
+against `adversarial_v1` yet** — that is opt-in territory for a
+future chunk and is intentionally not wired into any current Make
+target. NOT READY FOR PILOT remains the launch posture.
+
 ### Adversarial v0 slice
 
 A separate 6-case adversarial slice exists to stress an LLM-backed candidate profile
@@ -404,8 +436,8 @@ synthetic adversarial slice for both `llm_candidate_v0` and `llm_candidate_v1`
 is tracked at
 [`reports/llm_repeat_summary.md`](reports/llm_repeat_summary.md) +
 [`reports/llm_repeat_summary.json`](reports/llm_repeat_summary.json); raw
-per-run reports and traces stay gitignored under
-`reports/llm_repeats/adversarial/<profile>/<ts>/run_<i>/`.
+per-run reports and traces stay local-only inside the gitignored repeat-run
+output directory.
 
 | Metric | `llm_candidate_v0` (N=5) | `llm_candidate_v1` (N=5) |
 |---|---|---|
@@ -439,7 +471,7 @@ full per-case sequence and the per-band latency / cost tables.
 The recipe to re-capture and re-aggregate:
 
 ```bash
-RUNS=5 make repeat-adversarial-llm-v0   # writes reports/llm_repeats/adversarial/llm_candidate_v0/<ts>/run_<i>/ (gitignored)
+RUNS=5 make repeat-adversarial-llm-v0   # captures N v0 runs into the gitignored repeat-run output directory
 RUNS=5 make repeat-adversarial-llm-v1   # same for v1
 make repeat-adversarial-llm-summary     # aggregates every captured run -> reports/llm_repeat_summary.{md,json}
 ```

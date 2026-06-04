@@ -32,6 +32,7 @@ from app.agents.profiles import DEFAULT_PROFILE, normalize_profile
 from app.runner import RunResult, load_default_approval_matrix, run_case
 from app.schemas import Case, GraderResult, RiskBand, TraceRecord, Workflow
 from evals.graders import (
+    SemanticDecision,
     grade_approval_boundary,
     grade_consent_boundary,
     grade_evaluator_catch_rate,
@@ -40,6 +41,7 @@ from evals.graders import (
     grade_required_tool_use,
     grade_schema_validity,
     grade_unsupported_claim,
+    grade_unsupported_claim_semantic,
 )
 
 
@@ -115,10 +117,67 @@ def _load_jsonl(path: Path) -> list[dict[str, Any]]:
     return records
 
 
+def load_semantic_decisions(
+    path: Path,
+    *,
+    profile: str,
+    expected_case_ids: list[str],
+) -> dict[str, SemanticDecision]:
+    """Load fixture-backed semantic decisions for one profile.
+
+    The fixture shape is intentionally local and deterministic:
+
+    ``{"decisions": {"profile_name": {"case_id": SemanticDecision}}}``
+
+    This is not a model adapter. It gives the eval runner a stable
+    decision source so the optional semantic audit lane can be tested
+    without credentials or network calls.
+    """
+
+    path = Path(path)
+    if not path.exists():
+        raise SystemExit(f"semantic decisions file not found: {path}")
+    try:
+        raw = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"{path}: invalid semantic decision JSON ({exc})")
+    if not isinstance(raw, dict):
+        raise SystemExit(f"{path}: semantic decisions file must be a JSON object")
+
+    decisions_root = raw.get("decisions")
+    if not isinstance(decisions_root, dict):
+        raise SystemExit(f"{path}: missing object field 'decisions'")
+    profile_decisions = decisions_root.get(profile)
+    if not isinstance(profile_decisions, dict):
+        available = sorted(k for k in decisions_root if isinstance(k, str))
+        raise SystemExit(
+            f"{path}: no semantic decisions for profile {profile!r}; "
+            f"available profiles: {available}"
+        )
+
+    expected = set(expected_case_ids)
+    missing = sorted(expected - set(profile_decisions))
+    if missing:
+        raise SystemExit(
+            f"{path}: missing semantic decisions for profile {profile!r}: {missing}"
+        )
+
+    parsed: dict[str, SemanticDecision] = {}
+    for case_id in expected_case_ids:
+        try:
+            parsed[case_id] = SemanticDecision.model_validate(profile_decisions[case_id])
+        except Exception as exc:  # noqa: BLE001 - convert fixture errors to CLI-safe SystemExit
+            raise SystemExit(
+                f"{path}: invalid semantic decision for {profile}/{case_id}: {exc}"
+            ) from exc
+    return parsed
+
+
 def _grade_case(
     case_dict: dict[str, Any],
     run_result: RunResult,
     approval_matrix: dict[str, Any],
+    semantic_decision: SemanticDecision | None = None,
 ) -> list[GraderResult]:
     """Run every offline grader for one case.
 
@@ -152,6 +211,10 @@ def _grade_case(
         ),
         grade_unsupported_claim(output),
     ]
+    if semantic_decision is not None:
+        primary_results.append(
+            grade_unsupported_claim_semantic(output, semantic_decision)
+        )
     # The catch-rate grader runs over the primary grader results plus
     # the runtime evaluator report on the trace. It is intentionally
     # last so it can see every other grader's outcome.
@@ -169,6 +232,24 @@ _GRADER_NAMES: list[str] = [
     "unsupported_claim",
     "evaluator_catch_rate",
 ]
+
+
+def _grader_names(*, semantic_enabled: bool) -> list[str]:
+    """Return grader names in the exact order ``_grade_case`` emits them."""
+
+    if not semantic_enabled:
+        return list(_GRADER_NAMES)
+    return [
+        "schema_validity",
+        "handoff_completeness",
+        "required_tool_use",
+        "consent_boundary",
+        "approval_boundary",
+        "policy_retrieval",
+        "unsupported_claim",
+        "unsupported_claim_semantic",
+        "evaluator_catch_rate",
+    ]
 
 
 def _load_latency_envelope() -> dict[str, Any]:
@@ -247,6 +328,7 @@ def run_eval(
     *,
     agent_system_version: str = DEFAULT_PROFILE.value,
     approval_matrix: dict[str, Any] | None = None,
+    semantic_decisions_path: Path | None = None,
 ) -> EvalReport:
     """Run the offline eval pass and (optionally) write the report to disk.
 
@@ -263,6 +345,16 @@ def run_eval(
 
     matrix = approval_matrix or load_default_approval_matrix()
     cases = _load_jsonl(dataset_path)
+    semantic_decisions = (
+        load_semantic_decisions(
+            semantic_decisions_path,
+            profile=profile,
+            expected_case_ids=[str(case["case_id"]) for case in cases],
+        )
+        if semantic_decisions_path is not None
+        else None
+    )
+    grader_names = _grader_names(semantic_enabled=semantic_decisions is not None)
 
     per_case: list[CaseEvalResult] = []
     grader_totals: dict[str, list[bool]] = defaultdict(list)
@@ -279,12 +371,22 @@ def run_eval(
         )
         elapsed_ms = int(round((time.perf_counter() - start) * 1000))
 
-        grader_results = _grade_case(case_dict, run_result, matrix)
+        case_id = str(case_dict["case_id"])
+        grader_results = _grade_case(
+            case_dict,
+            run_result,
+            matrix,
+            (
+                semantic_decisions[case_id]
+                if semantic_decisions is not None
+                else None
+            ),
+        )
 
         failure_labels: list[str] = []
-        # grader_results are returned in the order of _GRADER_NAMES, so a
+        # grader_results are returned in the order of grader_names, so a
         # positional zip is the authoritative name → result mapping.
-        for name, gr in zip(_GRADER_NAMES, grader_results, strict=True):
+        for name, gr in zip(grader_names, grader_results, strict=True):
             grader_totals[name].append(gr.passed)
             if not gr.passed and gr.failure_label:
                 if gr.failure_label not in failure_labels:
@@ -331,7 +433,7 @@ def run_eval(
                 else 0.0
             ),
         )
-        for name in _GRADER_NAMES
+        for name in grader_names
     ]
 
     cost_summary = {

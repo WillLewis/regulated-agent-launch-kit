@@ -64,6 +64,16 @@ def main(argv: list[str] | None = None) -> int:
             "improved profile fixes)."
         ),
     )
+    parser.add_argument(
+        "--semantic-decisions",
+        type=Path,
+        default=None,
+        help=(
+            "Optional fixture-backed SemanticDecision JSON. When supplied, "
+            "the report includes an extra unsupported_claim_semantic grader "
+            "row. This is local-only and does not call a model."
+        ),
+    )
     args = parser.parse_args(argv)
 
     if not args.dataset.exists():
@@ -75,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
         traces_out=args.traces_out,
         report_out=args.report_out,
         agent_system_version=args.agent_system_version,
+        semantic_decisions_path=args.semantic_decisions,
     )
 
     print(

@@ -269,6 +269,15 @@ against `adversarial_v1` yet** — that is opt-in territory for a
 future chunk and is intentionally not wired into any current Make
 target. NOT READY FOR PILOT remains the launch posture.
 
+An optional fixture-backed semantic audit lane is available for this
+slice without calling a model. Passing
+`--semantic-decisions case_studies/financial_links_reliability/evals/adversarial_v1_semantic_decisions.json`
+to `scripts/run_eval.py` adds an `unsupported_claim_semantic` grader
+row to the report; the default eval path remains unchanged. The helper
+targets `make eval-adversarial-v1-baseline-semantic` and
+`make eval-adversarial-v1-improved-semantic` run that lane against the
+tracked local fixture decisions only.
+
 ### Adversarial v0 slice
 
 A separate 6-case adversarial slice exists to stress an LLM-backed candidate profile

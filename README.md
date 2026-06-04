@@ -276,7 +276,11 @@ to `scripts/run_eval.py` adds an `unsupported_claim_semantic` grader
 row to the report; the default eval path remains unchanged. The helper
 targets `make eval-adversarial-v1-baseline-semantic` and
 `make eval-adversarial-v1-improved-semantic` run that lane against the
-tracked local fixture decisions only.
+tracked local fixture decisions only. To preview the reviewer-facing
+surface for this lane, run `make semantic-reporting-surface`; it writes
+`reports/adversarial_v1_semantic_reporting_surface.html` from those
+fixture-backed reports. The HTML is a local report preview, not the
+final public webpage.
 
 ### Adversarial v0 slice
 

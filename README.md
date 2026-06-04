@@ -282,6 +282,26 @@ surface for this lane, run `make semantic-reporting-surface`; it writes
 fixture-backed reports. The HTML is a local report preview, not the
 final public webpage.
 
+An opt-in model/NLI adapter is also wired for the same contract. It
+reads an existing eval report plus its local traces, calls the
+credential-gated semantic adapter in `evals/semantic_model_adapter.py`,
+and writes a `SemanticDecision` JSON file that the existing
+`--semantic-decisions` eval lane can consume. This path can spend
+tokens and is not part of the default proof loop:
+
+```bash
+make check-llm-env
+make semantic-model-decisions-adversarial-v1-baseline
+make semantic-model-decisions-adversarial-v1-improved
+make semantic-model-reporting-surface
+```
+
+The generated model/NLI decision files, semantic-model eval reports,
+and semantic-model traces are gitignored local artifacts. They should
+only become public after an explicit evidence-pack/redaction decision.
+No credentialed model/NLI semantic run has been executed or claimed by
+this README.
+
 ### Adversarial v0 slice
 
 A separate 6-case adversarial slice exists to stress an LLM-backed candidate profile

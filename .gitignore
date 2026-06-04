@@ -45,6 +45,14 @@ reports/llm_smoke_eval.json
 reports/llm_repeat_summary_fixture.md
 reports/llm_repeat_summary_fixture.json
 
+# Opt-in model/NLI semantic-grader outputs. These are generated local
+# decision/eval artifacts from credentialed model calls; publish only
+# after an explicit evidence-pack/redaction decision.
+reports/semantic_model_decisions/
+reports/*_semantic_model_eval.json
+reports/*semantic_model_reporting_surface.html
+traces/local/*_semantic_model/
+
 # Credentialed repeat-run capture outputs. Raw per-run eval reports
 # embed raw model draft text and are treated as raw evidence; raw
 # traces ditto. The aggregated public-safe summary

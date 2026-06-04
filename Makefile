@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -33,6 +33,11 @@ help:
 	@echo "  eval-adversarial-v1-baseline-semantic  run baseline_v0 with fixture-backed semantic audit lane"
 	@echo "  eval-adversarial-v1-improved-semantic  run improved_v0 with fixture-backed semantic audit lane"
 	@echo "  semantic-reporting-surface render the fixture-backed semantic audit lane as static HTML"
+	@echo "  semantic-model-decisions-adversarial-v1-baseline generate opt-in model/NLI semantic decisions for baseline_v0"
+	@echo "  semantic-model-decisions-adversarial-v1-improved generate opt-in model/NLI semantic decisions for improved_v0"
+	@echo "  eval-adversarial-v1-baseline-semantic-model run baseline_v0 with model/NLI semantic decisions"
+	@echo "  eval-adversarial-v1-improved-semantic-model run improved_v0 with model/NLI semantic decisions"
+	@echo "  semantic-model-reporting-surface render the opt-in model/NLI semantic audit lane as static HTML"
 	@echo ""
 	@echo "Opt-in LLM targets (require ANTHROPIC_API_KEY and the anthropic SDK; not in the public proof loop):"
 	@echo "  check-llm-env        actionable preflight: verifies ANTHROPIC_API_KEY + anthropic SDK"
@@ -126,6 +131,47 @@ semantic-reporting-surface: eval-adversarial-v1-baseline-semantic eval-adversari
 		--baseline-report reports/baseline_adversarial_v1_semantic_eval.json \
 		--improved-report reports/improved_adversarial_v1_semantic_eval.json \
 		--out reports/adversarial_v1_semantic_reporting_surface.html
+
+# ---- Opt-in model/NLI semantic adapter targets (credentialed) ---------------
+# These targets use ANTHROPIC_API_KEY via scripts/generate_semantic_decisions.py
+# to produce SemanticDecision JSON for the already-generated deterministic
+# adversarial v1 reports. Outputs are gitignored by default because they are
+# model-generated local audit artifacts.
+
+semantic-model-decisions-adversarial-v1-baseline: check-llm-env eval-adversarial-v1-baseline
+	uv run python scripts/generate_semantic_decisions.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--eval-report reports/baseline_adversarial_v1_eval.json \
+		--out reports/semantic_model_decisions/adversarial_v1_baseline.json
+
+semantic-model-decisions-adversarial-v1-improved: check-llm-env eval-adversarial-v1-improved
+	uv run python scripts/generate_semantic_decisions.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--eval-report reports/improved_adversarial_v1_eval.json \
+		--out reports/semantic_model_decisions/adversarial_v1_improved.json
+
+eval-adversarial-v1-baseline-semantic-model: semantic-model-decisions-adversarial-v1-baseline
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--traces-out traces/local/baseline_adversarial_v1_semantic_model \
+		--report-out reports/baseline_adversarial_v1_semantic_model_eval.json \
+		--agent-system-version baseline_v0 \
+		--semantic-decisions reports/semantic_model_decisions/adversarial_v1_baseline.json
+
+eval-adversarial-v1-improved-semantic-model: semantic-model-decisions-adversarial-v1-improved
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--traces-out traces/local/improved_adversarial_v1_semantic_model \
+		--report-out reports/improved_adversarial_v1_semantic_model_eval.json \
+		--agent-system-version improved_v0 \
+		--semantic-decisions reports/semantic_model_decisions/adversarial_v1_improved.json
+
+semantic-model-reporting-surface: eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model
+	uv run python scripts/render_semantic_reporting_surface.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--baseline-report reports/baseline_adversarial_v1_semantic_model_eval.json \
+		--improved-report reports/improved_adversarial_v1_semantic_model_eval.json \
+		--out reports/adversarial_v1_semantic_model_reporting_surface.html
 
 eval-smoke:
 	uv run python scripts/run_eval.py \

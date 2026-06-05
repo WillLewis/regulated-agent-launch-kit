@@ -264,10 +264,20 @@ hallucination resistance. Every case is synthetic and carries
 - [Adversarial v1 eval card](reports/adversarial_v1_eval_card.md) — baseline-vs-improved comparison on the v1 slice.
 
 Regenerate locally with `make eval-card-adversarial-v1` (no external
-credentials required). **No credentialed LLM run has been executed
-against `adversarial_v1` yet** — that is opt-in territory for a
-future chunk and is intentionally not wired into any current Make
-target. NOT READY FOR PILOT remains the launch posture.
+credentials required). An opt-in, credential-gated LLM candidate loop
+for this slice is now **wired but not executed**: `make
+eval-adversarial-v1-llm-v0` / `-v1` run the `llm_candidate_v0` (Before)
+and `llm_candidate_v1` (After) prompts against the 12-case slice, `make
+eval-card-adversarial-v1-llm` renders the Before/After card, and `make
+redact-adversarial-v1-llm` + `make evidence-pack-adversarial-v1-llm`
+assemble the redacted pack at
+`evidence_packs/financial_links_llm_adversarial_v1/`. Every credentialed
+target gates on `make check-llm-env` (no silent fallback); the raw
+reports (`reports/llm_adversarial_v1_candidate_v*_eval.json`) and raw
+traces are gitignored, so the only public surface would be the redacted
+pack — which does not exist until a run is performed. **No credentialed
+LLM evidence run for this slice has been executed or is claimed here.**
+NOT READY FOR PILOT remains the launch posture.
 
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing

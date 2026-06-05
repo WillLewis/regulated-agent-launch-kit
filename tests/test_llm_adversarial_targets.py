@@ -369,6 +369,9 @@ _LLM_ADVERSARIAL_OUTPUT_PATHS: tuple[str, ...] = (
     "reports/llm_adversarial_v1_vs_v0_card.md",
     "traces/local/llm_adversarial",
     "traces/local/llm_adversarial_v1",
+    # adversarial v1 (12-case) LLM candidate loop raw eval reports
+    "reports/llm_adversarial_v1_candidate_v0_eval.json",
+    "reports/llm_adversarial_v1_candidate_v1_eval.json",
 )
 
 def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
@@ -397,6 +400,14 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
         # asymmetry note — references the card paths only for that
         # docs-consistency check.
         "test_unsupported_claim_consistency.py",
+        # References the adversarial v1 candidate raw-trace/report path
+        # strings only to assert they stay gitignored / untracked — never
+        # reads the real on-disk artifacts.
+        "test_adversarial_v1_dataset.py",
+        # Builds its own tmp_path fixtures and uses the raw-LLM path
+        # strings only to verify the v1 pack assembler abstracts drafts
+        # and refuses raw-trace inputs.
+        "test_evidence_pack_adversarial_v1_llm.py",
     }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:

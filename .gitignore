@@ -37,6 +37,13 @@ traces/local/llm_*/
 reports/llm_adversarial_eval.json
 reports/llm_adversarial_v1_eval.json
 reports/llm_smoke_eval.json
+# Adversarial v1 (12-case) LLM candidate raw eval reports. They embed raw
+# model draft text; the public-safe view is the redacted summary inside
+# evidence_packs/financial_links_llm_adversarial_v1/. The comparison card
+# (reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md) is public-safe and
+# MAY be tracked, like the other LLM cards.
+reports/llm_adversarial_v1_candidate_v0_eval.json
+reports/llm_adversarial_v1_candidate_v1_eval.json
 
 # Repeat-run aggregation demo outputs from the variance-report-fixture
 # Make target. The fixture inputs under tests/fixtures/llm_repeats/ are

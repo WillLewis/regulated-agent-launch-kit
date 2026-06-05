@@ -417,6 +417,13 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         # Credentialed repeat-run capture (opt-in, gated by check-llm-env).
         "repeat-adversarial-llm-v0",
         "repeat-adversarial-llm-v1",
+        # Opt-in adversarial v1 (12-case) LLM candidate evidence loop
+        # (gated by check-llm-env; never in CI).
+        "eval-adversarial-v1-llm-v0",
+        "eval-adversarial-v1-llm-v1",
+        "eval-card-adversarial-v1-llm",
+        "semantic-model-decisions-adversarial-v1-llm-v0",
+        "semantic-model-decisions-adversarial-v1-llm-v1",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

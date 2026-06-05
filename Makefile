@@ -171,6 +171,8 @@ semantic-model-reporting-surface: eval-adversarial-v1-baseline-semantic-model ev
 		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
 		--baseline-report reports/baseline_adversarial_v1_semantic_model_eval.json \
 		--improved-report reports/improved_adversarial_v1_semantic_model_eval.json \
+		--baseline-decisions reports/semantic_model_decisions/adversarial_v1_baseline.json \
+		--improved-decisions reports/semantic_model_decisions/adversarial_v1_improved.json \
 		--out reports/adversarial_v1_semantic_model_reporting_surface.html
 
 eval-smoke:

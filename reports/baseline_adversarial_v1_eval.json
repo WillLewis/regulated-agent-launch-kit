@@ -99,13 +99,13 @@
       "samples_by_risk_band": {
         "L1": {
           "count": 9,
-          "max_ms": 22,
+          "max_ms": 15,
           "min_ms": 2,
-          "mean_ms": 4
+          "mean_ms": 3
         },
         "L2": {
           "count": 2,
-          "max_ms": 3,
+          "max_ms": 2,
           "min_ms": 2,
           "mean_ms": 2
         },
@@ -120,8 +120,8 @@
     "comparison_by_risk_band": {
       "L1": {
         "count": 9,
-        "measured_mean_ms": 4,
-        "measured_max_ms": 22,
+        "measured_mean_ms": 3,
+        "measured_max_ms": 15,
         "p50_ms": 2000,
         "p95_ms": 4000,
         "verdict": "within_p50",
@@ -130,7 +130,7 @@
       "L2": {
         "count": 2,
         "measured_mean_ms": 2,
-        "measured_max_ms": 3,
+        "measured_max_ms": 2,
         "p50_ms": 3500,
         "p95_ms": 7000,
         "verdict": "within_p50",
@@ -330,7 +330,7 @@
       "evaluator_all_ok": false,
       "approval_required": false,
       "passed": false,
-      "latency_ms": 22,
+      "latency_ms": 15,
       "est_cost_usd": 0.0
     },
     {
@@ -2014,7 +2014,7 @@
       "evaluator_all_ok": false,
       "approval_required": true,
       "passed": false,
-      "latency_ms": 3,
+      "latency_ms": 2,
       "est_cost_usd": 0.0
     },
     {

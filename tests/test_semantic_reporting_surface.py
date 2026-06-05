@@ -11,6 +11,7 @@ import pytest
 
 from evals.run import run_eval
 from scripts.render_semantic_reporting_surface import (
+    MODEL_SEMANTIC_ADAPTER,
     SEMANTIC_GRADER_NAME,
     render_reporting_surface,
 )
@@ -75,6 +76,52 @@ def test_render_reporting_surface_contains_required_sections(
     assert SEMANTIC_GRADER_NAME in html
     assert "NOT READY FOR PILOT" in html
     assert "semantic_fixture" in html
+
+
+def test_model_backed_reporting_surface_uses_model_copy(
+    tmp_path: Path,
+    semantic_reports: tuple[Path, Path],
+) -> None:
+    baseline, improved = semantic_reports
+    baseline_decisions = tmp_path / "baseline_decisions.json"
+    improved_decisions = tmp_path / "improved_decisions.json"
+    baseline_decisions.write_text(
+        json.dumps(
+            {
+                "adapter": MODEL_SEMANTIC_ADAPTER,
+                "profile": "baseline_v0",
+                "summary": {"total_est_cost_usd": 0.06},
+            }
+        )
+    )
+    improved_decisions.write_text(
+        json.dumps(
+            {
+                "adapter": MODEL_SEMANTIC_ADAPTER,
+                "profile": "improved_v0",
+                "summary": {"total_est_cost_usd": 0.05},
+            }
+        )
+    )
+    out = tmp_path / "surface.html"
+
+    render_reporting_surface(
+        dataset_path=ADVERSARIAL_V1,
+        baseline_report_path=baseline,
+        improved_report_path=improved,
+        baseline_decisions_path=baseline_decisions,
+        improved_decisions_path=improved_decisions,
+        out=out,
+    )
+
+    html = out.read_text()
+    assert "Model/NLI Semantic Reporting Surface" in html
+    assert MODEL_SEMANTIC_ADAPTER in html
+    assert "model/NLI" in html
+    assert "est. decision cost $0.110000" in html
+    assert "no model call" not in html
+    assert "Semantic fixture" not in html
+    assert "Fixture-Backed Semantic Reporting Surface" not in html
 
 
 def test_render_reporting_surface_shows_case_level_adversarial_v1_evidence(
@@ -185,11 +232,34 @@ def test_renderer_cli_writes_html(
     assert "Fixture-Backed Semantic Reporting Surface" in out.read_text()
 
 
+def test_renderer_requires_both_decision_files_for_model_mode(
+    tmp_path: Path,
+    semantic_reports: tuple[Path, Path],
+) -> None:
+    baseline, improved = semantic_reports
+    baseline_decisions = tmp_path / "baseline_decisions.json"
+    baseline_decisions.write_text(
+        json.dumps({"adapter": MODEL_SEMANTIC_ADAPTER, "profile": "baseline_v0"})
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        render_reporting_surface(
+            dataset_path=ADVERSARIAL_V1,
+            baseline_report_path=baseline,
+            improved_report_path=improved,
+            baseline_decisions_path=baseline_decisions,
+            out=tmp_path / "surface.html",
+        )
+    assert "pass both --baseline-decisions and --improved-decisions" in str(exc.value)
+
+
 def test_makefile_exposes_semantic_reporting_surface_target() -> None:
     makefile = (ROOT / "Makefile").read_text()
     assert "semantic-reporting-surface:" in makefile
     assert "scripts/render_semantic_reporting_surface.py" in makefile
     assert "reports/adversarial_v1_semantic_reporting_surface.html" in makefile
+    assert "--baseline-decisions reports/semantic_model_decisions/adversarial_v1_baseline.json" in makefile
+    assert "--improved-decisions reports/semantic_model_decisions/adversarial_v1_improved.json" in makefile
 
 
 def test_generated_semantic_reports_have_expected_fixture_counts(

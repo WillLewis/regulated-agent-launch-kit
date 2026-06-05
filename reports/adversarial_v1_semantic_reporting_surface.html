@@ -130,9 +130,8 @@
       <p>
         This preview reads <code>case_studies/financial_links_reliability/evals/adversarial_v1.jsonl</code> and compares
         <code>baseline_v0</code> with
-        <code>improved_v0</code>. The default eval
-        lane remains unchanged; supplying a semantic-decision fixture adds the
-        ninth grader row <code>unsupported_claim_semantic</code>.
+        <code>improved_v0</code>. The default eval lane remains unchanged; supplying a semantic-decision fixture adds the ninth grader row
+        <code>unsupported_claim_semantic</code>.
       </p>
       <div class="metrics">
         <div class="metric"><small>Dataset cases</small><b>12</b><small>adversarial v1 cases</small></div>
@@ -152,12 +151,7 @@
           </tbody>
         </table>
         <p class="note">
-          The semantic lane consumes precomputed <code>SemanticDecision</code>
-          fixture records. It is an adapter contract for future NLI/model
-          graders, not a live model grader and not a replacement for the
-          runtime EvaluatorNode. Evidence rows are labeled
-          <code>semantic_fixture</code> so reviewers can distinguish this
-          lane from a future model-backed grader.
+          The semantic lane consumes precomputed `SemanticDecision` fixture records. It is an adapter contract for future NLI/model graders, not a live model grader and not a replacement for the runtime EvaluatorNode. Evidence rows are labeled `semantic_fixture` so reviewers can distinguish this lane from a future model-backed grader.
         </p>
       </div>
     </section>
@@ -181,10 +175,7 @@
     <section>
       <h2>Case-Level Surface</h2>
       <p class="note">
-        The case table shows whether the lexical unsupported-claim grader and
-        the fixture-backed semantic grader agree. This is the reviewer-facing
-        surface for debugging paraphrases, safe negation, cross-sentence traps,
-        and calibration cases before any credentialed model grader is wired in.
+        The case table shows whether the lexical unsupported-claim grader and the fixture-backed semantic grader agree. This is the reviewer-facing surface for debugging paraphrases, safe negation, cross-sentence traps, and calibration cases before any credentialed model grader is wired in.
       </p>
       <table>
         <thead>

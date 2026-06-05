@@ -339,3 +339,83 @@ def test_tracked_markdown_avoids_raw_repeat_run_path_templates() -> None:
         "with abstract wording (e.g. 'gitignored repeat-run output "
         f"directory'). Hits: {leaks}"
     )
+
+
+# ---------------------------------------------------------------------------
+# adversarial v1 (12-case) repeat summary — tracked public-safe evidence
+# ---------------------------------------------------------------------------
+
+V1_SUMMARY_MD = ROOT / "reports" / "llm_adversarial_v1_repeat_summary.md"
+V1_SUMMARY_JSON = ROOT / "reports" / "llm_adversarial_v1_repeat_summary.json"
+ADV_V1_DATASET = "case_studies/financial_links_reliability/evals/adversarial_v1.jsonl"
+
+
+def test_v1_summary_md_is_public_safe() -> None:
+    assert V1_SUMMARY_MD.exists(), (
+        "reports/llm_adversarial_v1_repeat_summary.md must exist once the "
+        "adversarial v1 repeat capture has been aggregated"
+    )
+    text = V1_SUMMARY_MD.read_text()
+    assert "NOT READY FOR PILOT" in text
+    for needle in FORBIDDEN_RAW_SUBSTRINGS:
+        assert needle not in text, (
+            f"adversarial v1 repeat summary md leaks {needle!r}"
+        )
+    import re
+
+    leaks = re.findall(r"reports/llm_repeats/[^\s\"`]*?/run_\d+", text)
+    assert not leaks, (
+        f"adversarial v1 repeat summary md leaks raw repeat-run paths: {leaks}"
+    )
+    lower = text.lower()
+    for phrase in FORBIDDEN_OVERCLAIMS:
+        assert phrase not in lower, (
+            f"adversarial v1 repeat summary md must not claim {phrase!r}"
+        )
+
+
+def test_v1_summary_json_is_public_safe_and_v1_scoped() -> None:
+    assert V1_SUMMARY_JSON.exists()
+    text = V1_SUMMARY_JSON.read_text()
+    for needle in FORBIDDEN_RAW_SUBSTRINGS:
+        assert needle not in text, (
+            f"adversarial v1 repeat summary json leaks {needle!r}"
+        )
+    payload = json.loads(text)
+    assert payload.get("not_ready_for_pilot") is True
+    assert payload.get("synthetic") is True
+    assert payload.get("run_count", 0) >= 2
+    # The v1 summary must be scoped to the adversarial v1 dataset only —
+    # never silently mixed with the v0 slice.
+    assert payload.get("datasets") == [ADV_V1_DATASET]
+
+
+def test_v1_repeat_summary_is_tracked() -> None:
+    """The aggregate summary is the public-safe evidence and must be tracked;
+    the raw per-run tree stays gitignored (asserted elsewhere)."""
+
+    for rel in (
+        "reports/llm_adversarial_v1_repeat_summary.md",
+        "reports/llm_adversarial_v1_repeat_summary.json",
+    ):
+        tracked = subprocess.run(
+            ["git", "ls-files", rel],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        assert tracked == rel, f"{rel} must be tracked as public-safe evidence"
+
+
+def test_readme_and_plan_reference_v1_repeat_summary() -> None:
+    """Once the v1 capture is executed and summarized, the docs must point
+    at the tracked summary rather than calling it 'not yet executed'."""
+
+    readme = README.read_text()
+    plan = PLAN.read_text()
+    assert "reports/llm_adversarial_v1_repeat_summary.md" in readme
+    assert "llm_adversarial_v1_repeat_summary" in plan
+    # The v1 repeat row/section must read as executed, not pending.
+    assert "executed once" in readme.lower()
+    assert "executed once" in plan.lower()

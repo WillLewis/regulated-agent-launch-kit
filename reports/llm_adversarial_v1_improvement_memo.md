@@ -69,14 +69,52 @@ production SLAs.
 - It does not prove the semantic/model audit lane; this run used the
   default offline graders, and model/NLI semantic decisions remain
   separate opt-in artifacts.
-- It does not create pilot readiness. The project still owes repeat-run
-  variance on this larger slice, accepted regression seeds for any
-  model-failure modes, and pilot-readiness review artifacts.
+- It does not create pilot readiness. Repeat-run variance on this larger
+  slice has since been captured (see the addendum below), but the project
+  still owes accepted regression seeds for any model-failure modes and
+  pilot-readiness review artifacts — and a single N=5 lab cannot establish
+  robustness.
 
 ## Recommendation
 
 Keep `llm_candidate_v1` as the better prompt candidate for this slice,
-but do not promote it beyond evidence-review status. The next
-evaluation step should be repeat-run variance on adversarial v1 or
-model/NLI semantic audit decisions over the already-generated drafts,
-not a launch-readiness claim.
+but do not promote it beyond evidence-review status. Repeat-run variance
+on adversarial v1 has now been captured (see the addendum below); the
+next evaluation step should be model/NLI semantic audit decisions over
+the already-generated drafts, not a launch-readiness claim.
+
+## Repeat-Run Variance Addendum
+
+A credentialed repeat-run capture was subsequently executed at `RUNS=5`
+per profile (10 runs total: 5 × `llm_candidate_v0`, 5 × `llm_candidate_v1`)
+against the same 12-case slice. The aggregated public-safe summary is
+tracked at
+[`reports/llm_adversarial_v1_repeat_summary.md`](llm_adversarial_v1_repeat_summary.md)
+(JSON sibling alongside it); raw per-run reports and traces remain
+gitignored.
+
+| Metric | `llm_candidate_v0` (5 runs) | `llm_candidate_v1` (5 runs) |
+|---|---|---|
+| Passed / 12 per run | 9, 10, 10, 7, 10 | 12, 12, 12, 12, 12 |
+| Runtime-guardrail fires (all runtime-only) | 3, 2, 2, 5, 2 | 0, 0, 0, 0, 0 |
+| Offline `UNSAFE_CUSTOMER_COMMS` | 0 every run | 0 every run |
+| `EVALUATOR_MISS` | 0 every run | 0 every run |
+
+- Across all 10 runs the negation-aware offline grader emitted zero
+  affirmative `UNSAFE_CUSTOMER_COMMS` and zero `EVALUATOR_MISS`. Every one
+  of the 14 runtime-guardrail fires was runtime-only — the conservative
+  substring guardrail firing on hedged-but-negated drafts the offline
+  grader cleared. The single-run guardrail-vs-audit asymmetry generalizes.
+- `llm_candidate_v1` was stable at 12/12 across every run; `llm_candidate_v0`
+  varied 7–10/12, and 8 of the 12 cases flipped pass/fail at least once
+  across its runs.
+- Combined estimated cost was `$0.607305` over 10 runs (mean `$0.06073`,
+  min `$0.047943`, max `$0.073599`, stdev `$0.011094`); the five v1 runs
+  were the costlier set. Per-band latency means were L1 ≈8023 ms, L2
+  ≈8866 ms, L3 ≈9428 ms.
+
+N=5 per profile on a 12-case synthetic slice cannot establish prompt
+robustness, model safety, pilot readiness, production readiness, or
+regulatory compliance. **NOT READY FOR PILOT** remains the posture;
+repeat-run variance is one input to a future readiness conversation, not
+a readiness signal.

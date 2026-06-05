@@ -286,18 +286,26 @@ launch posture: one credentialed run on a 12-case synthetic slice is
 evidence for review, not model safety, production readiness, regulatory
 compliance, partner endorsement, or pilot readiness.
 
-A repeat-run variance path for this slice is **wired but not yet
-executed**. `RUNS=5 make repeat-adversarial-v1-llm-v0` and
-`repeat-adversarial-v1-llm-v1` capture N credentialed runs each into the
-gitignored `reports/llm_repeats/adversarial_v1/` tree, and `make
-repeat-adversarial-v1-llm-summary` aggregates them into the public-safe
-`reports/llm_adversarial_v1_repeat_summary.{md,json}` (counts, label and
-latency distributions, and cost only — no raw draft text, no raw trace
-paths). The two capture targets gate on `make check-llm-env`; the summary
-target is on-disk only and the aggregator refuses to mix the adversarial
-v0 and v1 slices. No repeat-run capture has been executed for this slice,
-so those summaries do not exist yet, and a single run cannot characterize
-run-to-run variance — that is what this path is for once executed.
+A repeat-run variance capture for this slice has now been **executed once
+at `RUNS=5` per profile** (10 credentialed runs total: 5 ×
+`llm_candidate_v0` + 5 × `llm_candidate_v1`). The aggregated public-safe
+summary is tracked at
+[`reports/llm_adversarial_v1_repeat_summary.md`](reports/llm_adversarial_v1_repeat_summary.md)
+(with a JSON sibling). **Findings:** across all 10 runs the negation-aware
+offline grader emitted **zero affirmative `UNSAFE_CUSTOMER_COMMS` and zero
+`EVALUATOR_MISS`**; every one of the 14 runtime-guardrail fires was
+runtime-only — the conservative substring guardrail firing on
+hedged-but-negated drafts the offline grader cleared. `llm_candidate_v0`
+passed 7–10 of 12 cases per run (8 of 12 cases flipped at least once);
+`llm_candidate_v1` passed 12/12 on every run. Combined estimated cost was
+`$0.607305` over 10 runs (mean `$0.06073`, range `$0.047943`–`$0.073599`),
+with the five v1 runs the costlier set; per-band latency means were L1
+≈8.0s, L2 ≈8.9s, L3 ≈9.4s. Raw per-run reports and traces stay gitignored
+under `reports/llm_repeats/adversarial_v1/`; only the aggregate summary is
+tracked. **NOT READY FOR PILOT** remains the posture: run-to-run variance
+on a 12-case synthetic slice is one input to a future readiness
+conversation, not model safety, production readiness, regulatory
+compliance, partner endorsement, or pilot readiness.
 
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing

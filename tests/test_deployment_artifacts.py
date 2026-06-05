@@ -105,3 +105,142 @@ def test_readme_links_all_phase_1_docs() -> None:
     readme = (ROOT / "README.md").read_text()
     for doc in PHASE_1_DOCS:
         assert f"]({doc})" in readme, f"README missing markdown link to {doc}"
+
+
+# --- Phase 2 deployment docs -------------------------------------------------
+# The remaining deployment-leadership artifacts: a launch-decision review, an
+# exec update, an adoption plan, a field-feedback log, and a delivery plan.
+# They must be substantive, placeholder-free, synthetic-only, honestly
+# pre-pilot, and grounded in generated artifacts — not narrative.
+
+PHASE_2_DOCS = [
+    "deployment/pilot_readiness_review.md",
+    "deployment/exec_update.md",
+    "deployment/adoption_plan.md",
+    "deployment/field_feedback_to_product.md",
+    "deployment/delivery_plan.md",
+]
+
+PHASE_2_REQUIRED_SECTIONS = {
+    "deployment/pilot_readiness_review.md": [
+        "## Ready",
+        "## Blocked",
+        "## Pilot Only With Constraints",
+        "## Approval Boundaries",
+        "## Monitored Metrics",
+        "## Rollback Conditions",
+    ],
+    "deployment/exec_update.md": [
+        "## Status",
+        "## What Changed",
+        "## Top Metric Movement",
+        "## Top Unresolved Risk",
+        "## Decision Needed",
+        "## Recommendation",
+        "## Next Milestone",
+    ],
+    "deployment/adoption_plan.md": [
+        "## Pilot Users",
+        "## Onboarding",
+        "## Operating Cadence",
+        "## Adoption Risks",
+    ],
+    "deployment/field_feedback_to_product.md": [
+        "## Deployment Learnings",
+        "## Product Feedback Categories",
+        "## Feedback Loop",
+    ],
+    "deployment/delivery_plan.md": [
+        "## Phases",
+        "## Milestones",
+        "## Review Gates",
+    ],
+}
+
+
+@pytest.mark.parametrize("doc", PHASE_2_DOCS)
+def test_phase_2_doc_exists(doc: str) -> None:
+    assert (ROOT / doc).exists(), doc
+
+
+@pytest.mark.parametrize("doc", PHASE_2_DOCS)
+def test_phase_2_doc_has_no_unresolved_todo(doc: str) -> None:
+    content = (ROOT / doc).read_text()
+    assert "TODO:" not in content, f"{doc} still contains a TODO: placeholder"
+
+
+@pytest.mark.parametrize("doc", PHASE_2_DOCS)
+def test_phase_2_doc_is_substantive(doc: str) -> None:
+    content = (ROOT / doc).read_text()
+    assert len(content) >= 1500, f"{doc} appears thin ({len(content)} chars)"
+
+
+@pytest.mark.parametrize("doc", PHASE_2_DOCS)
+def test_phase_2_doc_keeps_synthetic_stance(doc: str) -> None:
+    content = (ROOT / doc).read_text().lower()
+    assert "synthetic" in content, doc
+
+
+@pytest.mark.parametrize("doc", PHASE_2_DOCS)
+def test_phase_2_doc_makes_no_readiness_overclaim(doc: str) -> None:
+    lower = (ROOT / doc).read_text().lower()
+    for forbidden in (
+        "production ready",
+        "production-ready",
+        "pilot ready",
+        "pilot-ready",
+        "model is safe",
+        "safe to deploy",
+    ):
+        assert forbidden not in lower, f"{doc} overclaims: {forbidden!r}"
+
+
+@pytest.mark.parametrize("doc", PHASE_2_DOCS)
+def test_phase_2_doc_grounds_claims_in_artifacts(doc: str) -> None:
+    """Each Phase 2 doc must reference at least one generated artifact or
+    deployment doc path so readiness claims are traceable, not narrative."""
+
+    content = (ROOT / doc).read_text()
+    artifact_markers = (
+        "reports/",
+        "evidence_packs/",
+        "configs/",
+        "case_studies/",
+        "deployment/",
+    )
+    assert any(marker in content for marker in artifact_markers), doc
+
+
+@pytest.mark.parametrize(
+    "doc,sections", list(PHASE_2_REQUIRED_SECTIONS.items())
+)
+def test_phase_2_doc_has_required_sections(doc: str, sections: list[str]) -> None:
+    content = (ROOT / doc).read_text()
+    for header in sections:
+        assert header in content, f"{doc} missing section {header!r}"
+
+
+def test_pilot_readiness_review_posture_and_approval_link() -> None:
+    content = (ROOT / "deployment/pilot_readiness_review.md").read_text()
+    assert "NOT READY FOR PILOT" in content
+    assert "configs/approval_matrix.yaml" in content
+
+
+def test_exec_update_holds_posture_and_recommends_no_pilot() -> None:
+    content = (ROOT / "deployment/exec_update.md").read_text()
+    assert "NOT READY FOR PILOT" in content
+    assert "do not pilot" in content.lower(), "exec update must not recommend a pilot go"
+
+
+def test_delivery_plan_has_owners_acceptance_gates_and_codex_reviews() -> None:
+    content = (ROOT / "deployment/delivery_plan.md").read_text()
+    assert "NOT READY FOR PILOT" in content
+    assert "Codex" in content
+    assert "acceptance gate" in content.lower()
+    assert "deployment/acceptance_criteria.md" in content
+
+
+def test_field_feedback_grounds_learnings_in_generated_artifacts() -> None:
+    content = (ROOT / "deployment/field_feedback_to_product.md").read_text()
+    assert "reports/llm_adversarial_v1_semantic_audit_summary.md" in content
+    assert "regressions_semantic_adversarial_v1" in content

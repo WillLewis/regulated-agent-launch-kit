@@ -99,6 +99,16 @@ system):
 - [Risk register](deployment/risk_register.md) — synthetic deployment risks with severity, likelihood, mitigation, detection signal, and owner.
 - [Dependency map](deployment/dependency_map.md) — what blocks what across technical, product, and review dependencies.
 
+Deployment-leadership artifacts for the **current** Financial Links state — each
+claim points to a generated eval/evidence artifact; all stay **NOT READY FOR
+PILOT**:
+
+- [Pilot readiness review](deployment/pilot_readiness_review.md) — ready/blocked/constraints, approval boundaries, monitored metrics, and rollback conditions; verdict **NOT READY FOR PILOT** with named blockers.
+- [Delivery plan](deployment/delivery_plan.md) — milestones (done/next) with owners, dependencies, acceptance gates, and Codex review gates.
+- [Adoption plan](deployment/adoption_plan.md) — synthetic pilot roles, onboarding via redacted evidence, operating cadence, and adoption risks.
+- [Executive update](deployment/exec_update.md) — status, what changed, metric movement, top risk, decision needed, recommendation, next milestone.
+- [Field feedback to product](deployment/field_feedback_to_product.md) — eval-loop learnings converted into reusable platform/product requirements.
+
 See [`PLAN_v3_openai_tdl_fde.md`](PLAN_v3_openai_tdl_fde.md) for the full phased plan.
 
 ## Synthetic Domain Model

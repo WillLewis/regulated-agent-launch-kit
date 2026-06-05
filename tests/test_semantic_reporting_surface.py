@@ -119,6 +119,8 @@ def test_model_backed_reporting_surface_uses_model_copy(
     assert MODEL_SEMANTIC_ADAPTER in html
     assert "model/NLI" in html
     assert "est. decision cost $0.110000" in html
+    # Model/NLI mode must label itself an audit experiment, not a fixture lane.
+    assert "audit experiment" in html
     assert "no model call" not in html
     assert "Semantic fixture" not in html
     assert "Fixture-Backed Semantic Reporting Surface" not in html
@@ -253,13 +255,170 @@ def test_renderer_requires_both_decision_files_for_model_mode(
     assert "pass both --baseline-decisions and --improved-decisions" in str(exc.value)
 
 
-def test_makefile_exposes_semantic_reporting_surface_target() -> None:
-    makefile = (ROOT / "Makefile").read_text()
-    assert "semantic-reporting-surface:" in makefile
-    assert "scripts/render_semantic_reporting_surface.py" in makefile
-    assert "reports/adversarial_v1_semantic_reporting_surface.html" in makefile
-    assert "--baseline-decisions reports/semantic_model_decisions/adversarial_v1_baseline.json" in makefile
-    assert "--improved-decisions reports/semantic_model_decisions/adversarial_v1_improved.json" in makefile
+def _write_model_decisions(
+    path: Path,
+    *,
+    adapter: str = MODEL_SEMANTIC_ADAPTER,
+    profile: str,
+    cost: float = 0.0,
+) -> Path:
+    path.write_text(
+        json.dumps(
+            {
+                "adapter": adapter,
+                "profile": profile,
+                "summary": {"total_est_cost_usd": cost},
+            }
+        )
+    )
+    return path
+
+
+def test_model_mode_rejects_wrong_adapter(
+    tmp_path: Path,
+    semantic_reports: tuple[Path, Path],
+) -> None:
+    baseline, improved = semantic_reports
+
+    with pytest.raises(SystemExit) as exc:
+        render_reporting_surface(
+            dataset_path=ADVERSARIAL_V1,
+            baseline_report_path=baseline,
+            improved_report_path=improved,
+            baseline_decisions_path=_write_model_decisions(
+                tmp_path / "baseline_decisions.json",
+                adapter="some_other_adapter",
+                profile="baseline_v0",
+            ),
+            improved_decisions_path=_write_model_decisions(
+                tmp_path / "improved_decisions.json",
+                profile="improved_v0",
+            ),
+            out=tmp_path / "surface.html",
+        )
+    message = str(exc.value)
+    assert "must declare adapter" in message
+    assert MODEL_SEMANTIC_ADAPTER in message
+
+
+def test_model_mode_rejects_profile_mismatch(
+    tmp_path: Path,
+    semantic_reports: tuple[Path, Path],
+) -> None:
+    baseline, improved = semantic_reports
+
+    with pytest.raises(SystemExit) as exc:
+        render_reporting_surface(
+            dataset_path=ADVERSARIAL_V1,
+            baseline_report_path=baseline,
+            improved_report_path=improved,
+            # Correct adapter, but the baseline decision file claims the
+            # improved profile, so it must not validate against the report.
+            baseline_decisions_path=_write_model_decisions(
+                tmp_path / "baseline_decisions.json",
+                profile="improved_v0",
+            ),
+            improved_decisions_path=_write_model_decisions(
+                tmp_path / "improved_decisions.json",
+                profile="improved_v0",
+            ),
+            out=tmp_path / "surface.html",
+        )
+    assert "does not match report profile" in str(exc.value)
+
+
+def test_model_backed_reporting_surface_is_public_safe(
+    tmp_path: Path,
+    semantic_reports: tuple[Path, Path],
+) -> None:
+    baseline, improved = semantic_reports
+    out = tmp_path / "surface.html"
+
+    render_reporting_surface(
+        dataset_path=ADVERSARIAL_V1,
+        baseline_report_path=baseline,
+        improved_report_path=improved,
+        baseline_decisions_path=_write_model_decisions(
+            tmp_path / "baseline_decisions.json",
+            profile="baseline_v0",
+            cost=0.06,
+        ),
+        improved_decisions_path=_write_model_decisions(
+            tmp_path / "improved_decisions.json",
+            profile="improved_v0",
+            cost=0.05,
+        ),
+        out=out,
+    )
+
+    html = out.read_text()
+    assert "audit experiment" in html
+    assert "NOT READY FOR PILOT" in html
+    lowered = html.lower()
+    forbidden_phrases = [
+        "production ready",
+        "production-ready",
+        "pilot ready",
+        "pilot-ready",
+        "regulatory compliant",
+        "regulatory-compliant",
+        "model safety claim",
+    ]
+    assert not any(phrase in lowered for phrase in forbidden_phrases)
+
+
+def _makefile_target_block(makefile: str, target: str) -> str:
+    """Return the recipe block for a single Makefile target.
+
+    The block runs from the ``target:`` header line through the indented
+    recipe lines, stopping at the next blank line or non-indented line. This
+    lets a test assert on one target's wiring instead of substring-matching
+    the whole file, which would conflate the fixture and model/NLI targets.
+    """
+
+    lines = makefile.splitlines()
+    header = f"{target}:"
+    start = next(
+        (i for i, line in enumerate(lines) if line.startswith(header)),
+        None,
+    )
+    assert start is not None, f"Makefile target {target!r} not found"
+    block = [lines[start]]
+    for line in lines[start + 1 :]:
+        if not line.strip() or not line[0].isspace():
+            break
+        block.append(line)
+    return "\n".join(block)
+
+
+def test_makefile_fixture_target_renders_tracked_html_without_decisions() -> None:
+    block = _makefile_target_block(
+        (ROOT / "Makefile").read_text(), "semantic-reporting-surface"
+    )
+    assert "scripts/render_semantic_reporting_surface.py" in block
+    assert "--out reports/adversarial_v1_semantic_reporting_surface.html" in block
+    # Fixture mode must never pass model/NLI decision files, or the renderer
+    # would switch to the credentialed audit-experiment copy.
+    assert "--baseline-decisions" not in block
+    assert "--improved-decisions" not in block
+
+
+def test_makefile_model_target_passes_both_decision_files() -> None:
+    block = _makefile_target_block(
+        (ROOT / "Makefile").read_text(), "semantic-model-reporting-surface"
+    )
+    assert "scripts/render_semantic_reporting_surface.py" in block
+    assert (
+        "--baseline-decisions reports/semantic_model_decisions/adversarial_v1_baseline.json"
+        in block
+    )
+    assert (
+        "--improved-decisions reports/semantic_model_decisions/adversarial_v1_improved.json"
+        in block
+    )
+    # The model/NLI HTML output is gitignored, distinct from the tracked
+    # fixture HTML, so a model run never overwrites the committed artifact.
+    assert "--out reports/adversarial_v1_semantic_model_reporting_surface.html" in block
 
 
 def test_generated_semantic_reports_have_expected_fixture_counts(

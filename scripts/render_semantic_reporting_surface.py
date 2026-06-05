@@ -1,9 +1,18 @@
-"""Render a static HTML preview for the fixture-backed semantic eval lane.
+"""Render a static HTML preview for the semantic unsupported-claim eval lane.
 
 The output is a local reporting-surface mock, not the final public website.
 It reads generated eval reports and the adversarial dataset, then renders a
 public-safe HTML file that shows how the semantic unsupported-claim lane would
 be explained to a reviewer.
+
+The renderer has two modes:
+
+* **Fixture mode** (no decision files) — the lane is backed by hand-authored
+  ``SemanticDecision`` fixtures; the HTML states that no model or network call
+  is made.
+* **Model/NLI mode** (both decision files) — the lane is backed by the opt-in
+  model/NLI adapter; the HTML labels itself an audit experiment and discloses
+  the estimated decision cost. Supplying only one decision file is an error.
 """
 
 from __future__ import annotations
@@ -585,7 +594,11 @@ def render_reporting_surface(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Render the fixture-backed semantic reporting surface as HTML."
+        description=(
+            "Render the semantic reporting surface as HTML. Omit the decision "
+            "files for fixture mode; pass both --baseline-decisions and "
+            "--improved-decisions for the opt-in model/NLI audit-experiment mode."
+        )
     )
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--baseline-report", type=Path, required=True)

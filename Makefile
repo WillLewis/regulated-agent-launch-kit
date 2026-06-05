@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -30,6 +30,10 @@ help:
 	@echo "  eval-adversarial-v1-baseline  run the adversarial v1 slice against baseline_v0 (deterministic)"
 	@echo "  eval-adversarial-v1-improved  run the adversarial v1 slice against improved_v0 (deterministic)"
 	@echo "  eval-card-adversarial-v1   run both adversarial v1 evals, then render the comparison eval card"
+	@echo "  dataset-test-adversarial-v2  validate the broader adversarial v2 JSONL slice (24 cases)"
+	@echo "  eval-adversarial-v2-baseline  run the adversarial v2 slice against baseline_v0 (deterministic)"
+	@echo "  eval-adversarial-v2-improved  run the adversarial v2 slice against improved_v0 (deterministic)"
+	@echo "  eval-card-adversarial-v2   run both adversarial v2 evals, then render the comparison eval card"
 	@echo "  eval-adversarial-v1-baseline-semantic  run baseline_v0 with fixture-backed semantic audit lane"
 	@echo "  eval-adversarial-v1-improved-semantic  run improved_v0 with fixture-backed semantic audit lane"
 	@echo "  semantic-reporting-surface render the fixture-backed semantic audit lane as static HTML"
@@ -100,6 +104,9 @@ dataset-test-adversarial:
 dataset-test-adversarial-v1:
 	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/adversarial_v1.jsonl
 
+dataset-test-adversarial-v2:
+	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/adversarial_v2.jsonl
+
 # ---- Deterministic adversarial v1 targets (credential-free) ---------------
 # These targets run the deterministic baseline_v0 / improved_v0 profiles
 # against the expanded 12-case adversarial v1 slice. They never call an
@@ -126,6 +133,36 @@ eval-card-adversarial-v1: eval-adversarial-v1-baseline eval-adversarial-v1-impro
 		--baseline-report reports/baseline_adversarial_v1_eval.json \
 		--improved-report reports/improved_adversarial_v1_eval.json \
 		--out reports/adversarial_v1_eval_card.md
+
+# ---- Deterministic adversarial v2 targets (credential-free) ---------------
+# M8: the broader 24-case adversarial v2 slice expands coverage beyond v1
+# (multi-policy conflict, stale-data vs consent ambiguity, fallback
+# permitted-vs-blocked confusion, missing partner_id / institution_id
+# variants, L2/L3 consent pressure with safe copy, and new overpromise
+# paraphrases). Like the v1 deterministic targets these run only the
+# baseline_v0 / improved_v0 profiles, never call an LLM, and never depend
+# on credentials. No adversarial v2 LLM target is wired (M7's semantic
+# blocking gate is the next chunk, not this one).
+
+eval-adversarial-v2-baseline:
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v2.jsonl \
+		--traces-out traces/local/baseline_adversarial_v2 \
+		--report-out reports/baseline_adversarial_v2_eval.json \
+		--agent-system-version baseline_v0
+
+eval-adversarial-v2-improved:
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v2.jsonl \
+		--traces-out traces/local/improved_adversarial_v2 \
+		--report-out reports/improved_adversarial_v2_eval.json \
+		--agent-system-version improved_v0
+
+eval-card-adversarial-v2: eval-adversarial-v2-baseline eval-adversarial-v2-improved
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/baseline_adversarial_v2_eval.json \
+		--improved-report reports/improved_adversarial_v2_eval.json \
+		--out reports/adversarial_v2_eval_card.md
 
 eval-adversarial-v1-baseline-semantic:
 	uv run python scripts/run_eval.py \

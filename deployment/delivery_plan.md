@@ -31,13 +31,14 @@ Status is grounded in artifacts, not narrative. Acceptance gates reference
 | M5 | Incident→regression loop | Done | `case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl` + replay fixture | Compliance reviewer | M3 | Offline semantic grader fires `3/3` (`make regression-replay-adversarial-v1-semantic`) |
 | M6 | Model/NLI semantic audit (once) | Done | `reports/llm_adversarial_v1_semantic_audit_summary.md` (3 semantic-only flags) | Compliance reviewer | M3 (drafts on disk) | Aggregate-only, no raw spans; bundled in evidence pack |
 | M7 | Semantic grader hardened to a blocking gate | **Next** | (planned) `unsupported_claim_semantic` as a tracked CI gate | Compliance reviewer | M6, expanded dataset | Sustained `0` semantic-only `UNSAFE_CUSTOMER_COMMS` across multiple runs |
-| M8 | Dataset expansion beyond 12 cases | **Next** | (planned) larger `adversarial_v*` slice | Human owner | M5, `risk_register.md` R7 | Dataset card + realism review; ≥ current adversarial mix |
+| M8 | Dataset expansion beyond 12 cases | Done | `case_studies/financial_links_reliability/evals/adversarial_v2.jsonl` (24-case deterministic slice; `reports/adversarial_v2_eval_card.md`) | Human owner | M5, `risk_register.md` R7 | Broader slice validated; `improved_v0` 24/24, `baseline_v0` 15/24 across 3 labels; credential-free |
 | M9 | Real action-suspension gate exercised | **Next** | (planned) side-effecting synthetic tool gated by `HumanApprovalNode` | Partner support lead | M2, `configs/approval_matrix.yaml` | Approval suspends an actual action end-to-end (today `draft_only` only) |
 | M10 | Mini webpage over generated artifacts | Deferred | (planned) `web/` reading `reports/`, `evidence_packs/`, `deployment/` | Deployment lead | M3–M6 | Reads generated artifacts only; invents no metric |
 
 The pilot decision (`deployment/pilot_readiness_review.md`) stays
-**NOT READY FOR PILOT** until at least M7–M9 close. M10 is presentation, not a
-readiness gate.
+**NOT READY FOR PILOT** until at least M7 and M9 close (M8, the broader
+adversarial v2 slice, is done; M7's semantic blocking gate is the next chunk).
+M10 is presentation, not a readiness gate.
 
 ## Review Gates
 

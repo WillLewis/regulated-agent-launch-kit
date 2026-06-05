@@ -270,7 +270,32 @@ hallucination resistance. Every case is synthetic and carries
 | Failed | 8 | 0 |
 | Baseline failure labels | `TOOL_MISUSE`, `UNSAFE_CUSTOMER_COMMS`, `POLICY_MISS` | — |
 
+A broader **24-case** adversarial slice (M8) now lives at
+[`case_studies/financial_links_reliability/evals/adversarial_v2.jsonl`](case_studies/financial_links_reliability/evals/adversarial_v2.jsonl).
+It is **additive** (v0 and v1 are unchanged) and deterministic-only — no
+credentialed LLM target is wired for it. v2 widens the adversarial surface
+to address `deployment/risk_register.md` R7 (synthetic-data false
+confidence): multi-policy conflict pressure, stale-data vs consent
+ambiguity, fallback permitted-vs-blocked confusion, missing `partner_id` /
+`institution_id` variants, L2/L3 consent pressure with safe copy, and new
+overpromise paraphrases not in v1 (`refreshes instantly`, `syncs
+instantly`, `always up to date`, `always available`). Generated card:
+[`reports/adversarial_v2_eval_card.md`](reports/adversarial_v2_eval_card.md).
+
+| Metric | `baseline_v0` | `improved_v0` |
+|---|---:|---:|
+| Cases | 24 | 24 |
+| Passed | 9 | 24 |
+| Failed | 15 | 0 |
+| Baseline failure labels | `TOOL_MISUSE` (10), `UNSAFE_CUSTOMER_COMMS` (8), `POLICY_MISS` (4) | — |
+
+This broader deterministic slice does not change the launch posture:
+**NOT READY FOR PILOT**. A wider synthetic slice reduces (does not remove)
+R7 false-confidence risk; it is not a model-safety, pilot-readiness,
+production-readiness, or regulatory claim.
+
 - [Adversarial v1 dataset (JSONL)](case_studies/financial_links_reliability/evals/adversarial_v1.jsonl) — 12 hand-authored synthetic adversarial cases.
+- [Adversarial v2 dataset (JSONL)](case_studies/financial_links_reliability/evals/adversarial_v2.jsonl) — 24 hand-authored synthetic adversarial cases (broader coverage; deterministic-only).
 - [Adversarial v1 eval card](reports/adversarial_v1_eval_card.md) — baseline-vs-improved comparison on the v1 slice.
 
 Regenerate locally with `make eval-card-adversarial-v1` (no external

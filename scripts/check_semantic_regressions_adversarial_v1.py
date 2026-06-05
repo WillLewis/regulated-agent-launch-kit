@@ -158,18 +158,80 @@ def check(regressions_path: Path, summary_path: Path) -> list[str]:
     return errors
 
 
+def check_replay_report(regressions_path: Path, report_path: Path) -> list[str]:
+    """Verify a credential-free replay report fired the semantic grader.
+
+    Asserts that the offline ``unsupported_claim_semantic`` grader produced an
+    ``UNSAFE_CUSTOMER_COMMS`` failure for **every** seeded case in the produced
+    eval report (one per regression seed). This is the proof that the seeds
+    replay — without any model call — through ``run_eval.py --semantic-decisions``.
+    """
+
+    errors: list[str] = []
+    if not report_path.exists():
+        return [f"replay report not found: {report_path}"]
+    report = json.loads(report_path.read_text())
+
+    names = [r.get("name") for r in report.get("aggregate_grader_pass_rates", [])]
+    if SEMANTIC_GRADER not in names:
+        return [
+            f"replay report has no {SEMANTIC_GRADER!r} grader; run "
+            "scripts/run_eval.py with --semantic-decisions <fixture>"
+        ]
+    idx = names.index(SEMANTIC_GRADER)
+
+    seed_ids = {r["regression_case_id"] for r in _load_jsonl(regressions_path)}
+    report_cases = {c.get("case_id"): c for c in report.get("per_case", [])}
+    for case_id in sorted(seed_ids):
+        case = report_cases.get(case_id)
+        if case is None:
+            errors.append(f"{case_id}: not present in replay report")
+            continue
+        results = case.get("grader_results", [])
+        if idx >= len(results):
+            errors.append(f"{case_id}: no {SEMANTIC_GRADER} result in report")
+            continue
+        result = results[idx]
+        if result.get("passed"):
+            errors.append(
+                f"{case_id}: {SEMANTIC_GRADER} did not fire (passed=True); "
+                f"expected a {SEMANTIC_FAILURE_LABEL} failure"
+            )
+        if result.get("failure_label") != SEMANTIC_FAILURE_LABEL:
+            errors.append(
+                f"{case_id}: {SEMANTIC_GRADER} failure_label="
+                f"{result.get('failure_label')!r}; expected {SEMANTIC_FAILURE_LABEL}"
+            )
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Validate the adversarial v1 semantic regression seeds and verify "
-            "their linkage to the public semantic audit summary. No model call."
+            "their linkage to the public semantic audit summary. With "
+            "--replay-report, also verify the semantic grader fired on every "
+            "seed in a credential-free replay report. No model call."
         )
     )
     parser.add_argument("--regressions", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--summary", type=Path, default=DEFAULT_SUMMARY)
+    parser.add_argument(
+        "--replay-report",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to a report produced by `run_eval.py "
+            "--semantic-decisions <fixture>` on the regression slice. When "
+            "given, assert the semantic grader fired UNSAFE_CUSTOMER_COMMS on "
+            "every seed."
+        ),
+    )
     args = parser.parse_args(argv)
 
     errors = check(args.regressions, args.summary)
+    if args.replay_report is not None:
+        errors += check_replay_report(args.regressions, args.replay_report)
     if errors:
         print(f"INVALID: {args.regressions}", file=sys.stderr)
         for err in errors:
@@ -177,9 +239,15 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     records = _load_jsonl(args.regressions)
+    replay_note = (
+        " + semantic grader fired on every seed in the replay report"
+        if args.replay_report is not None
+        else ""
+    )
     print(
         f"OK: {args.regressions} ({len(records)} semantic-only regression seed(s); "
-        "all pending_review; linked to the semantic audit summary; no model call)"
+        f"all pending_review; linked to the semantic audit summary{replay_note}; "
+        "no model call)"
     )
     return 0
 

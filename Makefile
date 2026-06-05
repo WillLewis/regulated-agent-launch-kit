@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -62,6 +62,7 @@ help:
 	@echo "  semantic-audit-summary-adversarial-v1-llm  aggregate model/NLI decisions into a public-safe summary (no LLM call)"
 	@echo "  regression-seed-adversarial-v1-semantic  pin the 3 semantic-only failures as pending_review regression seeds (no LLM call)"
 	@echo "  regression-check-adversarial-v1-semantic  validate the semantic regression seeds + summary linkage (no LLM call)"
+	@echo "  regression-replay-adversarial-v1-semantic  credential-free replay: prove the semantic grader fires on the 3 seeds (no LLM call)"
 	@echo "  redact-adversarial-v1-llm  redact both candidates' raw v1 LLM traces (no LLM call)"
 	@echo "  evidence-pack-adversarial-v1-llm  assemble evidence_packs/financial_links_llm_adversarial_v1/ (no LLM call)"
 	@echo ""
@@ -574,10 +575,16 @@ semantic-audit-summary-adversarial-v1-llm:
 # On-disk only: NO LLM call, NO credentials, NO candidate rerun. The seeder
 # pins the model/NLI semantic-only UNSAFE_CUSTOMER_COMMS failures (drafts the
 # lexical grader cleared) as pending_review regression seeds, sourced from the
-# tracked public semantic audit summary + the synthetic dataset. The check
-# validates shape + linkage to that summary; it deliberately does NOT replay
-# the cases through scripts/run_eval.py (the failure is only visible to the
-# model/NLI grader, so a deterministic replay would not reproduce it).
+# tracked public semantic audit summary + the synthetic dataset, and builds a
+# matching tracked SemanticDecision replay fixture. The seeds are now
+# credential-free replayable: `regression-replay-adversarial-v1-semantic` feeds
+# that fixture to the existing precomputed-decision lane (run_eval.py
+# --semantic-decisions) with the deterministic improved_v0 profile, so the
+# OFFLINE unsupported_claim_semantic grader fires UNSAFE_CUSTOMER_COMMS with no
+# model call. The fixture pins the audit's verdict; it does not re-derive the
+# claim from a live draft (that would need credentials). Evaluator/grader
+# separation is unaffected — only the offline grader is fed, never the runtime
+# EvaluatorNode. `regression-check-...` validates shape + summary linkage.
 
 regression-seed-adversarial-v1-semantic:
 	@if [ ! -f reports/llm_adversarial_v1_semantic_audit_summary.json ]; then \
@@ -590,12 +597,34 @@ regression-seed-adversarial-v1-semantic:
 		--summary reports/llm_adversarial_v1_semantic_audit_summary.json \
 		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
 		--out case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl
+	uv run python scripts/build_semantic_replay_fixture_adversarial_v1.py \
+		--regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
+		--summary reports/llm_adversarial_v1_semantic_audit_summary.json \
+		--out case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1_decisions.json
 
 regression-check-adversarial-v1-semantic:
 	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl
 	uv run python scripts/check_semantic_regressions_adversarial_v1.py \
 		--regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
 		--summary reports/llm_adversarial_v1_semantic_audit_summary.json
+
+# Credential-free replay: prove the offline semantic grader fires on all 3
+# seeds via the tracked precomputed-decision fixture. Runs the deterministic
+# improved_v0 profile (no credentials, no model call, no candidate rerun) and
+# asserts the unsupported_claim_semantic grader produced UNSAFE_CUSTOMER_COMMS
+# for every seed. Report + deterministic traces are gitignored regenerable
+# check outputs.
+regression-replay-adversarial-v1-semantic:
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
+		--traces-out traces/local/regression_semantic_adversarial_v1 \
+		--report-out reports/regression_semantic_adversarial_v1_eval.json \
+		--agent-system-version improved_v0 \
+		--semantic-decisions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1_decisions.json
+	uv run python scripts/check_semantic_regressions_adversarial_v1.py \
+		--regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
+		--summary reports/llm_adversarial_v1_semantic_audit_summary.json \
+		--replay-report reports/regression_semantic_adversarial_v1_eval.json
 
 # ---- Redaction + evidence pack for the adversarial v1 LLM evidence ----------
 # On-disk only: these do NOT call the LLM or require credentials. They assume

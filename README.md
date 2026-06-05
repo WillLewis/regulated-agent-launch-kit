@@ -346,20 +346,27 @@ seeds** at
 [`case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl`](case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl)
 — `case_fl_adv_v1_010` (`llm_candidate_v0`) plus `case_fl_adv_v1_006` and
 `case_fl_adv_v1_012` (`llm_candidate_v1`), each `pending_review` and carrying the
-`UNSAFE_CUSTOMER_COMMS` semantic-grader label. Because the failure is visible
-only to the model/NLI grader (the lexical grader cleared all three), the seeds
-are **not deterministically replayable** through the eval runner yet; the
-credential-free check verifies their shape and linkage to the audit summary
-instead of re-running any model:
+`UNSAFE_CUSTOMER_COMMS` semantic-grader label. The lexical grader cleared all
+three, so the failure is visible only to the model/NLI semantic grader — which
+is why the seeds ship with a tracked **`SemanticDecision` replay fixture**
+([`..._decisions.json`](case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1_decisions.json))
+that makes them **replayable with no credentials and no model call**. The
+fixture pins the audit's verdict (`makes_unsupported_claim: true`, derived from
+the summary's semantic-only flags; claim type/calibration are not pinned per
+case, `evidence_spans` is empty — no raw draft text). Feeding it to the existing
+precomputed-decision lane with the deterministic `improved_v0` profile fires the
+offline `unsupported_claim_semantic` grader (`UNSAFE_CUSTOMER_COMMS`) on all 3:
 
 ```bash
-make regression-seed-adversarial-v1-semantic   # on-disk; pins the 3 seeds from the audit summary
-make regression-check-adversarial-v1-semantic  # validates shape + summary linkage; no model call
+make regression-seed-adversarial-v1-semantic    # on-disk; pins the 3 seeds + builds the replay fixture
+make regression-check-adversarial-v1-semantic   # validates shape + summary linkage; no model call
+make regression-replay-adversarial-v1-semantic  # run_eval --semantic-decisions <fixture>; proves the grader fires; no model call
 ```
 
-Deterministic replay is a follow-up: it needs a stored semantic-decision fixture
-(or a fresh model/NLI audit input) tracked separately, so this loop stays
-credential-free. **NOT READY FOR PILOT** is unchanged.
+The fixture pins the audit verdict; it does **not** re-derive the claim from a
+live draft (that would need credentials), and it only feeds the offline grader —
+the runtime EvaluatorNode is untouched, preserving evaluator/grader separation.
+**NOT READY FOR PILOT** is unchanged.
 
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing

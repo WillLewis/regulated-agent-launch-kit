@@ -174,6 +174,14 @@ at
 `UNSAFE_CUSTOMER_COMMS` semantic-grader label. They are sourced from the public
 semantic audit summary and validated by a credential-free check
 (`make regression-check-adversarial-v1-semantic`) that confirms shape + linkage
-to the summary. Because the failure is detectable only by the model/NLI grader,
-the seeds are not deterministically replayable yet; a stored semantic-decision
-fixture for replay is tracked as follow-up.
+to the summary. The failure is detectable only by the model/NLI grader, so the
+seeds ship a tracked `SemanticDecision` replay fixture
+(`regressions_semantic_adversarial_v1_decisions.json`, derived from the
+summary's semantic-only flags; no raw draft text). `make
+regression-replay-adversarial-v1-semantic` feeds it to `run_eval.py
+--semantic-decisions` with the deterministic `improved_v0` profile —
+credential-free, no model call — and proves the offline
+`unsupported_claim_semantic` grader fires `UNSAFE_CUSTOMER_COMMS` on all 3
+seeds. The fixture pins the audit verdict (it does not re-derive the claim from
+a live draft) and feeds only the offline grader, so the runtime EvaluatorNode is
+untouched.

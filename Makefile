@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic semantic-gate-adversarial-v1-regressions semantic-gate-adversarial-v1-improved evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -67,6 +67,8 @@ help:
 	@echo "  regression-seed-adversarial-v1-semantic  pin the 3 semantic-only failures as pending_review regression seeds (no LLM call)"
 	@echo "  regression-check-adversarial-v1-semantic  validate the semantic regression seeds + summary linkage (no LLM call)"
 	@echo "  regression-replay-adversarial-v1-semantic  credential-free replay: prove the semantic grader fires on the 3 seeds (no LLM call)"
+	@echo "  semantic-gate-adversarial-v1-regressions  negative control: assert the blocking semantic gate fails on the 3 known-bad seeds (no LLM call)"
+	@echo "  semantic-gate-adversarial-v1-improved  pass-path demo: run the blocking semantic gate on the synthetic clean improved fixture (no LLM call)"
 	@echo "  redact-adversarial-v1-llm  redact both candidates' raw v1 LLM traces (no LLM call)"
 	@echo "  evidence-pack-adversarial-v1-llm  assemble evidence_packs/financial_links_llm_adversarial_v1/ (no LLM call)"
 	@echo ""
@@ -662,6 +664,43 @@ regression-replay-adversarial-v1-semantic:
 		--regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
 		--summary reports/llm_adversarial_v1_semantic_audit_summary.json \
 		--replay-report reports/regression_semantic_adversarial_v1_eval.json
+
+# ---- M7a: reusable credential-free semantic blocking gate -------------------
+# scripts/check_semantic_gate.py is a reusable blocking gate over any eval
+# report that carries the offline unsupported_claim_semantic lane. It calls no
+# model and needs no credentials. These two targets exercise it in BOTH
+# directions on tracked / regenerable synthetic artifacts. The gate is NOT in
+# the default GRADERS / default eval run; the deterministic public proof loop
+# is unchanged. M7 stays "gate infrastructure wired (M7a)" — a larger
+# CREDENTIALED semantic audit must still run clean before M7 is complete, and
+# the posture remains NOT READY FOR PILOT.
+
+# NEGATIVE CONTROL: the gate MUST block the 3 known-failing adversarial v1
+# semantic-only regression seeds. This target is GREEN only when the gate
+# correctly fails on them (proving the gate has teeth). No model call.
+semantic-gate-adversarial-v1-regressions:
+	@echo "NEGATIVE CONTROL — the semantic gate MUST block the 3 known-failing adversarial v1 semantic regression seeds (no model call)."
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
+		--traces-out traces/local/regression_semantic_adversarial_v1 \
+		--report-out reports/regression_semantic_adversarial_v1_eval.json \
+		--agent-system-version improved_v0 \
+		--semantic-decisions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1_decisions.json
+	@uv run python -c "import json; r=json.load(open('reports/regression_semantic_adversarial_v1_eval.json')); n=[x['name'] for x in r['aggregate_grader_pass_rates']]; assert 'unsupported_claim_semantic' in n, 'semantic lane missing from regenerated report — control would pass for the wrong reason'; row=r['aggregate_grader_pass_rates'][n.index('unsupported_claim_semantic')]; assert row['total']-row['passed']==3, 'expected 3 semantic failures to block; got '+str(row)"
+	@echo "  (verified: regenerated report carries the semantic lane with 3 failures — the gate has real bad input to block.)"
+	@if uv run python scripts/check_semantic_gate.py --report reports/regression_semantic_adversarial_v1_eval.json; then \
+		echo "ERROR: semantic gate PASSED on known-failing seeds — the gate has no teeth."; exit 1; \
+	else \
+		echo "OK (negative control): semantic gate correctly BLOCKED the 3 known-failing seeds (gate exit non-zero, as required)."; \
+	fi
+
+# PASS-PATH DEMO: gate the hand-authored synthetic clean fixture over the
+# DETERMINISTIC improved_v0 lane. Proves the gate's pass path on a real on-disk
+# report. This is NOT a model-safety or pilot-readiness claim — the fixture is
+# authored, not a credentialed model audit.
+semantic-gate-adversarial-v1-improved: eval-adversarial-v1-improved-semantic
+	@echo "PASS-PATH DEMO — gating a hand-authored SYNTHETIC clean fixture over deterministic improved_v0. Proves the gate's pass path only; NOT a model-safety or pilot-readiness claim. A larger credentialed semantic audit is still required for M7."
+	uv run python scripts/check_semantic_gate.py --report reports/improved_adversarial_v1_semantic_eval.json
 
 # ---- Redaction + evidence pack for the adversarial v1 LLM evidence ----------
 # On-disk only: these do NOT call the LLM or require credentials. They assume

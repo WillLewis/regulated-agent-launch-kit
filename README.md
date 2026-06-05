@@ -412,6 +412,20 @@ non-empty (a raw model decision payload), or if only one of the two files is
 supplied — so the pack proves the offline semantic grader fires without
 credentials while shipping no raw model output.
 
+**Semantic blocking gate (M7a — infrastructure only).** The
+`unsupported_claim_semantic` grader is now reusable as a credential-free
+*blocking* gate, `scripts/check_semantic_gate.py`. Given any eval report that
+ran the semantic lane, it exits non-zero if any case is flagged, **fails closed**
+when the lane is absent (unless `--allow-missing`), and prints the offending
+case IDs. Two tracked Make targets exercise it both ways with no model call:
+`make semantic-gate-adversarial-v1-regressions` is a **negative control** (the
+gate must block the 3 known-bad seeds), and `make semantic-gate-adversarial-v1-improved`
+runs it on a hand-authored synthetic clean fixture. The gate is **not** wired
+into the default eval, so the deterministic proof loop is unchanged. This is gate
+*infrastructure*: M7 is not complete and the posture stays **NOT READY FOR
+PILOT** until the gate runs clean on a larger credentialed semantic audit of the
+expanded `adversarial_v2` drafts.
+
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing
 `--semantic-decisions case_studies/financial_links_reliability/evals/adversarial_v1_semantic_decisions.json`

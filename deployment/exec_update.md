@@ -12,6 +12,19 @@ credentialed LLM comparison captured; semantic copy-safety gap open.
 
 ## What Changed
 
+Two deterministic, credential-free chunks landed since the last update. **M8**
+added a broader 24-case adversarial slice
+(`case_studies/financial_links_reliability/evals/adversarial_v2.jsonl`;
+`reports/adversarial_v2_eval_card.md`): `improved_v0` 24/24, `baseline_v0`
+15/24 across three labels. **M7a** promoted the offline
+`unsupported_claim_semantic` grader into a reusable **blocking gate**
+(`scripts/check_semantic_gate.py`): it fails closed when the semantic lane is
+absent and, as a tracked negative control
+(`make semantic-gate-adversarial-v1-regressions`), correctly blocks the 3
+known-bad semantic regression seeds. This is gate **infrastructure** only — it
+is not wired into the default eval, and M7 is **not** complete until the gate
+runs clean on a larger *credentialed* semantic audit.
+
 The adversarial v1 LLM evidence pack
 (`evidence_packs/financial_links_llm_adversarial_v1/`) now ships, alongside the
 redacted candidate comparison, an **aggregate-only model/NLI semantic audit**
@@ -53,10 +66,12 @@ readiness claim.
 ## Decision Needed
 
 Approve the **scope and sequencing** to close the semantic-grader gap before any
-pilot conversation: (1) promote the model/NLI `unsupported_claim_semantic` grader
-toward a blocking offline gate, (2) expand the dataset beyond 12 cases, and
-(3) fund repeat credentialed runs to characterize variance. No request to pilot
-is being made.
+pilot conversation: (1) the `unsupported_claim_semantic` blocking gate is now
+wired credential-free (**M7a done**) and the dataset is expanded to 24 cases
+(**M8 done**); (2) the remaining step is to **fund a credentialed semantic
+audit** of the expanded `adversarial_v2` candidate drafts and run the gate on
+it; (3) fund repeat credentialed runs to characterize variance. No request to
+pilot is being made.
 
 ## Recommendation
 
@@ -68,8 +83,10 @@ reach.
 
 ## Next Milestone
 
-A second, larger credentialed evaluation in which the model/NLI semantic grader
-runs as a tracked gate and sustains `0` semantic-only `UNSAFE_CUSTOMER_COMMS`
-across multiple runs on an expanded Financial Links dataset — the entry condition
-for moving from `DO NOT PILOT` toward `PILOT WITH CONSTRAINTS` in
-`deployment/acceptance_criteria.md`. Owners and gates: `deployment/delivery_plan.md`.
+Run `scripts/check_semantic_gate.py` on a larger **credentialed** semantic audit
+of the expanded `adversarial_v2` candidate drafts, sustaining `0` semantic-only
+`UNSAFE_CUSTOMER_COMMS` across multiple runs. The gate infrastructure (M7a) is
+now in place and has teeth (negative control passes); only the credentialed run
+remains to close M7 — the entry condition for moving from `DO NOT PILOT` toward
+`PILOT WITH CONSTRAINTS` in `deployment/acceptance_criteria.md`. Owners and
+gates: `deployment/delivery_plan.md`.

@@ -30,15 +30,18 @@ Status is grounded in artifacts, not narrative. Acceptance gates reference
 | M4 | Redaction + public-safe evidence pack | Done | `evidence_packs/financial_links_llm_adversarial_v1/` | Risk reviewer | M3, `configs/redaction_policy.yaml` | Redacted traces preserve eval evidence; redaction report lists fields |
 | M5 | Incident→regression loop | Done | `case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl` + replay fixture | Compliance reviewer | M3 | Offline semantic grader fires `3/3` (`make regression-replay-adversarial-v1-semantic`) |
 | M6 | Model/NLI semantic audit (once) | Done | `reports/llm_adversarial_v1_semantic_audit_summary.md` (3 semantic-only flags) | Compliance reviewer | M3 (drafts on disk) | Aggregate-only, no raw spans; bundled in evidence pack |
-| M7 | Semantic grader hardened to a blocking gate | **Next** | (planned) `unsupported_claim_semantic` as a tracked CI gate | Compliance reviewer | M6, expanded dataset | Sustained `0` semantic-only `UNSAFE_CUSTOMER_COMMS` across multiple runs |
+| M7a | Semantic gate **infrastructure** wired (credential-free) | Done | `scripts/check_semantic_gate.py` + `tests/test_semantic_gate.py`; negative-control + pass-path Make targets | Compliance reviewer | M6 | Reusable blocking gate exists, fails closed when the lane is absent, and blocks the 3 known-bad seeds (negative control) |
+| M7 | Semantic gate run **clean on a credentialed audit** | **Next** | (planned) run `check_semantic_gate.py` on a larger credentialed `adversarial_v2` semantic audit | Compliance reviewer | M7a, M8, credentialed run | Sustained `0` semantic-only `UNSAFE_CUSTOMER_COMMS` across multiple credentialed runs on the expanded slice |
 | M8 | Dataset expansion beyond 12 cases | Done | `case_studies/financial_links_reliability/evals/adversarial_v2.jsonl` (24-case deterministic slice; `reports/adversarial_v2_eval_card.md`) | Human owner | M5, `risk_register.md` R7 | Broader slice validated; `improved_v0` 24/24, `baseline_v0` 15/24 across 3 labels; credential-free |
 | M9 | Real action-suspension gate exercised | **Next** | (planned) side-effecting synthetic tool gated by `HumanApprovalNode` | Partner support lead | M2, `configs/approval_matrix.yaml` | Approval suspends an actual action end-to-end (today `draft_only` only) |
 | M10 | Mini webpage over generated artifacts | Deferred | (planned) `web/` reading `reports/`, `evidence_packs/`, `deployment/` | Deployment lead | M3–M6 | Reads generated artifacts only; invents no metric |
 
 The pilot decision (`deployment/pilot_readiness_review.md`) stays
-**NOT READY FOR PILOT** until at least M7 and M9 close (M8, the broader
-adversarial v2 slice, is done; M7's semantic blocking gate is the next chunk).
-M10 is presentation, not a readiness gate.
+**NOT READY FOR PILOT** until at least M7 and M9 close. M8 (broader adversarial
+v2 slice) and M7a (semantic gate *infrastructure*) are done; M7 itself is open —
+the gate exists and has teeth, but it has only been run on synthetic fixtures,
+not yet on a larger credentialed semantic audit that sustains zero semantic-only
+findings. M10 is presentation, not a readiness gate.
 
 ## Review Gates
 

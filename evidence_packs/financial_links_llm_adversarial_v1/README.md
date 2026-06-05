@@ -66,6 +66,8 @@ below is generated from on-disk inputs:
 - `traces/redacted/candidate_v1/case_fl_adv_v1_012.redaction_report.json` — Per-trace redaction report (removed/abstracted/preserved/uncovered fields).
 - `semantic_audit_aggregate.json` — Aggregate-only model/NLI semantic audit: counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and cost. Derived from the gitignored raw decision files; no draft text, model reasoning, or quoted spans are included.
 - `semantic_audit_summary.md` — Human-readable public-safe model/NLI semantic audit summary (aggregate-only).
+- `regressions/regressions_semantic_adversarial_v1.jsonl` — Pending_review synthetic semantic-only regression seeds — the model/NLI UNSAFE_CUSTOMER_COMMS drafts the lexical grader cleared (a lexical blind spot). Case-superset records linked to the public semantic audit summary; no raw trace path or raw draft text.
+- `regressions/regressions_semantic_adversarial_v1_decisions.json` — Credential-free SemanticDecision replay fixture: feeding it to run_eval.py --semantic-decisions with the deterministic improved_v0 profile fires the offline unsupported_claim_semantic grader on every seed with no model call. evidence_spans empty; rationale is authored provenance, not raw draft text.
 
 The redacted traces under `traces/redacted/candidate_v0/` and
 `traces/redacted/candidate_v1/` are paired with redaction reports
@@ -86,7 +88,10 @@ JSON eval summary. The redaction policy used is
   When a semantic audit has been run, this pack ships only the
   aggregate-only `semantic_audit_aggregate.json` (counts, enum histograms,
   synthetic case IDs/risk bands, cost) and the public
-  `semantic_audit_summary.md` — never the raw decisions;
+  `semantic_audit_summary.md` — never the raw decisions. The
+  `regressions/..._decisions.json` that ships (when present) is the
+  **credential-free replay fixture** with empty `evidence_spans`, not a raw
+  model decision file;
 - private project context (`.project-memory/`) — never published;
 - any pilot, production-readiness, regulatory, or model-safety claim.
 
@@ -107,6 +112,12 @@ JSON eval summary. The redaction policy used is
    `traces/redacted/candidate_v1/*.redacted.json` show the synthetic
    trace shape an analyst can reason about without raw model output.
 6. `manifest.json` is the machine-readable index.
+
+## Semantic regression seeds + credential-free replay fixture
+
+- `regressions/regressions_semantic_adversarial_v1.jsonl` pins the three model/NLI **semantic-only** `UNSAFE_CUSTOMER_COMMS` findings as `pending_review` synthetic regression seeds — customer-facing drafts the lexical `unsupported_claim` grader cleared (a lexical blind spot). Each seed is a case-superset record linked to the public `reports/llm_adversarial_v1_semantic_audit_summary.json`; none carries a raw trace path or raw draft text.
+- `regressions/regressions_semantic_adversarial_v1_decisions.json` is the tracked `SemanticDecision` **replay fixture**. Feeding it to the offline precomputed-decision lane (`run_eval.py --semantic-decisions`) with the deterministic `improved_v0` profile fires the offline `unsupported_claim_semantic` grader (`UNSAFE_CUSTOMER_COMMS`) on all three seeds **with no credentials and no model call** — it proves the offline semantic grader fires; it does not re-derive the claim from a live draft. The fixture pins the audit verdict (`makes_unsupported_claim: true`); `evidence_spans` is empty and `rationale` is an authored provenance string, so no raw draft text, model reasoning, or quoted spans ship. It feeds only the offline grader, never the runtime EvaluatorNode (evaluator/grader separation preserved).
+- These seeds are `pending_review`, not a fix; they are a reason the slice stays **NOT READY FOR PILOT**.
 
 ## Launch posture
 

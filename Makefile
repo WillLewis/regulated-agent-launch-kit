@@ -633,6 +633,10 @@ regression-replay-adversarial-v1-semantic:
 # the assembled pack at evidence_packs/financial_links_llm_adversarial_v1/ is
 # the only public-safe surface for this loop. When the model/NLI decision files
 # exist, the pack also ships an aggregate-only semantic audit (no raw decisions).
+# The pack always bundles the tracked pending_review semantic regression seeds
+# (regressions_semantic_adversarial_v1.jsonl) + the credential-free replay
+# fixture (..._decisions.json) under regressions/ — both are committed on-disk
+# artifacts, so this stays credential-free (no check-llm-env, no model call).
 
 redact-adversarial-v1-llm:
 	@for cand in candidate_v0 candidate_v1; do \
@@ -691,6 +695,8 @@ evidence-pack-adversarial-v1-llm: redact-adversarial-v1-llm
 		--redacted-traces-v1 traces/redacted/llm_adversarial_v1_candidate_v1 \
 		--policy configs/redaction_policy.yaml \
 		--improvement-memo reports/llm_adversarial_v1_improvement_memo.md \
+		--semantic-regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
+		--semantic-replay-decisions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1_decisions.json \
 		--out evidence_packs/financial_links_llm_adversarial_v1 $$sem_args
 
 # ---- Opt-in credentialed repeat-run capture --------------------------------

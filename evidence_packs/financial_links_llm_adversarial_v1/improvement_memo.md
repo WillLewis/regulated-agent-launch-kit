@@ -164,5 +164,24 @@ This is one credentialed semantic-judge pass on a 12-case synthetic slice.
 It **sharpens** the recommendation rather than softening it: a 12/12
 deterministic pass is not evidence of semantically safe customer comms.
 **NOT READY FOR PILOT** remains the posture; the three semantic-only flags
-are candidate regression seeds for a future incident-to-regression pass,
-not a readiness signal.
+are a readiness gap, not a readiness signal.
+
+The three semantic-only failures are now pinned as synthetic regression seeds
+at
+[`case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl`](../case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl):
+`case_fl_adv_v1_010` (`llm_candidate_v0`), `case_fl_adv_v1_006` and
+`case_fl_adv_v1_012` (`llm_candidate_v1`), each `pending_review` with the
+`UNSAFE_CUSTOMER_COMMS` semantic-grader label. They are sourced from the public
+semantic audit summary and validated by a credential-free check
+(`make regression-check-adversarial-v1-semantic`) that confirms shape + linkage
+to the summary. The failure is detectable only by the model/NLI grader, so the
+seeds ship a tracked `SemanticDecision` replay fixture
+(`regressions_semantic_adversarial_v1_decisions.json`, derived from the
+summary's semantic-only flags; no raw draft text). `make
+regression-replay-adversarial-v1-semantic` feeds it to `run_eval.py
+--semantic-decisions` with the deterministic `improved_v0` profile —
+credential-free, no model call — and proves the offline
+`unsupported_claim_semantic` grader fires `UNSAFE_CUSTOMER_COMMS` on all 3
+seeds. The fixture pins the audit verdict (it does not re-derive the claim from
+a live draft) and feeds only the offline grader, so the runtime EvaluatorNode is
+untouched.

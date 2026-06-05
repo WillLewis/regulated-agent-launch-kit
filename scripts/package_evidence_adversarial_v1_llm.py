@@ -15,11 +15,18 @@ This script publishes the public-safe view of the 12-case adversarial v1
 - redacted summaries of BOTH candidate raw eval reports;
 - redacted traces for BOTH candidates (subdir'd by candidate);
 - the prompt-improvement memo (when present);
+- the aggregate-only model/NLI semantic audit (when decision files are
+  provided);
+- the ``pending_review`` semantic regression seeds + the credential-free
+  ``SemanticDecision`` replay fixture (when provided), copied under
+  ``regressions/``;
 - README + manifest with the synthetic-only / no-readiness disclaimer.
 
 It does **not** call the LLM and requires no credentials. It refuses to
-ship anything sourced from ``traces/local/llm_*`` paths as defense-in-
-depth against accidental misuse.
+ship anything sourced from ``traces/local/llm_*`` paths, any raw
+``draft_text`` / ``draft_excerpt`` / ``final_response`` payload, or a
+replay fixture carrying non-empty ``evidence_spans`` (a raw model decision
+payload) as defense-in-depth against accidental misuse.
 """
 
 from __future__ import annotations
@@ -47,6 +54,10 @@ from scripts.redact_trace import redact  # noqa: E402
 
 
 EVIDENCE_PACK_VERSION = "evidence_pack_llm_adversarial_v1"
+
+# Keys that carry raw customer-facing draft text. They must never appear in a
+# regression seed or replay fixture shipped in the public pack.
+RAW_DRAFT_PAYLOAD_KEYS = ("draft_text", "draft_excerpt", "final_response")
 
 
 SYNTHETIC_DISCLAIMER = (
@@ -197,6 +208,94 @@ def _build_semantic_aggregate(
         ) from exc
 
 
+def _iter_nested_keys(value: Any) -> Any:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield key
+            yield from _iter_nested_keys(child)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _iter_nested_keys(item)
+
+
+def _assert_no_draft_payload_keys(obj: Any, *, label: str) -> None:
+    """Defense-in-depth: refuse any object carrying a raw draft-bearing key."""
+
+    for key in _iter_nested_keys(obj):
+        if key in RAW_DRAFT_PAYLOAD_KEYS:
+            raise SystemExit(
+                f"refusing to ship {label}: contains raw draft-bearing key {key!r}"
+            )
+
+
+def _guard_semantic_regression_seeds(path: Path) -> None:
+    """Defense-in-depth checks on the pending_review regression seeds JSONL
+    before it is copied into the pack: no raw trace path, no raw draft payload
+    key on any record."""
+
+    text = path.read_text()
+    if "traces/local/llm_" in text:
+        raise SystemExit(
+            f"refusing to ship semantic regression seeds referencing a raw "
+            f"trace path: {path}"
+        )
+    saw_record = False
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise SystemExit(
+                f"{path}:{lineno}: semantic regression seed is not valid JSON: {exc}"
+            ) from exc
+        label = (
+            f"semantic regression seed "
+            f"{record.get('regression_case_id', lineno)!r}"
+        )
+        _assert_no_draft_payload_keys(record, label=label)
+        saw_record = True
+    if not saw_record:
+        raise SystemExit(f"semantic regression seeds file is empty: {path}")
+
+
+def _guard_semantic_replay_fixture(path: Path) -> None:
+    """Defense-in-depth checks on the credential-free replay fixture before it
+    is copied into the pack: no raw trace path, no raw draft payload key, and —
+    critically — ``evidence_spans`` empty for EVERY decision. A populated
+    ``evidence_spans`` means a raw model decision file (which quotes draft
+    spans) was passed in by mistake; refuse it."""
+
+    text = path.read_text()
+    if "traces/local/llm_" in text:
+        raise SystemExit(
+            f"refusing to ship semantic replay fixture referencing a raw "
+            f"trace path: {path}"
+        )
+    fixture = json.loads(text)
+    _assert_no_draft_payload_keys(fixture, label=f"semantic replay fixture {path}")
+    decisions_by_profile = fixture.get("decisions")
+    if not isinstance(decisions_by_profile, dict) or not decisions_by_profile:
+        raise SystemExit(
+            f"semantic replay fixture has no decisions mapping: {path}"
+        )
+    for profile, decisions in decisions_by_profile.items():
+        if not isinstance(decisions, dict):
+            raise SystemExit(
+                f"semantic replay fixture profile {profile!r} is not a mapping: "
+                f"{path}"
+            )
+        for case_id, decision in decisions.items():
+            spans = decision.get("evidence_spans", []) if isinstance(decision, dict) else None
+            if spans:
+                raise SystemExit(
+                    f"refusing to ship semantic replay fixture: decision "
+                    f"{case_id!r} (profile {profile!r}) has non-empty "
+                    f"evidence_spans — that is a raw model decision payload, "
+                    f"not the credential-free replay fixture"
+                )
+
+
 def _guard_semantic_payload(payload: dict[str, Any]) -> None:
     """Defense-in-depth: a shipped semantic aggregate must carry no
     draft-bearing keys and no raw trace path."""
@@ -230,6 +329,38 @@ def _readme(manifest: dict[str, Any]) -> str:
         f"- `{entry['path']}` — {entry['purpose']}"
         for entry in manifest["files"]
     )
+    has_regressions = any(
+        entry["path"].startswith("regressions/") for entry in manifest["files"]
+    )
+    regressions_section = ""
+    if has_regressions:
+        regressions_section = (
+            "## Semantic regression seeds + credential-free replay fixture\n"
+            "\n"
+            "- `regressions/regressions_semantic_adversarial_v1.jsonl` pins the "
+            "three model/NLI **semantic-only** `UNSAFE_CUSTOMER_COMMS` findings "
+            "as `pending_review` synthetic regression seeds — customer-facing "
+            "drafts the lexical `unsupported_claim` grader cleared (a lexical "
+            "blind spot). Each seed is a case-superset record linked to the "
+            "public `reports/llm_adversarial_v1_semantic_audit_summary.json`; "
+            "none carries a raw trace path or raw draft text.\n"
+            "- `regressions/regressions_semantic_adversarial_v1_decisions.json` "
+            "is the tracked `SemanticDecision` **replay fixture**. Feeding it to "
+            "the offline precomputed-decision lane (`run_eval.py "
+            "--semantic-decisions`) with the deterministic `improved_v0` profile "
+            "fires the offline `unsupported_claim_semantic` grader "
+            "(`UNSAFE_CUSTOMER_COMMS`) on all three seeds **with no credentials "
+            "and no model call** — it proves the offline semantic grader fires; "
+            "it does not re-derive the claim from a live draft. The fixture pins "
+            "the audit verdict (`makes_unsupported_claim: true`); "
+            "`evidence_spans` is empty and `rationale` is an authored provenance "
+            "string, so no raw draft text, model reasoning, or quoted spans "
+            "ship. It feeds only the offline grader, never the runtime "
+            "EvaluatorNode (evaluator/grader separation preserved).\n"
+            "- These seeds are `pending_review`, not a fix; they are a reason "
+            "the slice stays **NOT READY FOR PILOT**.\n"
+            "\n"
+        )
     return f"""# Evidence Pack — Financial Links LLM Adversarial v1
 
 > {SYNTHETIC_DISCLAIMER}
@@ -263,7 +394,10 @@ JSON eval summary. The redaction policy used is
   When a semantic audit has been run, this pack ships only the
   aggregate-only `semantic_audit_aggregate.json` (counts, enum histograms,
   synthetic case IDs/risk bands, cost) and the public
-  `semantic_audit_summary.md` — never the raw decisions;
+  `semantic_audit_summary.md` — never the raw decisions. The
+  `regressions/..._decisions.json` that ships (when present) is the
+  **credential-free replay fixture** with empty `evidence_spans`, not a raw
+  model decision file;
 - private project context (`.project-memory/`) — never published;
 - any pilot, production-readiness, regulatory, or model-safety claim.
 
@@ -285,7 +419,7 @@ JSON eval summary. The redaction policy used is
    trace shape an analyst can reason about without raw model output.
 6. `manifest.json` is the machine-readable index.
 
-## Launch posture
+{regressions_section}## Launch posture
 
 **NOT READY FOR PILOT — local synthetic vertical slice only.** This pack
 shows the adversarial v1 candidate comparison closes locally on real LLM
@@ -309,6 +443,8 @@ def package_adversarial_v1_llm_evidence(
     semantic_decisions_v0: Path | None = None,
     semantic_decisions_v1: Path | None = None,
     semantic_summary: Path | None = None,
+    semantic_regressions: Path | None = None,
+    semantic_replay_decisions: Path | None = None,
 ) -> Path:
     raw_v0_report = _require_file(raw_v0_report, "raw-v0-report")
     raw_v1_report = _require_file(raw_v1_report, "raw-v1-report")
@@ -450,6 +586,41 @@ def package_adversarial_v1_llm_evidence(
             "(aggregate-only).",
         )
 
+    # Optional pending_review semantic regression seeds + the credential-free
+    # SemanticDecision replay fixture. They ship together under regressions/ or
+    # not at all. The seeds carry no raw draft text or trace path, and the
+    # replay fixture is the empty-evidence_spans (no draft-span) decision file;
+    # the guards refuse anything that looks like a raw model decision payload.
+    if (semantic_regressions is None) != (semantic_replay_decisions is None):
+        raise SystemExit(
+            "pass both --semantic-regressions and --semantic-replay-decisions, "
+            "or neither"
+        )
+    if semantic_regressions is not None and semantic_replay_decisions is not None:
+        seeds_path = _require_file(semantic_regressions, "semantic-regressions")
+        replay_path = _require_file(
+            semantic_replay_decisions, "semantic-replay-decisions"
+        )
+        _guard_semantic_regression_seeds(seeds_path)
+        _guard_semantic_replay_fixture(replay_path)
+        _add_copy(
+            seeds_path,
+            f"regressions/{seeds_path.name}",
+            "Pending_review synthetic semantic-only regression seeds — the "
+            "model/NLI UNSAFE_CUSTOMER_COMMS drafts the lexical grader cleared "
+            "(a lexical blind spot). Case-superset records linked to the public "
+            "semantic audit summary; no raw trace path or raw draft text.",
+        )
+        _add_copy(
+            replay_path,
+            f"regressions/{replay_path.name}",
+            "Credential-free SemanticDecision replay fixture: feeding it to "
+            "run_eval.py --semantic-decisions with the deterministic improved_v0 "
+            "profile fires the offline unsupported_claim_semantic grader on "
+            "every seed with no model call. evidence_spans empty; rationale is "
+            "authored provenance, not raw draft text.",
+        )
+
     _guard_no_raw_paths(manifest)
 
     readme_path = out / "README.md"
@@ -485,6 +656,18 @@ def _guard_no_raw_paths(manifest: dict[str, Any]) -> None:
             raise SystemExit(
                 f"refusing to ship file sourced from raw-LLM trace dir: "
                 f"{source!r} (rel={rel!r})"
+            )
+        # No raw model/NLI decision file may be COPIED into the pack. The
+        # aggregate's source is the directory string with a parenthetical
+        # (it does not end in ``.json``); a copied raw decision file would be a
+        # concrete ``*.json`` path under that dir.
+        if (
+            "reports/semantic_model_decisions/" in source
+            and source.rstrip().endswith(".json")
+        ):
+            raise SystemExit(
+                f"refusing to ship a raw model/NLI decision file copied into "
+                f"the pack: {source!r} (rel={rel!r})"
             )
 
 
@@ -537,6 +720,28 @@ def main(argv: list[str] | None = None) -> int:
             "When present, it's copied into the pack as semantic_audit_summary.md."
         ),
     )
+    parser.add_argument(
+        "--semantic-regressions",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to the pending_review semantic regression seeds "
+            "JSONL. Must be passed together with --semantic-replay-decisions; "
+            "both are copied into the pack under regressions/. Refused if it "
+            "carries a raw trace path or raw draft payload."
+        ),
+    )
+    parser.add_argument(
+        "--semantic-replay-decisions",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to the credential-free SemanticDecision replay "
+            "fixture JSON. Must be passed together with --semantic-regressions. "
+            "Refused if any decision carries non-empty evidence_spans (a raw "
+            "model decision payload)."
+        ),
+    )
     args = parser.parse_args(argv)
 
     pack_root = package_adversarial_v1_llm_evidence(
@@ -551,6 +756,8 @@ def main(argv: list[str] | None = None) -> int:
         semantic_decisions_v0=args.semantic_decisions_v0,
         semantic_decisions_v1=args.semantic_decisions_v1,
         semantic_summary=args.semantic_summary,
+        semantic_regressions=args.semantic_regressions,
+        semantic_replay_decisions=args.semantic_replay_decisions,
     )
     print(f"OK: assembled adversarial v1 LLM evidence pack -> {pack_root}")
     return 0

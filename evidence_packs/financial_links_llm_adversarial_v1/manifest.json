@@ -287,6 +287,16 @@
       "path": "semantic_audit_summary.md",
       "purpose": "Human-readable public-safe model/NLI semantic audit summary (aggregate-only).",
       "source": "reports/llm_adversarial_v1_semantic_audit_summary.md"
+    },
+    {
+      "path": "regressions/regressions_semantic_adversarial_v1.jsonl",
+      "purpose": "Pending_review synthetic semantic-only regression seeds \u2014 the model/NLI UNSAFE_CUSTOMER_COMMS drafts the lexical grader cleared (a lexical blind spot). Case-superset records linked to the public semantic audit summary; no raw trace path or raw draft text.",
+      "source": "case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl"
+    },
+    {
+      "path": "regressions/regressions_semantic_adversarial_v1_decisions.json",
+      "purpose": "Credential-free SemanticDecision replay fixture: feeding it to run_eval.py --semantic-decisions with the deterministic improved_v0 profile fires the offline unsupported_claim_semantic grader on every seed with no model call. evidence_spans empty; rationale is authored provenance, not raw draft text.",
+      "source": "case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1_decisions.json"
     }
   ]
 }

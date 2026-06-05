@@ -276,7 +276,7 @@ cost moved from `$0.051408` to `$0.071079` (+38%); per-band latency means
 still exceed synthetic p95 envelopes for L1 and L2 on both profiles.
 
 - [Adversarial v1 LLM comparison card](reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md) — Before/After card for `llm_candidate_v0` vs `llm_candidate_v1`.
-- [Adversarial v1 LLM evidence pack](evidence_packs/financial_links_llm_adversarial_v1/) — public-safe pack with redacted summaries and redacted traces for both candidates.
+- [Adversarial v1 LLM evidence pack](evidence_packs/financial_links_llm_adversarial_v1/) — public-safe pack with redacted summaries and redacted traces for both candidates, the aggregate-only semantic audit, and (under `regressions/`) the `pending_review` semantic regression seeds + credential-free replay fixture.
 - [Adversarial v1 LLM improvement memo](reports/llm_adversarial_v1_improvement_memo.md) — concise evidence-backed interpretation of the run.
 - [Adversarial v1 LLM semantic audit summary](reports/llm_adversarial_v1_semantic_audit_summary.md) — public-safe model/NLI vs. lexical unsupported-claim comparison (aggregate counts only; JSON sibling at `reports/llm_adversarial_v1_semantic_audit_summary.json`).
 
@@ -367,6 +367,15 @@ The fixture pins the audit verdict; it does **not** re-derive the claim from a
 live draft (that would need credentials), and it only feeds the offline grader —
 the runtime EvaluatorNode is untouched, preserving evaluator/grader separation.
 **NOT READY FOR PILOT** is unchanged.
+
+Both the seed JSONL and the replay fixture now ship inside the public
+[adversarial v1 LLM evidence pack](evidence_packs/financial_links_llm_adversarial_v1/)
+under `regressions/`. The packaging script (`scripts/package_evidence_adversarial_v1_llm.py`)
+copies them with no LLM call and fails closed if either file carries a raw
+trace path or raw draft text, if the replay fixture's `evidence_spans` are
+non-empty (a raw model decision payload), or if only one of the two files is
+supplied — so the pack proves the offline semantic grader fires without
+credentials while shipping no raw model output.
 
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing

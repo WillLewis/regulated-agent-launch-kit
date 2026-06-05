@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -60,6 +60,8 @@ help:
 	@echo "  semantic-model-decisions-adversarial-v1-llm-v0  model/NLI semantic decisions for the candidate_v0 report (gitignored)"
 	@echo "  semantic-model-decisions-adversarial-v1-llm-v1  model/NLI semantic decisions for the candidate_v1 report (gitignored)"
 	@echo "  semantic-audit-summary-adversarial-v1-llm  aggregate model/NLI decisions into a public-safe summary (no LLM call)"
+	@echo "  regression-seed-adversarial-v1-semantic  pin the 3 semantic-only failures as pending_review regression seeds (no LLM call)"
+	@echo "  regression-check-adversarial-v1-semantic  validate the semantic regression seeds + summary linkage (no LLM call)"
 	@echo "  redact-adversarial-v1-llm  redact both candidates' raw v1 LLM traces (no LLM call)"
 	@echo "  evidence-pack-adversarial-v1-llm  assemble evidence_packs/financial_links_llm_adversarial_v1/ (no LLM call)"
 	@echo ""
@@ -567,6 +569,33 @@ semantic-audit-summary-adversarial-v1-llm:
 		--decisions-v1 reports/semantic_model_decisions/adversarial_v1_llm_candidate_v1.json \
 		--out-json reports/llm_adversarial_v1_semantic_audit_summary.json \
 		--out-md reports/llm_adversarial_v1_semantic_audit_summary.md
+
+# ---- Semantic-only regression seeds (adversarial v1 model/NLI audit) ---------
+# On-disk only: NO LLM call, NO credentials, NO candidate rerun. The seeder
+# pins the model/NLI semantic-only UNSAFE_CUSTOMER_COMMS failures (drafts the
+# lexical grader cleared) as pending_review regression seeds, sourced from the
+# tracked public semantic audit summary + the synthetic dataset. The check
+# validates shape + linkage to that summary; it deliberately does NOT replay
+# the cases through scripts/run_eval.py (the failure is only visible to the
+# model/NLI grader, so a deterministic replay would not reproduce it).
+
+regression-seed-adversarial-v1-semantic:
+	@if [ ! -f reports/llm_adversarial_v1_semantic_audit_summary.json ]; then \
+		echo "ERROR: reports/llm_adversarial_v1_semantic_audit_summary.json not found."; \
+		echo "  The seeder reads the public semantic audit summary; it does NOT call a model."; \
+		echo "  Hint: run \`make semantic-audit-summary-adversarial-v1-llm\` (on-disk) first."; \
+		exit 1; \
+	fi
+	uv run python scripts/seed_semantic_regressions_adversarial_v1.py \
+		--summary reports/llm_adversarial_v1_semantic_audit_summary.json \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v1.jsonl \
+		--out case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl
+
+regression-check-adversarial-v1-semantic:
+	uv run python scripts/validate_dataset.py case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl
+	uv run python scripts/check_semantic_regressions_adversarial_v1.py \
+		--regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
+		--summary reports/llm_adversarial_v1_semantic_audit_summary.json
 
 # ---- Redaction + evidence pack for the adversarial v1 LLM evidence ----------
 # On-disk only: these do NOT call the LLM or require credentials. They assume

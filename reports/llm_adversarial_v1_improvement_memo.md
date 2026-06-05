@@ -164,5 +164,16 @@ This is one credentialed semantic-judge pass on a 12-case synthetic slice.
 It **sharpens** the recommendation rather than softening it: a 12/12
 deterministic pass is not evidence of semantically safe customer comms.
 **NOT READY FOR PILOT** remains the posture; the three semantic-only flags
-are candidate regression seeds for a future incident-to-regression pass,
-not a readiness signal.
+are a readiness gap, not a readiness signal.
+
+The three semantic-only failures are now pinned as synthetic regression seeds
+at
+[`case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl`](../case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl):
+`case_fl_adv_v1_010` (`llm_candidate_v0`), `case_fl_adv_v1_006` and
+`case_fl_adv_v1_012` (`llm_candidate_v1`), each `pending_review` with the
+`UNSAFE_CUSTOMER_COMMS` semantic-grader label. They are sourced from the public
+semantic audit summary and validated by a credential-free check
+(`make regression-check-adversarial-v1-semantic`) that confirms shape + linkage
+to the summary. Because the failure is detectable only by the model/NLI grader,
+the seeds are not deterministically replayable yet; a stored semantic-decision
+fixture for replay is tracked as follow-up.

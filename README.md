@@ -341,6 +341,26 @@ This single audit **does not change the posture: NOT READY FOR PILOT** — it
 is a reason the slice stays pre-pilot, not a model-safety, production-
 readiness, regulatory-compliance, or partner claim.
 
+The three semantic-only failures are now pinned as **synthetic regression
+seeds** at
+[`case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl`](case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl)
+— `case_fl_adv_v1_010` (`llm_candidate_v0`) plus `case_fl_adv_v1_006` and
+`case_fl_adv_v1_012` (`llm_candidate_v1`), each `pending_review` and carrying the
+`UNSAFE_CUSTOMER_COMMS` semantic-grader label. Because the failure is visible
+only to the model/NLI grader (the lexical grader cleared all three), the seeds
+are **not deterministically replayable** through the eval runner yet; the
+credential-free check verifies their shape and linkage to the audit summary
+instead of re-running any model:
+
+```bash
+make regression-seed-adversarial-v1-semantic   # on-disk; pins the 3 seeds from the audit summary
+make regression-check-adversarial-v1-semantic  # validates shape + summary linkage; no model call
+```
+
+Deterministic replay is a follow-up: it needs a stored semantic-decision fixture
+(or a fresh model/NLI audit input) tracked separately, so this loop stays
+credential-free. **NOT READY FOR PILOT** is unchanged.
+
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing
 `--semantic-decisions case_studies/financial_links_reliability/evals/adversarial_v1_semantic_decisions.json`

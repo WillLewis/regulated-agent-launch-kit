@@ -408,6 +408,15 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
         # strings only to verify the v1 pack assembler abstracts drafts
         # and refuses raw-trace inputs.
         "test_evidence_pack_adversarial_v1_llm.py",
+        # Asserts the model/NLI semantic-decision Make targets consume the
+        # on-disk candidate report/traces (no candidate rerun) and that the
+        # raw decisions stay gitignored — references the path strings only
+        # for that wiring/gitignore check, never reads the real artifacts.
+        "test_semantic_model_targets.py",
+        # Builds its own in-memory report/decision fixtures and uses the
+        # raw-LLM trace path strings only inside those fixtures; never reads
+        # the real on-disk candidate outputs.
+        "test_semantic_audit_summary.py",
     }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:

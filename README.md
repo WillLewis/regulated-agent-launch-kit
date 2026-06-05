@@ -278,6 +278,7 @@ still exceed synthetic p95 envelopes for L1 and L2 on both profiles.
 - [Adversarial v1 LLM comparison card](reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md) — Before/After card for `llm_candidate_v0` vs `llm_candidate_v1`.
 - [Adversarial v1 LLM evidence pack](evidence_packs/financial_links_llm_adversarial_v1/) — public-safe pack with redacted summaries and redacted traces for both candidates.
 - [Adversarial v1 LLM improvement memo](reports/llm_adversarial_v1_improvement_memo.md) — concise evidence-backed interpretation of the run.
+- [Adversarial v1 LLM semantic audit summary](reports/llm_adversarial_v1_semantic_audit_summary.md) — public-safe model/NLI vs. lexical unsupported-claim comparison (aggregate counts only; JSON sibling at `reports/llm_adversarial_v1_semantic_audit_summary.json`).
 
 Every credentialed target gates on `make check-llm-env` (no silent
 fallback); raw reports (`reports/llm_adversarial_v1_candidate_v*_eval.json`)
@@ -306,6 +307,39 @@ tracked. **NOT READY FOR PILOT** remains the posture: run-to-run variance
 on a 12-case synthetic slice is one input to a future readiness
 conversation, not model safety, production readiness, regulatory
 compliance, partner endorsement, or pilot readiness.
+
+A **model/NLI semantic audit of the candidate drafts already on disk** has
+now been **executed once** with the opt-in adapter
+(`evals/semantic_model_adapter.py`, judge model `claude-sonnet-4-5`). It
+judges the two committed-locally candidate eval reports without re-running
+the candidate agent (the Make targets were patched to drop the candidate-eval
+prerequisite so they cannot regenerate the very drafts under audit). The
+aggregate-only, public-safe summary is tracked at
+[`reports/llm_adversarial_v1_semantic_audit_summary.md`](reports/llm_adversarial_v1_semantic_audit_summary.md)
+(with a JSON sibling) and is bundled into the evidence pack as
+`semantic_audit_aggregate.json`. **Findings:** the lexical `unsupported_claim`
+grader cleared every draft (0/12 flags on both candidates), but the model/NLI
+grader flagged **3 customer-facing drafts as `UNSAFE_CUSTOMER_COMMS` that the
+lexical grader passed** — 1 in `llm_candidate_v0` (a freshness overpromise,
+L3) and 2 in `llm_candidate_v1` (a consent and a timing overpromise, both L1)
+— i.e. a **lexical blind spot**. Notably the deterministically "improved"
+`llm_candidate_v1`, which passes 12/12 offline, carries *more* semantic flags
+than v0, so the offline improvement did not reduce semantic overpromising.
+Estimated semantic-judge cost was `$0.148269` across both profiles (24
+decisions). Raw model decisions quote short draft spans and stay gitignored
+under `reports/semantic_model_decisions/`; only the aggregate counts are
+public. Reproduce with:
+
+```bash
+make check-llm-env
+make semantic-model-decisions-adversarial-v1-llm-v0   # judges drafts on disk; no candidate rerun
+make semantic-model-decisions-adversarial-v1-llm-v1
+make semantic-audit-summary-adversarial-v1-llm        # on-disk only; writes the tracked summary
+```
+
+This single audit **does not change the posture: NOT READY FOR PILOT** — it
+is a reason the slice stays pre-pilot, not a model-safety, production-
+readiness, regulatory-compliance, or partner claim.
 
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing
@@ -337,8 +371,12 @@ make semantic-model-reporting-surface
 The generated model/NLI decision files, semantic-model eval reports,
 and semantic-model traces are gitignored local artifacts. They should
 only become public after an explicit evidence-pack/redaction decision.
-No credentialed model/NLI semantic run has been executed or claimed by
-this README.
+The `baseline_v0` / `improved_v0` model/NLI lane shown in this block is
+wired but its results are **not** claimed in this README; the only
+credentialed model/NLI run reported here is the adversarial v1 candidate-
+draft audit described above
+([`reports/llm_adversarial_v1_semantic_audit_summary.md`](reports/llm_adversarial_v1_semantic_audit_summary.md)),
+which judges drafts already on disk and is aggregate-only.
 
 ### Adversarial v0 slice
 

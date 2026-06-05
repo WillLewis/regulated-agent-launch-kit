@@ -38,6 +38,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from evals.semantic_audit import (  # noqa: E402
+    DRAFT_BEARING_DECISION_KEYS,
+    assert_public_safe,
+    build_semantic_audit_summary,
+)
 from scripts.redact_trace import redact  # noqa: E402
 
 
@@ -161,6 +166,65 @@ def _rewrite_llm_report_notes(report: dict[str, Any]) -> None:
             )
 
 
+def _build_semantic_aggregate(
+    *,
+    raw_v0: dict[str, Any],
+    raw_v1: dict[str, Any],
+    decisions_v0_path: Path,
+    decisions_v1_path: Path,
+) -> dict[str, Any]:
+    """Derive the aggregate-only semantic audit payload from raw decision files.
+
+    The raw decision files quote draft spans and are never shipped. This builds
+    the same public-safe aggregate the summary CLI produces, so the pack
+    enforces the redaction at its own boundary. The candidate reports are read
+    only for grader pass/fail and synthetic case metadata — no draft text is
+    copied.
+    """
+
+    dec_v0 = json.loads(decisions_v0_path.read_text())
+    dec_v1 = json.loads(decisions_v1_path.read_text())
+    try:
+        return build_semantic_audit_summary(
+            [
+                (raw_v0, dec_v0, str(decisions_v0_path)),
+                (raw_v1, dec_v1, str(decisions_v1_path)),
+            ]
+        )
+    except ValueError as exc:
+        raise SystemExit(
+            f"cannot build semantic aggregate for pack: {exc}"
+        ) from exc
+
+
+def _guard_semantic_payload(payload: dict[str, Any]) -> None:
+    """Defense-in-depth: a shipped semantic aggregate must carry no
+    draft-bearing keys and no raw trace path."""
+
+    try:
+        assert_public_safe(payload)
+    except ValueError as exc:
+        raise SystemExit(f"refusing to ship semantic aggregate: {exc}") from exc
+
+
+def _guard_semantic_markdown(path: Path) -> None:
+    """Defense-in-depth: refuse a semantic summary markdown that still names a
+    draft-bearing decision field or a raw trace path."""
+
+    text = path.read_text()
+    for token in DRAFT_BEARING_DECISION_KEYS:
+        if token in text:
+            raise SystemExit(
+                f"refusing to ship semantic summary markdown containing "
+                f"draft-bearing token {token!r}: {path}"
+            )
+    if "traces/local/llm_" in text:
+        raise SystemExit(
+            f"refusing to ship semantic summary markdown referencing a raw "
+            f"trace path: {path}"
+        )
+
+
 def _readme(manifest: dict[str, Any]) -> str:
     file_lines = "\n".join(
         f"- `{entry['path']}` — {entry['purpose']}"
@@ -194,8 +258,12 @@ JSON eval summary. The redaction policy used is
 - the raw JSON eval reports (both candidate reports are gitignored; the
   pack ships only their redacted summaries) — intentionally excluded as
   raw payloads;
-- model/NLI semantic-decision payloads — those remain gitignored local
-  audit artifacts under `reports/semantic_model_decisions/`;
+- raw model/NLI semantic-decision payloads — those quote short draft
+  spans and remain gitignored under `reports/semantic_model_decisions/`.
+  When a semantic audit has been run, this pack ships only the
+  aggregate-only `semantic_audit_aggregate.json` (counts, enum histograms,
+  synthetic case IDs/risk bands, cost) and the public
+  `semantic_audit_summary.md` — never the raw decisions;
 - private project context (`.project-memory/`) — never published;
 - any pilot, production-readiness, regulatory, or model-safety claim.
 
@@ -238,6 +306,9 @@ def package_adversarial_v1_llm_evidence(
     policy: Path,
     out: Path,
     improvement_memo: Path | None = None,
+    semantic_decisions_v0: Path | None = None,
+    semantic_decisions_v1: Path | None = None,
+    semantic_summary: Path | None = None,
 ) -> Path:
     raw_v0_report = _require_file(raw_v0_report, "raw-v0-report")
     raw_v1_report = _require_file(raw_v1_report, "raw-v1-report")
@@ -342,6 +413,43 @@ def package_adversarial_v1_llm_evidence(
                 "uncovered fields).",
             )
 
+    # Optional aggregate-only model/NLI semantic audit artifacts. Raw model
+    # decision payloads (which quote draft spans) are NEVER shipped; only the
+    # derived aggregate and the public summary markdown are.
+    if (semantic_decisions_v0 is None) != (semantic_decisions_v1 is None):
+        raise SystemExit(
+            "pass both --semantic-decisions-v0 and --semantic-decisions-v1, "
+            "or neither"
+        )
+    if semantic_decisions_v0 is not None and semantic_decisions_v1 is not None:
+        dv0 = _require_file(semantic_decisions_v0, "semantic-decisions-v0")
+        dv1 = _require_file(semantic_decisions_v1, "semantic-decisions-v1")
+        aggregate = _build_semantic_aggregate(
+            raw_v0=raw_v0,
+            raw_v1=raw_v1,
+            decisions_v0_path=dv0,
+            decisions_v1_path=dv1,
+        )
+        _guard_semantic_payload(aggregate)
+        _add_payload(
+            aggregate,
+            "semantic_audit_aggregate.json",
+            "Aggregate-only model/NLI semantic audit: counts, enum histograms, "
+            "synthetic case IDs/risk bands, confidence ranges, and cost. "
+            "Derived from the gitignored raw decision files; no draft text, "
+            "model reasoning, or quoted spans are included.",
+            source="reports/semantic_model_decisions/ (aggregated; raw files gitignored)",
+        )
+    if semantic_summary is not None:
+        summary_path = _require_file(semantic_summary, "semantic-summary")
+        _guard_semantic_markdown(summary_path)
+        _add_copy(
+            summary_path,
+            "semantic_audit_summary.md",
+            "Human-readable public-safe model/NLI semantic audit summary "
+            "(aggregate-only).",
+        )
+
     _guard_no_raw_paths(manifest)
 
     readme_path = out / "README.md"
@@ -403,6 +511,32 @@ def main(argv: list[str] | None = None) -> int:
             "it's copied into the pack as improvement_memo.md."
         ),
     )
+    parser.add_argument(
+        "--semantic-decisions-v0",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to the candidate_v0 model/NLI decision file. When "
+            "passed (with --semantic-decisions-v1), the pack ships an "
+            "aggregate-only semantic_audit_aggregate.json; the raw decision "
+            "file is never copied."
+        ),
+    )
+    parser.add_argument(
+        "--semantic-decisions-v1",
+        type=Path,
+        default=None,
+        help="Optional path to the candidate_v1 model/NLI decision file.",
+    )
+    parser.add_argument(
+        "--semantic-summary",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to the public-safe semantic audit summary markdown. "
+            "When present, it's copied into the pack as semantic_audit_summary.md."
+        ),
+    )
     args = parser.parse_args(argv)
 
     pack_root = package_adversarial_v1_llm_evidence(
@@ -414,6 +548,9 @@ def main(argv: list[str] | None = None) -> int:
         policy=args.policy,
         out=args.out,
         improvement_memo=args.improvement_memo,
+        semantic_decisions_v0=args.semantic_decisions_v0,
+        semantic_decisions_v1=args.semantic_decisions_v1,
+        semantic_summary=args.semantic_summary,
     )
     print(f"OK: assembled adversarial v1 LLM evidence pack -> {pack_root}")
     return 0

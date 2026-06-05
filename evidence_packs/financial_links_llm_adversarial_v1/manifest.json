@@ -277,6 +277,16 @@
       "path": "traces/redacted/candidate_v1/case_fl_adv_v1_012.redaction_report.json",
       "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
       "source": "traces/redacted/llm_adversarial_v1_candidate_v1/case_fl_adv_v1_012.redaction_report.json"
+    },
+    {
+      "path": "semantic_audit_aggregate.json",
+      "purpose": "Aggregate-only model/NLI semantic audit: counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and cost. Derived from the gitignored raw decision files; no draft text, model reasoning, or quoted spans are included.",
+      "source": "reports/semantic_model_decisions/ (aggregated; raw files gitignored)"
+    },
+    {
+      "path": "semantic_audit_summary.md",
+      "purpose": "Human-readable public-safe model/NLI semantic audit summary (aggregate-only).",
+      "source": "reports/llm_adversarial_v1_semantic_audit_summary.md"
     }
   ]
 }

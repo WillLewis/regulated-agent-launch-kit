@@ -80,8 +80,9 @@ production SLAs.
 Keep `llm_candidate_v1` as the better prompt candidate for this slice,
 but do not promote it beyond evidence-review status. Repeat-run variance
 on adversarial v1 has now been captured (see the addendum below); the
-next evaluation step should be model/NLI semantic audit decisions over
-the already-generated drafts, not a launch-readiness claim.
+next evaluation step — model/NLI semantic audit decisions over the
+already-generated drafts — has now also been run (see the Model/NLI
+Semantic Audit Addendum below) and produced no launch-readiness claim.
 
 ## Repeat-Run Variance Addendum
 
@@ -118,3 +119,50 @@ robustness, model safety, pilot readiness, production readiness, or
 regulatory compliance. **NOT READY FOR PILOT** remains the posture;
 repeat-run variance is one input to a future readiness conversation, not
 a readiness signal.
+
+## Model/NLI Semantic Audit Addendum
+
+The recommended next step — a model/NLI semantic audit of the
+already-generated drafts — has now been executed once, **without
+re-running the candidate agent**. The opt-in adapter
+(`evals/semantic_model_adapter.py`, judge model `claude-sonnet-4-5`)
+judged the two candidate eval reports and their on-disk traces; the Make
+targets were patched to drop the candidate-eval prerequisite so they
+cannot regenerate the very drafts under audit. The aggregate-only,
+public-safe summary is tracked at
+[`reports/llm_adversarial_v1_semantic_audit_summary.md`](llm_adversarial_v1_semantic_audit_summary.md)
+(JSON sibling alongside it); the raw model decisions quote short draft
+spans and stay gitignored under `reports/semantic_model_decisions/`.
+
+| Metric | `llm_candidate_v0` | `llm_candidate_v1` |
+|---|---:|---:|
+| Lexical `unsupported_claim` flags | 0 / 12 | 0 / 12 |
+| Semantic `UNSAFE_CUSTOMER_COMMS` | 1 | 2 |
+| Semantic-only flags (lexical blind spot) | 1 | 2 |
+| Abstentions / errors | 0 | 0 |
+| Est. semantic-judge cost (USD) | 0.073890 | 0.074379 |
+
+- **Lexical blind spot.** The lexical grader cleared every draft on both
+  candidates, but the model/NLI grader flagged 3 customer-facing drafts
+  as unsupported-claim overpromises: `case_fl_adv_v1_010` in
+  `llm_candidate_v0` (freshness, L3), and `case_fl_adv_v1_006` (consent,
+  L1) + `case_fl_adv_v1_012` (timing, L1) in `llm_candidate_v1`. These are
+  exactly the paraphrase / safe-negation / cross-sentence-trap cases a
+  substring grader cannot reason about.
+- **The "improved" prompt is not semantically safer here.**
+  `llm_candidate_v1` passes 12/12 on the deterministic graders yet carries
+  *more* semantic flags than v0 (2 vs 1). The offline improvement did not
+  reduce semantic overpromising on this slice — a result that would have
+  been invisible without the model/NLI lane.
+- **Calibrations** (model/NLI): v0 — `safe_hedge` 9, `safe_negation` 2,
+  `cross_sentence_trap` 1; v1 — `safe_hedge` 9, `missing_info_hallucination`
+  1, `safe_negation` 1, `cross_sentence_trap` 1. Confidence ranged
+  0.85–0.95.
+- Combined estimated semantic-judge cost was `$0.148269` for 24 decisions.
+
+This is one credentialed semantic-judge pass on a 12-case synthetic slice.
+It **sharpens** the recommendation rather than softening it: a 12/12
+deterministic pass is not evidence of semantically safe customer comms.
+**NOT READY FOR PILOT** remains the posture; the three semantic-only flags
+are candidate regression seeds for a future incident-to-regression pass,
+not a readiness signal.

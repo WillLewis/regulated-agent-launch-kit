@@ -64,6 +64,8 @@ below is generated from on-disk inputs:
 - `traces/redacted/candidate_v1/case_fl_adv_v1_010.redaction_report.json` — Per-trace redaction report (removed/abstracted/preserved/uncovered fields).
 - `traces/redacted/candidate_v1/case_fl_adv_v1_011.redaction_report.json` — Per-trace redaction report (removed/abstracted/preserved/uncovered fields).
 - `traces/redacted/candidate_v1/case_fl_adv_v1_012.redaction_report.json` — Per-trace redaction report (removed/abstracted/preserved/uncovered fields).
+- `semantic_audit_aggregate.json` — Aggregate-only model/NLI semantic audit: counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and cost. Derived from the gitignored raw decision files; no draft text, model reasoning, or quoted spans are included.
+- `semantic_audit_summary.md` — Human-readable public-safe model/NLI semantic audit summary (aggregate-only).
 
 The redacted traces under `traces/redacted/candidate_v0/` and
 `traces/redacted/candidate_v1/` are paired with redaction reports
@@ -79,8 +81,12 @@ JSON eval summary. The redaction policy used is
 - the raw JSON eval reports (both candidate reports are gitignored; the
   pack ships only their redacted summaries) — intentionally excluded as
   raw payloads;
-- model/NLI semantic-decision payloads — those remain gitignored local
-  audit artifacts under `reports/semantic_model_decisions/`;
+- raw model/NLI semantic-decision payloads — those quote short draft
+  spans and remain gitignored under `reports/semantic_model_decisions/`.
+  When a semantic audit has been run, this pack ships only the
+  aggregate-only `semantic_audit_aggregate.json` (counts, enum histograms,
+  synthetic case IDs/risk bands, cost) and the public
+  `semantic_audit_summary.md` — never the raw decisions;
 - private project context (`.project-memory/`) — never published;
 - any pilot, production-readiness, regulatory, or model-safety claim.
 

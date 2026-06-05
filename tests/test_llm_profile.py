@@ -435,6 +435,13 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         # (gated by check-llm-env; never in CI).
         "repeat-adversarial-v1-llm-v0",
         "repeat-adversarial-v1-llm-v1",
+        # On-disk-only aggregation/packaging (no credentials, NO profile
+        # invocation). Like the eval-card targets, these merely reference the
+        # gitignored model/NLI decision-file paths whose names embed the
+        # profile (reports/semantic_model_decisions/..._llm_candidate_v*.json);
+        # they never run scripts/run_eval.py with an llm_candidate_* profile.
+        "semantic-audit-summary-adversarial-v1-llm",
+        "evidence-pack-adversarial-v1-llm",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

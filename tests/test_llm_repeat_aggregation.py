@@ -104,6 +104,51 @@ def test_mixed_datasets_allowed_with_flag(tmp_path: Path) -> None:
     assert len(summary["datasets"]) == 2
 
 
+# Concrete adversarial v0 / v1 slice paths — the repeat summaries must never
+# silently combine the two slices.
+_ADV_V0_PATH = "case_studies/financial_links_reliability/evals/adversarial_v0.jsonl"
+_ADV_V1_PATH = "case_studies/financial_links_reliability/evals/adversarial_v1.jsonl"
+
+
+def _report_with(dataset_path: str, profile: str = "llm_candidate_v0") -> dict:
+    report = json.loads((RUN_PATHS[0]).read_text())
+    report["dataset_path"] = dataset_path
+    report["agent_system_version"] = profile
+    return report
+
+
+def test_adversarial_v0_and_v1_slices_do_not_aggregate_together(tmp_path: Path) -> None:
+    """A v0-slice report and a v1-slice report must not silently merge into one
+    summary. The adversarial v1 repeat summary aggregates only v1 reports, and
+    the default allow_mixed_datasets=False enforces that isolation."""
+
+    v0 = tmp_path / "v0.json"
+    v1 = tmp_path / "v1.json"
+    v0.write_text(json.dumps(_report_with(_ADV_V0_PATH)))
+    v1.write_text(json.dumps(_report_with(_ADV_V1_PATH)))
+    with pytest.raises(AggregationError) as exc:
+        aggregate_files([v0, v1])
+    assert "mix datasets" in str(exc.value)
+
+
+def test_adversarial_v1_only_summary_is_v1_scoped_and_public_safe(tmp_path: Path) -> None:
+    """Two v1-slice runs (mixed candidate profiles, same dataset) aggregate
+    into a v1-only summary — mirroring the make summary target — and the
+    rendered Markdown stays public-safe regardless of slice."""
+
+    a = tmp_path / "v1_a.json"
+    b = tmp_path / "v1_b.json"
+    a.write_text(json.dumps(_report_with(_ADV_V1_PATH, "llm_candidate_v0")))
+    b.write_text(json.dumps(_report_with(_ADV_V1_PATH, "llm_candidate_v1")))
+    summary = aggregate_files([a, b], allow_mixed_profiles=True)
+    assert summary["datasets"] == [_ADV_V1_PATH]
+    assert summary["profile_family"] == ["llm_candidate_v0", "llm_candidate_v1"]
+    assert summary["not_ready_for_pilot"] is True
+    md = render_markdown(summary)
+    assert "NOT READY FOR PILOT" in md
+    assert "traces/local/llm_" not in md
+
+
 def test_mixed_profile_families_rejected_by_default(tmp_path: Path) -> None:
     other = json.loads((RUN_PATHS[0]).read_text())
     other["agent_system_version"] = "llm_candidate_v1"

@@ -189,8 +189,7 @@ JSON eval summary. The redaction policy used is
 
 ## What this pack does **not** contain
 
-- raw LLM traces (gitignored under the
-  `traces/local/llm_adversarial_v1_candidate_v*/` directories) —
+- raw LLM traces (the gitignored per-candidate raw-trace directories) —
   intentionally excluded;
 - the raw JSON eval reports (both candidate reports are gitignored; the
   pack ships only their redacted summaries) — intentionally excluded as

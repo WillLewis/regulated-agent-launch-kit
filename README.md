@@ -286,6 +286,19 @@ launch posture: one credentialed run on a 12-case synthetic slice is
 evidence for review, not model safety, production readiness, regulatory
 compliance, partner endorsement, or pilot readiness.
 
+A repeat-run variance path for this slice is **wired but not yet
+executed**. `RUNS=5 make repeat-adversarial-v1-llm-v0` and
+`repeat-adversarial-v1-llm-v1` capture N credentialed runs each into the
+gitignored `reports/llm_repeats/adversarial_v1/` tree, and `make
+repeat-adversarial-v1-llm-summary` aggregates them into the public-safe
+`reports/llm_adversarial_v1_repeat_summary.{md,json}` (counts, label and
+latency distributions, and cost only — no raw draft text, no raw trace
+paths). The two capture targets gate on `make check-llm-env`; the summary
+target is on-disk only and the aggregator refuses to mix the adversarial
+v0 and v1 slices. No repeat-run capture has been executed for this slice,
+so those summaries do not exist yet, and a single run cannot characterize
+run-to-run variance — that is what this path is for once executed.
+
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing
 `--semantic-decisions case_studies/financial_links_reliability/evals/adversarial_v1_semantic_decisions.json`

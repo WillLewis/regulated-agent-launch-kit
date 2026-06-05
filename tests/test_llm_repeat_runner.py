@@ -358,6 +358,9 @@ def _make_targets() -> dict[str, str]:
             "repeat-adversarial-llm-v0",
             "repeat-adversarial-llm-v1",
             "repeat-adversarial-llm-summary",
+            "repeat-adversarial-v1-llm-v0",
+            "repeat-adversarial-v1-llm-v1",
+            "repeat-adversarial-v1-llm-summary",
             "test",
             "scaffold-test",
         }:
@@ -451,3 +454,141 @@ def test_committed_repeat_outputs_are_absent() -> None:
         "git is tracking raw repeat-run outputs that must remain local; "
         f"tracked: {tracked}"
     )
+
+
+# ---------------------------------------------------------------------------
+# adversarial v1 (12-case) repeat-run wiring — isolated from adversarial v0
+# ---------------------------------------------------------------------------
+
+_V1_REPEAT_TARGETS: tuple[str, ...] = (
+    "repeat-adversarial-v1-llm-v0",
+    "repeat-adversarial-v1-llm-v1",
+    "repeat-adversarial-v1-llm-summary",
+)
+
+
+def test_v1_repeat_targets_exist_and_capture_targets_depend_on_check_llm_env() -> None:
+    targets = _make_targets()
+    for t in _V1_REPEAT_TARGETS:
+        assert t in targets, f"Makefile missing target {t!r}"
+    for t in ("repeat-adversarial-v1-llm-v0", "repeat-adversarial-v1-llm-v1"):
+        assert "check-llm-env" in targets[t].split(), (
+            f"{t} must depend on check-llm-env before any token spend; "
+            f"got prereqs={targets[t]!r}"
+        )
+    # Summary is on-disk only — it must NOT require credentials.
+    assert (
+        "check-llm-env" not in targets["repeat-adversarial-v1-llm-summary"].split()
+    )
+
+
+def test_v1_repeat_targets_are_not_dependencies_of_make_test() -> None:
+    targets = _make_targets()
+    test_prereqs = set(targets.get("test", "").split())
+    for t in _V1_REPEAT_TARGETS:
+        assert t not in test_prereqs, (
+            f"`make test` must not depend on {t!r}; credentialed v1 repeat "
+            "capture is opt-in."
+        )
+
+
+def test_v1_repeat_targets_route_through_llm_repeats_on_adversarial_v1() -> None:
+    text = MAKEFILE.read_text()
+    body_v0 = re.search(
+        r"^repeat-adversarial-v1-llm-v0:[^\n]*\n((?:\t[^\n]*\n)+)", text, re.MULTILINE
+    )
+    body_v1 = re.search(
+        r"^repeat-adversarial-v1-llm-v1:[^\n]*\n((?:\t[^\n]*\n)+)", text, re.MULTILINE
+    )
+    assert body_v0 and body_v1, "could not extract repeat-adversarial-v1-* bodies"
+    for body, profile in (
+        (body_v0.group(1), "llm_candidate_v0"),
+        (body_v1.group(1), "llm_candidate_v1"),
+    ):
+        assert "scripts/run_llm_repeats.py" in body
+        assert f"--profile {profile}" in body
+        # The 12-case adversarial v1 slice, NOT the v0 slice.
+        assert (
+            "case_studies/financial_links_reliability/evals/adversarial_v1.jsonl"
+            in body
+        )
+        assert "adversarial_v0.jsonl" not in body
+        # Isolated output tree (via the v1-specific Make variable, pinned to
+        # reports/llm_repeats/adversarial_v1 by the path-collision test).
+        assert "$(REPEAT_V1_OUT_DIR)" in body
+
+
+def test_v1_repeat_summary_writes_isolated_public_paths() -> None:
+    text = MAKEFILE.read_text()
+    # The summary recipe contains an inline `python -c` with backslash line
+    # continuations that start at column 0, so capture the whole stanza up to
+    # the next blank line rather than only the tab-indented recipe lines.
+    stanza = re.search(
+        r"^repeat-adversarial-v1-llm-summary:.*?(?=\n\n)",
+        text,
+        re.DOTALL | re.MULTILINE,
+    )
+    assert stanza, "could not extract repeat-adversarial-v1-llm-summary stanza"
+    recipe = stanza.group(0)
+    # Reads the isolated v1 raw tree and writes the v1 summary variables
+    # (pinned to the distinct reports/llm_adversarial_v1_repeat_summary.*
+    # paths by the path-collision test).
+    assert "$(REPEAT_V1_OUT_DIR)" in recipe
+    assert "$(REPEAT_V1_SUMMARY_MD)" in recipe
+    assert "$(REPEAT_V1_SUMMARY_JSON)" in recipe
+    # Must not reference the adversarial v0 summary variables.
+    assert "$(REPEAT_SUMMARY_MD)" not in recipe
+    assert "$(REPEAT_SUMMARY_JSON)" not in recipe
+
+
+def test_v1_repeat_output_paths_do_not_collide_with_v0() -> None:
+    """The v1 capture/summary paths must be distinct from the v0 ones so a v1
+    run never overwrites the committed v0 summary or mixes raw trees."""
+
+    text = MAKEFILE.read_text()
+    assert "REPEAT_V1_OUT_DIR ?= reports/llm_repeats/adversarial_v1" in text
+    assert (
+        "REPEAT_V1_SUMMARY_MD ?= reports/llm_adversarial_v1_repeat_summary.md" in text
+    )
+    assert (
+        "REPEAT_V1_SUMMARY_JSON ?= reports/llm_adversarial_v1_repeat_summary.json"
+        in text
+    )
+    # The v0 default out-dir stays the distinct (shorter) path.
+    assert "REPEAT_OUT_DIR ?= reports/llm_repeats/adversarial\n" in text
+
+
+def test_v1_raw_repeat_tree_gitignored_but_summary_trackable() -> None:
+    """Raw v1 repeat outputs stay gitignored (they embed raw model output);
+    the aggregate summaries are public-safe and may be tracked."""
+
+    import subprocess
+
+    raw = (
+        "reports/llm_repeats/adversarial_v1/llm_candidate_v0/"
+        "20990101_000000/run_001/eval_report.json"
+    )
+    ignored = subprocess.run(
+        ["git", "check-ignore", raw],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert ignored.returncode == 0 and ignored.stdout.strip(), (
+        f"raw v1 repeat output must be gitignored: {raw}"
+    )
+    for summary_path in (
+        "reports/llm_adversarial_v1_repeat_summary.md",
+        "reports/llm_adversarial_v1_repeat_summary.json",
+    ):
+        not_ignored = subprocess.run(
+            ["git", "check-ignore", summary_path],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert not_ignored.returncode == 1, (
+            f"aggregate summary {summary_path} must be trackable (not gitignored)"
+        )

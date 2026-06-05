@@ -417,6 +417,11 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
         # raw-LLM trace path strings only inside those fixtures; never reads
         # the real on-disk candidate outputs.
         "test_semantic_audit_summary.py",
+        # M7b: references the adversarial v2 candidate raw-report / trace /
+        # decision path strings only to assert they stay gitignored, and builds
+        # its own synthetic decision fixtures in tmp_path; never reads the real
+        # on-disk artifacts.
+        "test_adversarial_v2_llm_targets.py",
     }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:

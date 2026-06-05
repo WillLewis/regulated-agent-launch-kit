@@ -45,6 +45,15 @@ reports/llm_smoke_eval.json
 reports/llm_adversarial_v1_candidate_v0_eval.json
 reports/llm_adversarial_v1_candidate_v1_eval.json
 
+# Adversarial v2 (24-case) LLM candidate raw eval reports (M7b). Like v1 they
+# embed raw model draft text; the public surfaces are the aggregate semantic-
+# audit summary + the comparison card. The credential-free semantic replay
+# fixture is a regenerable intermediate derived from the gitignored model/NLI
+# decisions (which stay under reports/semantic_model_decisions/).
+reports/llm_adversarial_v2_candidate_v0_eval.json
+reports/llm_adversarial_v2_candidate_v1_eval.json
+reports/llm_adversarial_v2_candidate_v1_semantic_replay_decisions.json
+
 # Repeat-run aggregation demo outputs from the variance-report-fixture
 # Make target. The fixture inputs under tests/fixtures/llm_repeats/ are
 # tracked; the rendered demo outputs are not, so the target can be

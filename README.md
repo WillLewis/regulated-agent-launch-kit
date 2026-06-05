@@ -426,6 +426,23 @@ into the default eval, so the deterministic proof loop is unchanged. This is gat
 PILOT** until the gate runs clean on a larger credentialed semantic audit of the
 expanded `adversarial_v2` drafts.
 
+**Adversarial v2 LLM gate pipeline (M7b — wired, run pending).** The opt-in,
+credentialed pipeline to actually run the gate against the 24-case
+`adversarial_v2` LLM candidate drafts is now wired: `eval-adversarial-v2-llm-v0`
+/ `-v1` (raw reports/traces gitignored), `eval-card-adversarial-v2-llm`,
+`semantic-model-decisions-adversarial-v2-llm-v0` / `-v1` (judge the on-disk
+drafts; raw decisions gitignored), an on-disk `semantic-audit-summary-adversarial-v2-llm`
+(public aggregate), and a **credential-free** `semantic-gate-adversarial-v2-llm`
+that re-keys the candidate's audited verdicts under the deterministic
+`improved_v0` vehicle (`scripts/build_semantic_replay_adversarial_v2_llm.py`) so
+the gate runs with no model call and no token spend. Every credentialed target
+gates on `check-llm-env` (no silent fallback) and no deterministic/CI target
+depends on them. The rails are verified credential-free
+(`tests/test_adversarial_v2_llm_targets.py`: the gate passes on a clean synthetic
+verdict set and blocks on a flagged one). **The credentialed audit itself has not
+been run here (no `ANTHROPIC_API_KEY`), so there is no v2 pass/fail evidence yet
+and M7 stays open.** Posture unchanged: **NOT READY FOR PILOT**.
+
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing
 `--semantic-decisions case_studies/financial_links_reliability/evals/adversarial_v1_semantic_decisions.json`

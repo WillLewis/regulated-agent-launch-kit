@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic semantic-gate-adversarial-v1-regressions semantic-gate-adversarial-v1-improved evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm eval-adversarial-v2-llm-v0 eval-adversarial-v2-llm-v1 eval-card-adversarial-v2-llm semantic-model-decisions-adversarial-v2-llm-v0 semantic-model-decisions-adversarial-v2-llm-v1 semantic-audit-summary-adversarial-v2-llm semantic-gate-adversarial-v2-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic semantic-gate-adversarial-v1-regressions semantic-gate-adversarial-v1-improved evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -64,6 +64,11 @@ help:
 	@echo "  semantic-model-decisions-adversarial-v1-llm-v0  model/NLI semantic decisions for the candidate_v0 report (gitignored)"
 	@echo "  semantic-model-decisions-adversarial-v1-llm-v1  model/NLI semantic decisions for the candidate_v1 report (gitignored)"
 	@echo "  semantic-audit-summary-adversarial-v1-llm  aggregate model/NLI decisions into a public-safe summary (no LLM call)"
+	@echo "  [M7b] eval-adversarial-v2-llm-v0 / -v1  run the 24-case adversarial v2 slice against llm_candidate_v0 / v1 (credentialed; raw report gitignored)"
+	@echo "  [M7b] eval-card-adversarial-v2-llm  render the v2 candidate_v0 (Before) vs candidate_v1 (After) card"
+	@echo "  [M7b] semantic-model-decisions-adversarial-v2-llm-v0 / -v1  model/NLI semantic decisions for the v2 candidate drafts on disk (gitignored)"
+	@echo "  [M7b] semantic-audit-summary-adversarial-v2-llm  aggregate v2 model/NLI decisions into a public-safe summary (no LLM call)"
+	@echo "  [M7b] semantic-gate-adversarial-v2-llm  credential-free semantic gate over the v2 candidate_v1 verdicts (blocks on any flagged case; no model call)"
 	@echo "  regression-seed-adversarial-v1-semantic  pin the 3 semantic-only failures as pending_review regression seeds (no LLM call)"
 	@echo "  regression-check-adversarial-v1-semantic  validate the semantic regression seeds + summary linkage (no LLM call)"
 	@echo "  regression-replay-adversarial-v1-semantic  credential-free replay: prove the semantic grader fires on the 3 seeds (no LLM call)"
@@ -609,6 +614,128 @@ semantic-audit-summary-adversarial-v1-llm:
 		--decisions-v1 reports/semantic_model_decisions/adversarial_v1_llm_candidate_v1.json \
 		--out-json reports/llm_adversarial_v1_semantic_audit_summary.json \
 		--out-md reports/llm_adversarial_v1_semantic_audit_summary.md
+
+# ===== M7b: opt-in credentialed adversarial v2 LLM candidate + semantic gate ===
+# Direct analogs of the adversarial v1 LLM targets, on the broader 24-case v2
+# slice. Credentialed targets gate on check-llm-env (no silent fallback). Raw
+# candidate reports, raw traces, and raw model/NLI decisions stay gitignored;
+# the public surfaces are the aggregate semantic-audit summary and the pass/fail
+# of the credential-free semantic gate. No deterministic / CI target depends on
+# these. M7b runs the semantic gate against the v2 candidate drafts; it does NOT
+# complete M7 (one credentialed audit is not the delivery-plan bar) and does NOT
+# change the NOT READY FOR PILOT posture.
+
+eval-adversarial-v2-llm-v0: check-llm-env
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v2.jsonl \
+		--traces-out traces/local/llm_adversarial_v2_candidate_v0 \
+		--report-out reports/llm_adversarial_v2_candidate_v0_eval.json \
+		--agent-system-version llm_candidate_v0
+
+eval-adversarial-v2-llm-v1: check-llm-env
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v2.jsonl \
+		--traces-out traces/local/llm_adversarial_v2_candidate_v1 \
+		--report-out reports/llm_adversarial_v2_candidate_v1_eval.json \
+		--agent-system-version llm_candidate_v1
+
+eval-card-adversarial-v2-llm: eval-adversarial-v2-llm-v0 eval-adversarial-v2-llm-v1
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/llm_adversarial_v2_candidate_v0_eval.json \
+		--improved-report reports/llm_adversarial_v2_candidate_v1_eval.json \
+		--baseline-label Before \
+		--improved-label After \
+		--out reports/llm_adversarial_v2_candidate_v1_vs_v0_card.md
+
+# Model/NLI semantic decisions judging the v2 candidate drafts ALREADY ON DISK.
+# They deliberately do NOT depend on the candidate eval targets (that would
+# re-run the candidate model and overwrite the very drafts under audit). They
+# fail clean if the candidate report or traces are missing. Decision JSON stays
+# gitignored under reports/semantic_model_decisions/.
+semantic-model-decisions-adversarial-v2-llm-v0: check-llm-env
+	@if [ ! -f reports/llm_adversarial_v2_candidate_v0_eval.json ]; then \
+		echo "ERROR: reports/llm_adversarial_v2_candidate_v0_eval.json not found."; \
+		echo "  This target judges drafts already on disk; it does NOT generate them."; \
+		echo "  Hint: run \`make eval-adversarial-v2-llm-v0\` (credentialed) first."; \
+		exit 1; \
+	fi
+	@if [ ! -d traces/local/llm_adversarial_v2_candidate_v0 ]; then \
+		echo "ERROR: traces/local/llm_adversarial_v2_candidate_v0/ not found."; \
+		echo "  Hint: run \`make eval-adversarial-v2-llm-v0\` first."; \
+		exit 1; \
+	fi
+	uv run python scripts/generate_semantic_decisions.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v2.jsonl \
+		--eval-report reports/llm_adversarial_v2_candidate_v0_eval.json \
+		--out reports/semantic_model_decisions/adversarial_v2_llm_candidate_v0.json
+
+semantic-model-decisions-adversarial-v2-llm-v1: check-llm-env
+	@if [ ! -f reports/llm_adversarial_v2_candidate_v1_eval.json ]; then \
+		echo "ERROR: reports/llm_adversarial_v2_candidate_v1_eval.json not found."; \
+		echo "  This target judges drafts already on disk; it does NOT generate them."; \
+		echo "  Hint: run \`make eval-adversarial-v2-llm-v1\` (credentialed) first."; \
+		exit 1; \
+	fi
+	@if [ ! -d traces/local/llm_adversarial_v2_candidate_v1 ]; then \
+		echo "ERROR: traces/local/llm_adversarial_v2_candidate_v1/ not found."; \
+		echo "  Hint: run \`make eval-adversarial-v2-llm-v1\` first."; \
+		exit 1; \
+	fi
+	uv run python scripts/generate_semantic_decisions.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v2.jsonl \
+		--eval-report reports/llm_adversarial_v2_candidate_v1_eval.json \
+		--out reports/semantic_model_decisions/adversarial_v2_llm_candidate_v1.json
+
+# On-disk only: NO LLM call, NO credentials. Aggregates the two gitignored v2
+# decision files + candidate reports into the public-safe aggregate summary
+# (counts, enum histograms, synthetic case IDs/risk bands, cost). Reuses the
+# generic adversarial-v1 summarizer with v2 paths. The summary JSON + Markdown
+# are tracked public artifacts.
+semantic-audit-summary-adversarial-v2-llm:
+	@for f in \
+		reports/semantic_model_decisions/adversarial_v2_llm_candidate_v0.json \
+		reports/semantic_model_decisions/adversarial_v2_llm_candidate_v1.json; do \
+		if [ ! -f $$f ]; then \
+			echo "ERROR: $$f not found."; \
+			echo "  This target aggregates existing model/NLI decisions; it does NOT generate them."; \
+			echo "  Hint: run \`make semantic-model-decisions-adversarial-v2-llm-v0\` and"; \
+			echo "        \`make semantic-model-decisions-adversarial-v2-llm-v1\` (credentialed) first."; \
+			exit 1; \
+		fi; \
+	done
+	uv run python scripts/summarize_semantic_audit_adversarial_v1_llm.py \
+		--report-v0 reports/llm_adversarial_v2_candidate_v0_eval.json \
+		--report-v1 reports/llm_adversarial_v2_candidate_v1_eval.json \
+		--decisions-v0 reports/semantic_model_decisions/adversarial_v2_llm_candidate_v0.json \
+		--decisions-v1 reports/semantic_model_decisions/adversarial_v2_llm_candidate_v1.json \
+		--out-json reports/llm_adversarial_v2_semantic_audit_summary.json \
+		--out-md reports/llm_adversarial_v2_semantic_audit_summary.md
+
+# Credential-free semantic GATE over the v2 candidate_v1 drafts. Re-keys the
+# (gitignored) candidate model/NLI verdicts under the deterministic improved_v0
+# vehicle via a public-safe replay fixture, runs the offline semantic lane, and
+# BLOCKS (exit non-zero) on any flagged case. No model call, no candidate rerun,
+# no token spend. A BLOCK is preserved as evidence (the failing run + the
+# tracked aggregate summary); a PASS is one credentialed audit, NOT M7
+# completion. NOT a check-llm-env target — it consumes decisions already on disk.
+semantic-gate-adversarial-v2-llm:
+	@if [ ! -f reports/semantic_model_decisions/adversarial_v2_llm_candidate_v1.json ]; then \
+		echo "ERROR: reports/semantic_model_decisions/adversarial_v2_llm_candidate_v1.json not found."; \
+		echo "  The gate replays the v2 candidate_v1 model/NLI verdicts; it does NOT generate them."; \
+		echo "  Hint: run \`make semantic-model-decisions-adversarial-v2-llm-v1\` (credentialed) first."; \
+		exit 1; \
+	fi
+	uv run python scripts/build_semantic_replay_adversarial_v2_llm.py \
+		--decisions reports/semantic_model_decisions/adversarial_v2_llm_candidate_v1.json \
+		--out reports/llm_adversarial_v2_candidate_v1_semantic_replay_decisions.json
+	uv run python scripts/run_eval.py \
+		--dataset case_studies/financial_links_reliability/evals/adversarial_v2.jsonl \
+		--traces-out traces/local/llm_adversarial_v2_candidate_v1_semantic_model \
+		--report-out reports/llm_adversarial_v2_candidate_v1_semantic_model_eval.json \
+		--agent-system-version improved_v0 \
+		--semantic-decisions reports/llm_adversarial_v2_candidate_v1_semantic_replay_decisions.json
+	uv run python scripts/check_semantic_gate.py \
+		--report reports/llm_adversarial_v2_candidate_v1_semantic_model_eval.json
 
 # ---- Semantic-only regression seeds (adversarial v1 model/NLI audit) ---------
 # On-disk only: NO LLM call, NO credentials, NO candidate rerun. The seeder

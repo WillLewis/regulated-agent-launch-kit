@@ -442,6 +442,18 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         # they never run scripts/run_eval.py with an llm_candidate_* profile.
         "semantic-audit-summary-adversarial-v1-llm",
         "evidence-pack-adversarial-v1-llm",
+        # M7b: opt-in adversarial v2 (24-case) LLM candidate + semantic-gate
+        # loop (gated by check-llm-env; never in CI). The decision/summary/gate
+        # recipes reference gitignored decision-file paths whose names embed the
+        # profile (reports/semantic_model_decisions/adversarial_v2_llm_candidate_v*.json)
+        # but only eval-adversarial-v2-llm-v0/v1 actually invoke an llm_candidate
+        # profile via run_eval; the gate runs the deterministic improved_v0 vehicle.
+        "eval-adversarial-v2-llm-v0",
+        "eval-adversarial-v2-llm-v1",
+        "semantic-model-decisions-adversarial-v2-llm-v0",
+        "semantic-model-decisions-adversarial-v2-llm-v1",
+        "semantic-audit-summary-adversarial-v2-llm",
+        "semantic-gate-adversarial-v2-llm",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

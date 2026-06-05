@@ -489,16 +489,42 @@ def test_v2_card_target_compares_both_profiles() -> None:
     assert "reports/adversarial_v2_eval_card.md" in recipe
 
 
-def test_no_adversarial_v2_llm_target_is_introduced() -> None:
-    """M8 is deterministic-only: there must be no credentialed adversarial v2
-    LLM target (those belong to a later, opt-in chunk)."""
+def test_adversarial_v2_llm_targets_are_opt_in_and_credential_gated() -> None:
+    """M8 itself is deterministic-only. M7b later introduced the opt-in v2 LLM
+    targets (superseding M8's earlier 'no v2 LLM target' guard); they must be
+    credential-gated, and the deterministic v2 proof loop must not invoke them.
+    Full coverage lives in ``tests/test_adversarial_v2_llm_targets.py``."""
 
     makefile = MAKEFILE.read_text()
-    target_headers = re.findall(r"^([a-z0-9-]+):", makefile, flags=re.MULTILINE)
-    offenders = [
-        t for t in target_headers if "adversarial-v2" in t and "llm" in t
-    ]
-    assert not offenders, f"unexpected adversarial v2 LLM target(s): {offenders}"
+    # Every credentialed v2 LLM target must gate on check-llm-env (no silent
+    # fallback).
+    for target in (
+        "eval-adversarial-v2-llm-v0",
+        "eval-adversarial-v2-llm-v1",
+        "semantic-model-decisions-adversarial-v2-llm-v0",
+        "semantic-model-decisions-adversarial-v2-llm-v1",
+    ):
+        match = re.search(
+            rf"^{re.escape(target)}:\s*([^\n]*)$", makefile, flags=re.MULTILINE
+        )
+        assert match is not None, f"missing v2 LLM target {target!r}"
+        assert "check-llm-env" in match.group(1).split(), (
+            f"{target} must gate on check-llm-env"
+        )
+    # The deterministic v2 targets must not request an llm_candidate profile.
+    for target in (
+        "eval-adversarial-v2-baseline",
+        "eval-adversarial-v2-improved",
+        "eval-card-adversarial-v2",
+    ):
+        pattern = re.compile(
+            rf"^{re.escape(target)}:[^\n]*\n((?:\t[^\n]*\n)+)", re.MULTILINE
+        )
+        block = pattern.search(makefile)
+        assert block is not None, f"missing deterministic target {target!r}"
+        assert "llm_candidate" not in block.group(1), (
+            f"deterministic target {target} must not invoke an llm_candidate profile"
+        )
 
 
 # ---------------------------------------------------------------------------

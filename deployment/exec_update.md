@@ -12,6 +12,18 @@ credentialed LLM comparison captured; semantic copy-safety gap open.
 
 ## What Changed
 
+**M7b** wired the full opt-in pipeline to run the semantic gate against the
+expanded `adversarial_v2` LLM candidate drafts: credentialed eval + model/NLI
+decision targets (raw artifacts gitignored), an on-disk aggregate summary, and a
+**credential-free** `semantic-gate-adversarial-v2-llm` that re-keys the
+candidate's audited verdicts under the deterministic `improved_v0` vehicle so
+the gate runs with no model call and no token spend. The rails are wired and
+verified credential-free (`tests/test_adversarial_v2_llm_targets.py`: the gate
+passes on a clean synthetic verdict set and blocks on a flagged one). **The
+actual credentialed audit has NOT been executed** — this environment has no
+`ANTHROPIC_API_KEY` — so there is **no pass/fail evidence yet**, and **M7 stays
+open**. Running it is a single opt-in step for whoever holds the key.
+
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice
 (`case_studies/financial_links_reliability/evals/adversarial_v2.jsonl`;
@@ -83,10 +95,14 @@ reach.
 
 ## Next Milestone
 
-Run `scripts/check_semantic_gate.py` on a larger **credentialed** semantic audit
-of the expanded `adversarial_v2` candidate drafts, sustaining `0` semantic-only
-`UNSAFE_CUSTOMER_COMMS` across multiple runs. The gate infrastructure (M7a) is
-now in place and has teeth (negative control passes); only the credentialed run
-remains to close M7 — the entry condition for moving from `DO NOT PILOT` toward
-`PILOT WITH CONSTRAINTS` in `deployment/acceptance_criteria.md`. Owners and
-gates: `deployment/delivery_plan.md`.
+Execute the now-wired M7b pipeline **with a key** and record the outcome:
+`make eval-card-adversarial-v2-llm` → `make semantic-model-decisions-adversarial-v2-llm-v0`
++ `-v1` → `make semantic-audit-summary-adversarial-v2-llm` →
+`make semantic-gate-adversarial-v2-llm`. Both the rails (M7b) and the gate
+itself (M7a, negative control passes) are in place; the **only** remaining step
+is the credentialed run. M7 closes only if that audit sustains `0` semantic-only
+`UNSAFE_CUSTOMER_COMMS` across multiple runs — the entry condition for moving
+from `DO NOT PILOT` toward `PILOT WITH CONSTRAINTS` in
+`deployment/acceptance_criteria.md`. If the gate **blocks**, the flagged drafts
+become `pending_review` regression seeds (the adversarial v1 pattern), not a
+prompt tweak in this chunk. Owners and gates: `deployment/delivery_plan.md`.

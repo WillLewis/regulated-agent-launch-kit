@@ -9,11 +9,12 @@ This is the smallest honest eval pass:
 - aggregate grader pass rates, failure-label counts, evaluator outcomes,
   and a synthetic latency/cost summary into a local JSON report.
 
-No external credentials are required. All cost numbers are 0.0 — the
-runner is deterministic and does not call a model. Latency is measured
-locally for transparency; the synthetic latency budgets in
-``configs/latency_budgets.yaml`` are surfaced alongside the measured
-values as planning envelopes only (not production SLAs).
+The default deterministic profiles require no external credentials and
+report 0.0 cost. Opt-in ``llm_*`` profiles route draft text through the
+credential-gated adapter and surface estimated cost from the trace.
+Latency is measured locally for transparency; the synthetic latency
+budgets in ``configs/latency_budgets.yaml`` are surfaced alongside the
+measured values as planning envelopes only (not production SLAs).
 """
 
 from __future__ import annotations
@@ -436,12 +437,32 @@ def run_eval(
         for name in grader_names
     ]
 
-    cost_summary = {
-        "note": (
+    llm_in_play = str(profile).startswith("llm_")
+    cost_note = (
+        "Estimated cost is aggregated from credential-gated LLM trace metadata "
+        "for this synthetic run. It is a public-list-price planning estimate, "
+        "not a billing number, partner commitment, or production forecast."
+        if llm_in_play
+        else (
             "Cost is a deterministic 0.0 placeholder for this synthetic run — "
-            "no external model is called. Real cost surfaces here once an LLM "
-            "is wired into the runner."
-        ),
+            "no external model is called. Real cost surfaces here for opt-in "
+            "LLM profiles."
+        )
+    )
+    latency_note = (
+        "Wall-clock latency for the graph path, including credential-gated LLM "
+        "draft generation for opt-in LLM profiles. These are local synthetic "
+        "measurements, not production SLAs."
+        if llm_in_play
+        else (
+            "Wall-clock latency for the deterministic runner only. The runner "
+            "is near-instant; these numbers become meaningful for opt-in LLM "
+            "profiles."
+        )
+    )
+
+    cost_summary = {
+        "note": cost_note,
         "total_est_cost_usd": round(total_cost_usd, 6),
         "per_case_count": len(per_case),
     }
@@ -450,11 +471,7 @@ def run_eval(
     latency_summary = {
         "synthetic_planning_envelope": envelope,
         "measured_ms": {
-            "note": (
-                "Wall-clock latency for the deterministic runner only. The runner "
-                "is near-instant; these numbers will become meaningful when an LLM "
-                "is wired in."
-            ),
+            "note": latency_note,
             "samples_by_risk_band": {
                 band: {
                     "count": len(samples),

@@ -34,7 +34,7 @@ from evals.run import AggregateGraderRate, CaseEvalResult, EvalReport  # noqa: E
 
 LAUNCH_POSTURE = (
     "NOT READY FOR PILOT — local synthetic vertical slice only; "
-    "proceed to evaluator catch-rate and regression-loop work."
+    "use as evidence for review, not as a launch-readiness claim."
 )
 
 SYNTHETIC_DISCLAIMER = (
@@ -175,7 +175,7 @@ def _label_table(
 
 REDACTED_LLM_TRACE_FALLBACK: str = (
     "Trace evidence: redacted trace not yet generated; "
-    "run `make redact-llm-adversarial` and re-render this card."
+    "run the matching LLM redaction target and re-render this card."
 )
 
 
@@ -206,8 +206,8 @@ def _failing_case_block(
     ``traces/local/llm_*`` — those paths embed raw model output and
     must not become public artifacts. Instead it links to the matching
     redacted trace under ``traces/redacted/llm_*`` when one exists, or
-    falls back to a plain-text instruction directing the reader to
-    ``make redact-llm-adversarial``. Deterministic profiles keep their
+    falls back to a plain-text instruction directing the reader to run
+    the matching LLM redaction target. Deterministic profiles keep their
     existing direct-link behavior.
     """
 
@@ -577,10 +577,11 @@ def render_card(
     )
     launch_posture_rider = (
         (
-            "Specifically: this card compares an LLM-backed profile against the\n"
-            "deterministic reference on a single synthetic adversarial slice. It\n"
-            "owes: LLM cost capture, a redacted evidence pack covering the LLM\n"
-            "traces, pinned regression seeds for any new model failures, and\n"
+            "Specifically: this card compares LLM-backed profile behavior on a\n"
+            "single synthetic adversarial slice and includes estimated LLM cost\n"
+            "and latency capture. Share it only through a redacted evidence pack\n"
+            "when raw LLM traces exist. It still owes repeat-run variance on this\n"
+            "slice, pinned regression seeds for accepted model failure modes, and\n"
             "pilot-readiness review artifacts before any launch-readiness\n"
             "recommendation could be made."
         )

@@ -19,8 +19,8 @@ is a 12-case synthetic stress slice that expands beyond the original
    across at least 2 distinct failure labels.
 8. The adversarial v1 LLM candidate loop is wired as opt-in and
    credential-gated (eval/card/semantic-decision/redaction/evidence
-   targets), but README / PLAN do not claim a credentialed run has
-   actually been executed against adversarial v1.
+   targets), and README / PLAN describe the executed credentialed run
+   with public-safe links and no readiness overclaim.
 """
 
 from __future__ import annotations
@@ -341,37 +341,39 @@ def test_baseline_v0_fails_at_least_3_cases_across_2_labels(
 
 
 # ---------------------------------------------------------------------------
-# README / PLAN must not claim an LLM v1 run on adversarial_v1
+# README / PLAN must reflect the executed adversarial v1 LLM run safely
 # ---------------------------------------------------------------------------
 
 
-def test_readme_does_not_claim_llm_run_on_adversarial_v1() -> None:
+def test_readme_claims_executed_adversarial_v1_llm_run_with_evidence() -> None:
+    readme = README.read_text()
+    lower = readme.lower()
+    assert "credential-gated llm candidate loop for this slice has now" in lower
+    assert "been executed once" in lower
+    assert "reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md" in readme
+    assert "evidence_packs/financial_links_llm_adversarial_v1/" in readme
+    assert "reports/llm_adversarial_v1_improvement_memo.md" in readme
+    assert "NOT READY FOR PILOT" in readme
     lower = README.read_text().lower()
-    forbidden = (
-        "credentialed run on adversarial_v1",
-        "llm candidate evaluated on adversarial v1",
-        "adversarial_v1 credentialed run",
-        "llm run on adversarial_v1",
-        "adversarial v1 credentialed llm run",
-    )
+    forbidden = ("production ready", "pilot ready", "model safety claim")
     for phrase in forbidden:
         assert phrase not in lower, (
-            f"README must not claim an LLM run on adversarial_v1: {phrase!r}"
+            f"README must not overclaim adversarial v1 LLM evidence: {phrase!r}"
         )
 
 
-def test_plan_does_not_claim_llm_run_on_adversarial_v1() -> None:
+def test_plan_claims_executed_adversarial_v1_llm_run_with_limits() -> None:
+    plan = PLAN.read_text()
     lower = PLAN.read_text().lower()
-    forbidden = (
-        "credentialed run on adversarial_v1",
-        "llm candidate evaluated on adversarial v1",
-        "adversarial_v1 credentialed run",
-        "llm run on adversarial_v1",
-        "adversarial v1 credentialed llm run",
-    )
+    assert "executed once; redacted evidence pack generated" in lower
+    assert "before passed 6/12, after passed 12/12" in lower
+    assert "evidence_packs/financial_links_llm_adversarial_v1/" in plan
+    assert "reports/llm_adversarial_v1_improvement_memo.md" in plan
+    assert "zero affirmative `UNSAFE_CUSTOMER_COMMS`" in plan
+    forbidden = ("production ready", "pilot ready", "regulatory compliant")
     for phrase in forbidden:
         assert phrase not in lower, (
-            f"PLAN must not claim an LLM run on adversarial_v1: {phrase!r}"
+            f"PLAN must not overclaim adversarial v1 LLM evidence: {phrase!r}"
         )
 
 
@@ -461,6 +463,27 @@ def test_eval_card_adversarial_v1_llm_compares_both_candidates() -> None:
     assert "--baseline-label Before" in body
     assert "--improved-label After" in body
     assert "reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md" in body
+
+
+def test_evidence_pack_adversarial_v1_llm_rerenders_card_after_redaction() -> None:
+    """The standalone card target renders before redacted traces exist.
+    The evidence-pack target must rerender after redaction so the packaged
+    card links to redacted traces instead of saying trace evidence is
+    missing."""
+
+    makefile = (ROOT / "Makefile").read_text()
+    body = _make_recipe(makefile, "evidence-pack-adversarial-v1-llm")
+    assert "scripts/generate_eval_card.py" in body
+    assert "reports/llm_adversarial_v1_candidate_v0_eval.json" in body
+    assert "reports/llm_adversarial_v1_candidate_v1_eval.json" in body
+    assert "reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md" in body
+
+    generate_idx = body.index("scripts/generate_eval_card.py")
+    package_idx = body.index("scripts/package_evidence_adversarial_v1_llm.py")
+    assert generate_idx < package_idx, (
+        "evidence-pack-adversarial-v1-llm must rerender the card after "
+        "redaction and before packaging"
+    )
 
 
 def test_adversarial_v1_llm_eval_targets_run_right_profiles_and_paths() -> None:

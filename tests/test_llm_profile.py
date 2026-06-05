@@ -262,6 +262,12 @@ def test_llm_profile_eval_report_aggregates_cost(
         f"got {summary_total}"
     )
     assert summary_total > 0.0
+    cost_note = report.synthetic_cost_summary["note"]
+    assert "credential-gated LLM trace metadata" in cost_note
+    assert "deterministic 0.0 placeholder" not in cost_note
+    latency_note = report.synthetic_latency_envelope["measured_ms"]["note"]
+    assert "including credential-gated LLM" in latency_note
+    assert "deterministic runner only" not in latency_note
 
 
 def test_deterministic_profile_still_reports_zero_cost(tmp_path: Path) -> None:
@@ -276,6 +282,7 @@ def test_deterministic_profile_still_reports_zero_cost(tmp_path: Path) -> None:
     )
     assert all(c.est_cost_usd == 0.0 for c in report.per_case)
     assert report.synthetic_cost_summary["total_est_cost_usd"] == 0.0
+    assert "deterministic 0.0 placeholder" in report.synthetic_cost_summary["note"]
 
 
 def test_llm_profile_trace_preserves_graph_node_path(monkeypatch: pytest.MonkeyPatch) -> None:

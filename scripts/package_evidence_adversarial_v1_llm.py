@@ -109,6 +109,58 @@ def _write_json(dst: Path, payload: Any) -> Path:
     return dst
 
 
+def _rewrite_trace_paths_to_pack_redacted(
+    report: dict[str, Any],
+    *,
+    candidate: str,
+) -> None:
+    """Point redacted eval-summary case rows at pack-relative traces.
+
+    Raw eval reports carry ``traces/local/llm_*`` paths because those
+    are the runner outputs. Public evidence packs should not preserve
+    those local raw-evidence locations; the per-case evidence pointer is
+    rewritten to the redacted trace shipped inside the pack.
+    """
+
+    per_case = report.get("per_case")
+    if not isinstance(per_case, list):
+        return
+    for case in per_case:
+        if not isinstance(case, dict):
+            continue
+        case_id = case.get("case_id")
+        if isinstance(case_id, str) and case_id:
+            case["trace_path"] = (
+                f"traces/redacted/{candidate}/{case_id}.redacted.json"
+            )
+
+
+def _rewrite_llm_report_notes(report: dict[str, Any]) -> None:
+    """Normalize stale deterministic notes on redacted LLM eval summaries."""
+
+    cost_summary = report.get("synthetic_cost_summary")
+    if isinstance(cost_summary, dict):
+        total_cost = float(cost_summary.get("total_est_cost_usd", 0.0) or 0.0)
+        if total_cost > 0.0:
+            cost_summary["note"] = (
+                "Estimated cost is aggregated from credential-gated LLM trace "
+                "metadata for this synthetic run. It is a public-list-price "
+                "planning estimate, not a billing number, partner commitment, "
+                "or production forecast."
+            )
+
+    latency_envelope = report.get("synthetic_latency_envelope")
+    if isinstance(latency_envelope, dict):
+        measured = latency_envelope.get("measured_ms")
+        if isinstance(measured, dict):
+            measured["note"] = (
+                "Wall-clock latency for the graph path, including "
+                "credential-gated LLM draft generation for opt-in LLM "
+                "profiles. These are local synthetic measurements, not "
+                "production SLAs."
+            )
+
+
 def _readme(manifest: dict[str, Any]) -> str:
     file_lines = "\n".join(
         f"- `{entry['path']}` — {entry['purpose']}"
@@ -201,9 +253,13 @@ def package_adversarial_v1_llm_evidence(
 
     raw_v0 = json.loads(raw_v0_report.read_text())
     redacted_v0, redaction_v0 = redact(raw_v0, policy_data)
+    _rewrite_trace_paths_to_pack_redacted(redacted_v0, candidate="candidate_v0")
+    _rewrite_llm_report_notes(redacted_v0)
 
     raw_v1 = json.loads(raw_v1_report.read_text())
     redacted_v1, redaction_v1 = redact(raw_v1, policy_data)
+    _rewrite_trace_paths_to_pack_redacted(redacted_v1, candidate="candidate_v1")
+    _rewrite_llm_report_notes(redacted_v1)
 
     v0_trace_files, v0_trace_reports = _collect_redacted_traces(redacted_v0_dir)
     v1_trace_files, v1_trace_reports = _collect_redacted_traces(redacted_v1_dir)

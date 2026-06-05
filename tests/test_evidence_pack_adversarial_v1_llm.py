@@ -49,6 +49,16 @@ def _raw_report(profile: str) -> dict[str, object]:
         "aggregate_grader_pass_rates": [
             {"name": "unsupported_claim", "total": 1, "passed": 1, "pass_rate": 1.0}
         ],
+        "synthetic_latency_envelope": {
+            "measured_ms": {
+                "note": "Wall-clock latency for the deterministic runner only."
+            }
+        },
+        "synthetic_cost_summary": {
+            "note": "Cost is a deterministic 0.0 placeholder.",
+            "total_est_cost_usd": 0.001,
+            "per_case_count": 1,
+        },
         "per_case": [
             {
                 "case_id": "case_fl_adv_v1_001",
@@ -153,6 +163,31 @@ def test_pack_ships_redacted_traces_for_both_candidates(pack: Path) -> None:
     assert (
         pack / "traces" / "redacted" / "candidate_v1" / "case_fl_adv_v1_001.redacted.json"
     ).exists()
+
+
+def test_pack_rewrites_eval_summary_trace_paths_to_redacted_pack_paths(
+    pack: Path,
+) -> None:
+    for rel, candidate in (
+        ("llm_candidate_v0_eval.redacted.json", "candidate_v0"),
+        ("llm_candidate_v1_eval.redacted.json", "candidate_v1"),
+    ):
+        payload = json.loads((pack / rel).read_text())
+        trace_path = payload["per_case"][0]["trace_path"]
+        assert trace_path == (
+            f"traces/redacted/{candidate}/case_fl_adv_v1_001.redacted.json"
+        )
+        assert "traces/local/llm_" not in trace_path
+
+
+def test_pack_rewrites_stale_deterministic_cost_and_latency_notes(pack: Path) -> None:
+    payload = json.loads((pack / "llm_candidate_v0_eval.redacted.json").read_text())
+    cost_note = payload["synthetic_cost_summary"]["note"]
+    latency_note = payload["synthetic_latency_envelope"]["measured_ms"]["note"]
+    assert "credential-gated LLM trace metadata" in cost_note
+    assert "deterministic 0.0 placeholder" not in cost_note
+    assert "including credential-gated LLM" in latency_note
+    assert "deterministic runner only" not in latency_note
 
 
 def test_pack_manifest_has_no_raw_local_paths(pack: Path) -> None:

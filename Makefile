@@ -539,6 +539,12 @@ evidence-pack-adversarial-v1-llm: redact-adversarial-v1-llm
 			exit 1; \
 		fi; \
 	done
+	uv run python scripts/generate_eval_card.py \
+		--baseline-report reports/llm_adversarial_v1_candidate_v0_eval.json \
+		--improved-report reports/llm_adversarial_v1_candidate_v1_eval.json \
+		--baseline-label Before \
+		--improved-label After \
+		--out reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md
 	uv run python scripts/package_evidence_adversarial_v1_llm.py \
 		--raw-v0-report reports/llm_adversarial_v1_candidate_v0_eval.json \
 		--raw-v1-report reports/llm_adversarial_v1_candidate_v1_eval.json \

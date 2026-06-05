@@ -138,6 +138,10 @@ def test_llm_pair_swaps_in_llm_disclaimer_and_rider(
     )
     # Launch-posture rider must reflect that a model is in the pair already.
     assert "(so cost and latency become meaningful)" not in text
+    assert "owes: LLM cost capture" not in text
+    assert "redacted evidence pack covering the LLM" not in text
+    assert "estimated LLM cost" in text
+    assert "redacted evidence pack" in text
 
 
 def test_llm_disclaimer_keeps_public_safety_stance(

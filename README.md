@@ -264,20 +264,27 @@ hallucination resistance. Every case is synthetic and carries
 - [Adversarial v1 eval card](reports/adversarial_v1_eval_card.md) — baseline-vs-improved comparison on the v1 slice.
 
 Regenerate locally with `make eval-card-adversarial-v1` (no external
-credentials required). An opt-in, credential-gated LLM candidate loop
-for this slice is now **wired but not executed**: `make
-eval-adversarial-v1-llm-v0` / `-v1` run the `llm_candidate_v0` (Before)
-and `llm_candidate_v1` (After) prompts against the 12-case slice, `make
-eval-card-adversarial-v1-llm` renders the Before/After card, and `make
-redact-adversarial-v1-llm` + `make evidence-pack-adversarial-v1-llm`
-assemble the redacted pack at
-`evidence_packs/financial_links_llm_adversarial_v1/`. Every credentialed
-target gates on `make check-llm-env` (no silent fallback); the raw
-reports (`reports/llm_adversarial_v1_candidate_v*_eval.json`) and raw
-traces are gitignored, so the only public surface would be the redacted
-pack — which does not exist until a run is performed. **No credentialed
-LLM evidence run for this slice has been executed or is claimed here.**
-NOT READY FOR PILOT remains the launch posture.
+credentials required).
+
+The opt-in, credential-gated LLM candidate loop for this slice has now
+been executed once: `llm_candidate_v0` (Before) passed 6/12 cases and
+`llm_candidate_v1` (After) passed 12/12 on the same expanded adversarial
+v1 slice. The six Before failures were runtime-guardrail fires with no
+offline failure labels; the negation-aware offline grader emitted zero
+affirmative `UNSAFE_CUSTOMER_COMMS` failures on both profiles. Estimated
+cost moved from `$0.051408` to `$0.071079` (+38%); per-band latency means
+still exceed synthetic p95 envelopes for L1 and L2 on both profiles.
+
+- [Adversarial v1 LLM comparison card](reports/llm_adversarial_v1_candidate_v1_vs_v0_card.md) — Before/After card for `llm_candidate_v0` vs `llm_candidate_v1`.
+- [Adversarial v1 LLM evidence pack](evidence_packs/financial_links_llm_adversarial_v1/) — public-safe pack with redacted summaries and redacted traces for both candidates.
+- [Adversarial v1 LLM improvement memo](reports/llm_adversarial_v1_improvement_memo.md) — concise evidence-backed interpretation of the run.
+
+Every credentialed target gates on `make check-llm-env` (no silent
+fallback); raw reports (`reports/llm_adversarial_v1_candidate_v*_eval.json`)
+and raw traces remain gitignored. **NOT READY FOR PILOT** remains the
+launch posture: one credentialed run on a 12-case synthetic slice is
+evidence for review, not model safety, production readiness, regulatory
+compliance, partner endorsement, or pilot readiness.
 
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing

@@ -1,0 +1,539 @@
+{
+  "version": "evidence_pack_llm_adversarial_v2",
+  "synthetic": true,
+  "milestone": "M7",
+  "m7_status": "OPEN \u2014 semantic gate BLOCKED on 14 semantic-only findings",
+  "disclaimer": "This evidence pack is generated from a fully synthetic local eval run on the 24-case Financial Links adversarial v2 slice (milestone M7). Identifiers, policies, partner configurations, and risk bands are fabricated for this deployment-readiness lab. Both compared profiles call a real LLM via the credential-gated path, but every case in the dataset is synthetic and no real customer data is involved. M7 was executed once with a real key and the credential-free semantic gate BLOCKED: the model/NLI audit found 14 semantic-only UNSAFE_CUSTOMER_COMMS drafts the lexical grader cleared, so M7 remains OPEN. Raw LLM traces, the raw JSON eval reports, and the raw model/NLI decision files are intentionally excluded from this pack and from git tracking; only redacted and aggregate-only artifacts ship here. Nothing in this pack implies model safety, production readiness, regulatory compliance, partner endorsement, or pilot readiness. One credentialed run on a 24-case synthetic slice is not enough evidence to claim a prompt is robust \u2014 and this run blocked.",
+  "files": [
+    {
+      "path": "README.md",
+      "purpose": "Pack overview + synthetic-only / M7-blocked / no-readiness disclaimer.",
+      "source": "<generated>"
+    },
+    {
+      "path": "eval_card.md",
+      "purpose": "Before/After candidate_v0-vs-candidate_v1 comparison eval card (markdown) on the 24-case adversarial v2 slice (v0 20/24 \u2192 v1 24/24).",
+      "source": "reports/llm_adversarial_v2_candidate_v1_vs_v0_card.md"
+    },
+    {
+      "path": "semantic_audit_aggregate.json",
+      "purpose": "Aggregate-only model/NLI semantic audit: counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and cost. The 14 semantic-only UNSAFE_CUSTOMER_COMMS flags that BLOCKED the M7 gate. No draft text, model reasoning, or quoted spans.",
+      "source": "reports/llm_adversarial_v2_semantic_audit_summary.json"
+    },
+    {
+      "path": "semantic_audit_summary.md",
+      "purpose": "Human-readable public-safe model/NLI semantic audit summary (aggregate-only).",
+      "source": "reports/llm_adversarial_v2_semantic_audit_summary.md"
+    },
+    {
+      "path": "llm_candidate_v0_eval.redacted.json",
+      "purpose": "candidate_v0 (Before) JSON eval report with raw draft text abstracted and IDs removed.",
+      "source": "reports/llm_adversarial_v2_candidate_v0_eval.json"
+    },
+    {
+      "path": "llm_candidate_v0_eval.redaction_report.json",
+      "purpose": "Redaction report for the candidate_v0 JSON eval.",
+      "source": "reports/llm_adversarial_v2_candidate_v0_eval.json"
+    },
+    {
+      "path": "llm_candidate_v1_eval.redacted.json",
+      "purpose": "candidate_v1 (After) JSON eval report with raw draft text abstracted and IDs removed.",
+      "source": "reports/llm_adversarial_v2_candidate_v1_eval.json"
+    },
+    {
+      "path": "llm_candidate_v1_eval.redaction_report.json",
+      "purpose": "Redaction report for the candidate_v1 JSON eval.",
+      "source": "reports/llm_adversarial_v2_candidate_v1_eval.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_001.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_001.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_002.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_002.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_003.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_003.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_004.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_004.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_005.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_005.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_006.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_006.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_007.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_007.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_008.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_008.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_009.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_009.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_010.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_010.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_011.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_011.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_012.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_012.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_013.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_013.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_014.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_014.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_015.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_015.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_016.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_016.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_017.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_017.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_018.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_018.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_019.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_019.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_020.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_020.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_021.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_021.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_022.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_022.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_023.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_023.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_024.redacted.json",
+      "purpose": "Redacted synthetic candidate_v0 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_024.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_001.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_001.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_002.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_002.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_003.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_003.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_004.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_004.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_005.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_005.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_006.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_006.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_007.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_007.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_008.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_008.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_009.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_009.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_010.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_010.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_011.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_011.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_012.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_012.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_013.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_013.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_014.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_014.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_015.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_015.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_016.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_016.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_017.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_017.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_018.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_018.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_019.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_019.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_020.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_020.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_021.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_021.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_022.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_022.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_023.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_023.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v0/case_fl_adv_v2_024.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v0/case_fl_adv_v2_024.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_001.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_001.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_002.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_002.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_003.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_003.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_004.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_004.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_005.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_005.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_006.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_006.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_007.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_007.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_008.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_008.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_009.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_009.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_010.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_010.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_011.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_011.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_012.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_012.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_013.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_013.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_014.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_014.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_015.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_015.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_016.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_016.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_017.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_017.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_018.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_018.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_019.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_019.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_020.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_020.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_021.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_021.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_022.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_022.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_023.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_023.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_024.redacted.json",
+      "purpose": "Redacted synthetic candidate_v1 LLM trace.",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_024.redacted.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_001.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_001.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_002.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_002.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_003.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_003.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_004.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_004.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_005.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_005.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_006.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_006.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_007.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_007.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_008.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_008.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_009.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_009.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_010.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_010.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_011.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_011.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_012.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_012.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_013.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_013.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_014.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_014.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_015.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_015.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_016.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_016.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_017.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_017.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_018.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_018.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_019.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_019.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_020.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_020.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_021.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_021.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_022.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_022.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_023.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_023.redaction_report.json"
+    },
+    {
+      "path": "traces/redacted/candidate_v1/case_fl_adv_v2_024.redaction_report.json",
+      "purpose": "Per-trace redaction report (removed/abstracted/preserved/uncovered fields).",
+      "source": "traces/redacted/llm_adversarial_v2_candidate_v1/case_fl_adv_v2_024.redaction_report.json"
+    },
+    {
+      "path": "regressions/regressions_semantic_adversarial_v2.jsonl",
+      "purpose": "Pending_review synthetic semantic-only regression seeds \u2014 the 14 model/NLI UNSAFE_CUSTOMER_COMMS drafts the lexical grader cleared (a lexical blind spot). Case-superset records linked to the public semantic audit summary; no raw trace path or raw draft text.",
+      "source": "case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v2.jsonl"
+    },
+    {
+      "path": "regressions/regressions_semantic_adversarial_v2_decisions.json",
+      "purpose": "Credential-free SemanticDecision replay fixture: feeding it to run_eval.py --semantic-decisions with the deterministic improved_v0 profile fires the offline unsupported_claim_semantic grader on every seed with no model call. evidence_spans empty; rationale is authored provenance, not raw draft text.",
+      "source": "case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v2_decisions.json"
+    }
+  ]
+}

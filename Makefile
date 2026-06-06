@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 action-suspension-demo eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm eval-adversarial-v2-llm-v0 eval-adversarial-v2-llm-v1 eval-card-adversarial-v2-llm semantic-model-decisions-adversarial-v2-llm-v0 semantic-model-decisions-adversarial-v2-llm-v1 semantic-audit-summary-adversarial-v2-llm semantic-gate-adversarial-v2-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic regression-seed-adversarial-v2-semantic regression-check-adversarial-v2-semantic regression-replay-adversarial-v2-semantic semantic-gate-adversarial-v1-regressions semantic-gate-adversarial-v1-improved evidence-pack-adversarial-v1-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 action-suspension-demo eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm eval-adversarial-v2-llm-v0 eval-adversarial-v2-llm-v1 eval-card-adversarial-v2-llm semantic-model-decisions-adversarial-v2-llm-v0 semantic-model-decisions-adversarial-v2-llm-v1 semantic-audit-summary-adversarial-v2-llm semantic-gate-adversarial-v2-llm regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic regression-seed-adversarial-v2-semantic regression-check-adversarial-v2-semantic regression-replay-adversarial-v2-semantic semantic-gate-adversarial-v1-regressions semantic-gate-adversarial-v1-improved evidence-pack-adversarial-v1-llm evidence-pack-adversarial-v2-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -80,6 +80,7 @@ help:
 	@echo "  semantic-gate-adversarial-v1-improved  pass-path demo: run the blocking semantic gate on the synthetic clean improved fixture (no LLM call)"
 	@echo "  redact-adversarial-v1-llm  redact both candidates' raw v1 LLM traces (no LLM call)"
 	@echo "  evidence-pack-adversarial-v1-llm  assemble evidence_packs/financial_links_llm_adversarial_v1/ (no LLM call)"
+	@echo "  evidence-pack-adversarial-v2-llm  assemble evidence_packs/financial_links_llm_adversarial_v2/ for the BLOCKED M7 run (credential-free; no LLM call)"
 	@echo ""
 	@echo "Opt-in CREDENTIALED repeat-run capture (real Anthropic API calls; costs money; not in CI):"
 	@echo "  RUNS=5 make repeat-adversarial-llm-v0  capture N llm_candidate_v0 adversarial runs (RUNS defaults to 5)"
@@ -965,6 +966,68 @@ evidence-pack-adversarial-v1-llm: redact-adversarial-v1-llm
 		--semantic-regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1.jsonl \
 		--semantic-replay-decisions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v1_decisions.json \
 		--out evidence_packs/financial_links_llm_adversarial_v1 $$sem_args
+
+# ---- Public-safe evidence pack for the executed adversarial v2 LLM run (M7) --
+# CREDENTIAL-FREE by construction. Its required inputs are the tracked,
+# public-safe M7 surfaces — the Before/After comparison card, the aggregate
+# semantic audit (json + md), the 14 pending_review regression seeds, and the
+# credential-free replay fixture. It does NOT run check-llm-env, candidate
+# evals, semantic-model decision generation, the semantic gate, or any LLM /
+# model call; those already happened in the credentialed M7 run and produced
+# these tracked artifacts. M7 ran once and the gate BLOCKED, so the pack states
+# M7 OPEN / NOT READY FOR PILOT.
+#
+# When the gitignored raw M7 artifacts (raw candidate reports + raw per-candidate
+# traces) are present locally, the pack ALSO ships redacted candidate eval
+# summaries + redacted traces; redaction is deterministic and credential-free.
+# When they are absent (any fresh clone), the pack is the credential-free core
+# and the target still succeeds.
+
+evidence-pack-adversarial-v2-llm:
+	@for f in \
+		reports/llm_adversarial_v2_candidate_v1_vs_v0_card.md \
+		reports/llm_adversarial_v2_semantic_audit_summary.json \
+		reports/llm_adversarial_v2_semantic_audit_summary.md \
+		case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v2.jsonl \
+		case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v2_decisions.json; do \
+		if [ ! -f $$f ]; then \
+			echo "ERROR: $$f not found."; \
+			echo "  This target packages tracked public-safe M7 artifacts; it runs NO LLM/model call."; \
+			echo "  Hint: produce them with eval-card-adversarial-v2-llm, semantic-audit-summary-adversarial-v2-llm, and regression-seed-adversarial-v2-semantic."; \
+			exit 1; \
+		fi; \
+	done
+	@raw_args=""; \
+	rv0=reports/llm_adversarial_v2_candidate_v0_eval.json; \
+	rv1=reports/llm_adversarial_v2_candidate_v1_eval.json; \
+	tv0=traces/local/llm_adversarial_v2_candidate_v0; \
+	tv1=traces/local/llm_adversarial_v2_candidate_v1; \
+	if [ -f $$rv0 ] && [ -f $$rv1 ] && [ -d $$tv0 ] && [ -d $$tv1 ]; then \
+		echo "NOTE: raw M7 artifacts present locally; ALSO shipping redacted candidate summaries + traces."; \
+		for cand in candidate_v0 candidate_v1; do \
+			src=traces/local/llm_adversarial_v2_$$cand; \
+			dst=traces/redacted/llm_adversarial_v2_$$cand; \
+			mkdir -p $$dst; \
+			for input in $$src/*.json; do \
+				base=$$(basename $$input .json); \
+				uv run python scripts/redact_trace.py \
+					--input $$input \
+					--policy configs/redaction_policy.yaml \
+					--output $$dst/$$base.redacted.json \
+					--report-out $$dst/$$base.redaction_report.json || exit 1; \
+			done; \
+		done; \
+		raw_args="--policy configs/redaction_policy.yaml --raw-v0-report $$rv0 --raw-v1-report $$rv1 --redacted-traces-v0 traces/redacted/llm_adversarial_v2_candidate_v0 --redacted-traces-v1 traces/redacted/llm_adversarial_v2_candidate_v1"; \
+	else \
+		echo "NOTE: raw M7 artifacts absent; packaging the credential-free core only (card + aggregate + summary + regressions)."; \
+	fi; \
+	uv run python scripts/package_evidence_adversarial_v2_llm.py \
+		--eval-card reports/llm_adversarial_v2_candidate_v1_vs_v0_card.md \
+		--semantic-summary-json reports/llm_adversarial_v2_semantic_audit_summary.json \
+		--semantic-summary-md reports/llm_adversarial_v2_semantic_audit_summary.md \
+		--semantic-regressions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v2.jsonl \
+		--semantic-replay-decisions case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v2_decisions.json \
+		--out evidence_packs/financial_links_llm_adversarial_v2 $$raw_args
 
 # ---- Opt-in credentialed repeat-run capture --------------------------------
 # These three targets are the credentialed half of the repeat-run loop.

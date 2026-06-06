@@ -452,9 +452,17 @@ as `pending_review` regression seeds
 with a credential-free replay fixture — `make regression-replay-adversarial-v2-semantic`
 fires the offline `unsupported_claim_semantic` grader on all 14 with no model
 call. Raw reports/traces/decisions stay gitignored; only the aggregate summary +
-redacted card are public. This is **one** credentialed audit, not a robustness,
-pilot-readiness, production-readiness, compliance, or model-safety claim. Posture
-unchanged: **NOT READY FOR PILOT**.
+redacted card are public. The public-safe evidence pack for this **blocked** run
+lives at
+[`evidence_packs/financial_links_llm_adversarial_v2/`](evidence_packs/financial_links_llm_adversarial_v2/)
+— the comparison card, the aggregate-only semantic audit, the 14
+`pending_review` seeds + credential-free replay fixture, and (when the gitignored
+raw artifacts are present locally) redacted candidate summaries and traces;
+assemble it credential-free with `make evidence-pack-adversarial-v2-llm` (no
+`check-llm-env`, no model call). The pack's README states M7 ran and the gate
+BLOCKED — **M7 remains OPEN**. This is **one** credentialed audit, not a
+robustness, pilot-readiness, production-readiness, compliance, or model-safety
+claim. Posture unchanged: **NOT READY FOR PILOT**.
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`

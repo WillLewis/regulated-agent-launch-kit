@@ -422,6 +422,10 @@ def test_no_test_requires_generated_adversarial_llm_outputs() -> None:
         # its own synthetic decision fixtures in tmp_path; never reads the real
         # on-disk artifacts.
         "test_adversarial_v2_llm_targets.py",
+        # Builds its own tmp_path fixtures and uses the raw-LLM v2 trace/report
+        # path strings only to verify the v2 pack assembler abstracts drafts and
+        # fails closed on raw-trace inputs; never reads the real on-disk artifacts.
+        "test_evidence_pack_adversarial_v2_llm.py",
     }
     for test_file in TESTS_DIR.glob("**/*.py"):
         if test_file.name in exempt:

@@ -12,10 +12,12 @@ The deterministic Financial Links slice closes its planted-failure eval loop
 (`reports/adversarial_v1_eval_card.md`: improved `12/12`), but an opt-in
 model/NLI semantic audit surfaced unsupported-claim drafts that the deterministic
 pipeline cleared (`reports/llm_adversarial_v1_semantic_audit_summary.md`: 3
-semantic-only `UNSAFE_CUSTOMER_COMMS`, including one `L3`). That gap, plus the
-narrow synthetic scope and the absence of a true action-suspension gate, keeps
-the slice pre-pilot. This maps to the `DO NOT PILOT` posture in
-`deployment/acceptance_criteria.md` rather than `PILOT WITH CONSTRAINTS`.
+semantic-only `UNSAFE_CUSTOMER_COMMS`, including one `L3`). That gap and the
+narrow synthetic scope keep the slice pre-pilot. (The action-suspension
+*mechanism* is now proven credential-free by the separate M9 harness — see
+Blocked — but is not wired into the live `draft_only` loop.) This maps to the
+`DO NOT PILOT` posture in `deployment/acceptance_criteria.md` rather than
+`PILOT WITH CONSTRAINTS`.
 
 ## Ready
 
@@ -60,11 +62,17 @@ Unresolved items that block any pilot conversation:
   instance of `risk_register.md` R2 (evaluator misses an unsupported claim). The
   deterministically "improved" `llm_candidate_v1` carries **more** semantic flags
   than `v0`, so offline `12/12` is not a copy-safety guarantee.
-- **No true human-approval suspension.** `configs/approval_matrix.yaml` sets
-  `action_boundary: draft_only` for every rule, and the runner is offline, so the
-  `HumanApprovalNode` has never gated a real side-effecting action — approval is
-  enforced as a policy + grader, not as a live suspension. The approval gate is
-  unproven against an actual pending action.
+- **Human-approval suspension proven in a harness, not wired into the live loop.**
+  M9 (`app/action_suspension.py`) proves the mechanism credential-free: a real
+  LangGraph interrupts before `HumanApprovalNode`, so a synthetic side-effecting
+  action is **suspended before execution**, never executes on reject/missing
+  approval (fail-closed), and executes **exactly once** when approved
+  (`tests/test_action_suspension.py`; traces under
+  `traces/local/action_suspension/`). But this is a *separate* synthetic harness:
+  `configs/approval_matrix.yaml` is still `action_boundary: draft_only` for every
+  FL rule, and the live Financial Links loop neither executes nor suspends a real
+  action. Wiring the gate into a production action path (beyond `draft_only`)
+  remains a product decision, not done here.
 - **Latency/cost are local synthetic evidence only.** Credentialed LLM means are
   `L1` 8023 ms / `L2` 8866 ms / `L3` 9428 ms
   (`reports/llm_adversarial_v1_repeat_summary.md`), above the synthetic `L1`/`L2`

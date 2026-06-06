@@ -443,6 +443,23 @@ verdict set and blocks on a flagged one). **The credentialed audit itself has no
 been run here (no `ANTHROPIC_API_KEY`), so there is no v2 pass/fail evidence yet
 and M7 stays open.** Posture unchanged: **NOT READY FOR PILOT**.
 
+**Synthetic action-suspension gate (M9 — infrastructure).** A separate
+credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`
+can **suspend a synthetic side-effecting action before it executes**. It runs a
+real `langgraph` graph compiled with a checkpointer and an interrupt before the
+approval node, so the first invoke genuinely suspends: the action is requested
+but not executed. Injecting a human decision and resuming proves all four paths —
+**suspended** (never executes), **rejected** (never executes), **approved**
+(executes the synthetic tool `execute_synthetic_relink_action` **exactly once**),
+and **missing approval** (fails closed). A runtime evaluator self-check and a
+separate offline grader (`evals/action_suspension_grader.py`, which fires
+`UNSUPPORTED_ACTION` on a violation — **not** in default `GRADERS`) score each
+trace; `make action-suspension-demo` emits public-safe traces under
+`traces/local/action_suspension/`. This is **separate** from the Financial Links
+proof loop, which stays `draft_only` and is unchanged. M9 is infrastructure, not
+a wired production action gate, and does not change the posture: **NOT READY FOR
+PILOT** (the gating blocker is M7's credentialed semantic audit).
+
 An optional fixture-backed semantic audit lane is available for this
 slice without calling a model. Passing
 `--semantic-decisions case_studies/financial_links_reliability/evals/adversarial_v1_semantic_decisions.json`

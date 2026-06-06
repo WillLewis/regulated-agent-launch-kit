@@ -34,15 +34,19 @@ Status is grounded in artifacts, not narrative. Acceptance gates reference
 | M7b | Adversarial v2 LLM + semantic-gate **pipeline** wired | Rails done + tested; **credentialed run NOT executed** (no `ANTHROPIC_API_KEY` in this environment) | Opt-in credentialed targets (`eval-adversarial-v2-llm-v0/v1`, `eval-card-adversarial-v2-llm`, `semantic-model-decisions-adversarial-v2-llm-v0/v1`), on-disk summary target, and a credential-free `semantic-gate-adversarial-v2-llm` (re-keys candidate verdicts under `improved_v0` via `scripts/build_semantic_replay_adversarial_v2_llm.py`); `tests/test_adversarial_v2_llm_targets.py` | Compliance reviewer | M7a, M8 | Targets exist + gate fires credential-free on synthetic verdicts (pass on clean, block on flagged); raw artifacts gitignored. **No actual candidate audit has been run, so there is no pass/fail evidence yet** |
 | M7 | Semantic gate run **clean on a credentialed audit** | **Next** | (planned) execute the M7b pipeline with a key: `eval-card-adversarial-v2-llm` → `semantic-model-decisions-adversarial-v2-llm-v0/v1` → `semantic-audit-summary-adversarial-v2-llm` → `semantic-gate-adversarial-v2-llm` | Compliance reviewer | M7b + a credentialed run | Sustained `0` semantic-only `UNSAFE_CUSTOMER_COMMS` across multiple credentialed runs on the expanded slice. M7b only built the rails; M7 stays open until a real audit runs clean |
 | M8 | Dataset expansion beyond 12 cases | Done | `case_studies/financial_links_reliability/evals/adversarial_v2.jsonl` (24-case deterministic slice; `reports/adversarial_v2_eval_card.md`) | Human owner | M5, `risk_register.md` R7 | Broader slice validated; `improved_v0` 24/24, `baseline_v0` 15/24 across 3 labels; credential-free |
-| M9 | Real action-suspension gate exercised | **Next** | (planned) side-effecting synthetic tool gated by `HumanApprovalNode` | Partner support lead | M2, `configs/approval_matrix.yaml` | Approval suspends an actual action end-to-end (today `draft_only` only) |
+| M9 | Synthetic action-suspension gate **infrastructure** | Done (synthetic harness; separate from the draft_only FL loop) | `app/action_suspension.py` (real LangGraph that interrupts before `HumanApprovalNode`), `app/tools/synthetic_action_tools.py`, `evals/action_suspension_grader.py`, `scripts/run_action_suspension_demo.py`, traces under `traces/local/action_suspension/`, `tests/test_action_suspension.py` | Partner support lead | M2 | Proven credential-free: a synthetic side-effecting action is **suspended before execution**, never executes on reject/missing-approval (fail-closed), and executes **exactly once** when approved. This is infrastructure on a separate harness — the live FL loop stays `draft_only`; it is not a production action gate |
 | M10 | Mini webpage over generated artifacts | Deferred | (planned) `web/` reading `reports/`, `evidence_packs/`, `deployment/` | Deployment lead | M3–M6 | Reads generated artifacts only; invents no metric |
 
 The pilot decision (`deployment/pilot_readiness_review.md`) stays
-**NOT READY FOR PILOT** until at least M7 and M9 close. M8 (broader adversarial
-v2 slice) and M7a (semantic gate *infrastructure*) are done; M7 itself is open —
-the gate exists and has teeth, but it has only been run on synthetic fixtures,
-not yet on a larger credentialed semantic audit that sustains zero semantic-only
-findings. M10 is presentation, not a readiness gate.
+**NOT READY FOR PILOT** — the gating blocker is now **M7**. M8 (broader
+adversarial v2 slice), M7a (semantic gate *infrastructure*), M7b (v2 LLM gate
+pipeline wired), and M9 (action-suspension *infrastructure*) are done; M7 itself
+is open — the semantic gate exists and has teeth, but it has only been run on
+synthetic fixtures, not yet on a larger credentialed semantic audit that
+sustains zero semantic-only findings. M9 proved the suspension *mechanism* on a
+separate synthetic harness; wiring it into a live action path (beyond
+`draft_only`) is a later product decision, not a pilot prerequisite. M10 is
+presentation, not a readiness gate.
 
 ## Review Gates
 

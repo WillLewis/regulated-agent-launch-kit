@@ -12,6 +12,17 @@ credentialed LLM comparison captured; semantic copy-safety gap open.
 
 ## What Changed
 
+**M9** proved the human-approval **suspension mechanism** credential-free: a
+separate synthetic harness (`app/action_suspension.py`) runs a real LangGraph
+that interrupts before `HumanApprovalNode`, so a synthetic side-effecting action
+is **suspended before execution**, never executes on reject or missing approval
+(fail-closed), and executes **exactly once** when approved
+(`tests/test_action_suspension.py`; traces under
+`traces/local/action_suspension/`). It is infrastructure on a separate harness —
+the live Financial Links loop stays `draft_only` and the gate is not wired into a
+production action path. M9 does not change the posture; the gating blocker is now
+M7 alone.
+
 **M7b** wired the full opt-in pipeline to run the semantic gate against the
 expanded `adversarial_v2` LLM candidate drafts: credentialed eval + model/NLI
 decision targets (raw artifacts gitignored), an on-disk aggregate summary, and a

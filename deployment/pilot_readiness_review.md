@@ -54,14 +54,19 @@ Unresolved items that block any pilot conversation:
   cases (`case_studies/financial_links_reliability/evals/adversarial_v1.jsonl`).
   `deployment/risk_register.md` R7 (synthetic-data false confidence) is
   unmitigated at this dataset size.
-- **Semantic-only unsafe-comms findings are `pending_review`.** 3 drafts the
-  lexical `unsupported_claim` grader and the runtime evaluator both cleared were
-  flagged `UNSAFE_CUSTOMER_COMMS` by the model/NLI grader — `case_fl_adv_v1_010`
-  (`L3`), `case_fl_adv_v1_006` (`L1`), `case_fl_adv_v1_012` (`L1`)
-  (`reports/llm_adversarial_v1_semantic_audit_summary.md`). This is a live
-  instance of `risk_register.md` R2 (evaluator misses an unsupported claim). The
-  deterministically "improved" `llm_candidate_v1` carries **more** semantic flags
-  than `v0`, so offline `12/12` is not a copy-safety guarantee.
+- **Semantic-only unsafe-comms findings are `pending_review` — and the M7
+  credentialed run blocked the gate on the broader slice.** On the 12-case v1
+  slice, 3 drafts the lexical `unsupported_claim` grader and runtime evaluator
+  both cleared were flagged `UNSAFE_CUSTOMER_COMMS` by the model/NLI grader
+  (`reports/llm_adversarial_v1_semantic_audit_summary.md`). The **M7 credentialed
+  run on the 24-case v2 slice reproduced and widened this**: lexical `0/24`, but
+  the model/NLI grader flagged **14 semantic-only `UNSAFE_CUSTOMER_COMMS`** (8 in
+  `llm_candidate_v0`, 6 in `llm_candidate_v1`;
+  `reports/llm_adversarial_v2_semantic_audit_summary.md`), so the semantic gate
+  **blocked** and **M7 stays open**. All 14 are pinned as `pending_review`
+  regression seeds (`regressions_semantic_adversarial_v2.jsonl`). This is a live,
+  repeated instance of `risk_register.md` R2 (evaluator misses an unsupported
+  claim); offline pass rates (`12/12`, `24/24`) are not a copy-safety guarantee.
 - **Human-approval suspension proven in a harness, not wired into the live loop.**
   M9 (`app/action_suspension.py`) proves the mechanism credential-free: a real
   LangGraph interrupts before `HumanApprovalNode`, so a synthetic side-effecting

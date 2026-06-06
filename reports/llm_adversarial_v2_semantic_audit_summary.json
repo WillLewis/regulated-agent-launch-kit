@@ -8,7 +8,7 @@
     "case_studies/financial_links_reliability/evals/adversarial_v2.jsonl"
   ],
   "launch_posture": "NOT READY FOR PILOT \u2014 local synthetic vertical slice only. This model/NLI semantic audit is an opt-in experiment over drafts already on disk, not a model-safety, production-readiness, regulatory-compliance, or partner claim.",
-  "note": "Aggregate-only model/NLI semantic audit of customer-facing drafts already on disk. No raw draft text, model reasoning, or quoted draft spans are included \u2014 only counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and list-price cost estimates. Synthetic Financial Links adversarial v1 data only.",
+  "note": "Aggregate-only model/NLI semantic audit of customer-facing drafts already on disk. No raw draft text, model reasoning, or quoted draft spans are included \u2014 only counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and list-price cost estimates. Synthetic Financial Links adversarial v2 data only.",
   "headline": "The model/NLI semantic grader flagged 14 customer-facing draft(s) (8 in llm_candidate_v0, 6 in llm_candidate_v1) that the lexical unsupported-claim grader passed \u2014 a lexical blind spot. These are exactly the paraphrase, safe-negation, and cross-sentence-trap cases a substring grader cannot reason about, and they are why this slice stays pre-pilot.",
   "profiles": [
     {

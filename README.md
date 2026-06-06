@@ -426,9 +426,9 @@ into the default eval, so the deterministic proof loop is unchanged. This is gat
 PILOT** until the gate runs clean on a larger credentialed semantic audit of the
 expanded `adversarial_v2` drafts.
 
-**Adversarial v2 LLM gate pipeline (M7b — wired, run pending).** The opt-in,
-credentialed pipeline to actually run the gate against the 24-case
-`adversarial_v2` LLM candidate drafts is now wired: `eval-adversarial-v2-llm-v0`
+**Adversarial v2 LLM gate pipeline (M7b — wired) and the M7 run (executed, gate
+BLOCKED).** The opt-in, credentialed pipeline against the 24-case
+`adversarial_v2` LLM candidate drafts is wired: `eval-adversarial-v2-llm-v0`
 / `-v1` (raw reports/traces gitignored), `eval-card-adversarial-v2-llm`,
 `semantic-model-decisions-adversarial-v2-llm-v0` / `-v1` (judge the on-disk
 drafts; raw decisions gitignored), an on-disk `semantic-audit-summary-adversarial-v2-llm`
@@ -437,11 +437,24 @@ that re-keys the candidate's audited verdicts under the deterministic
 `improved_v0` vehicle (`scripts/build_semantic_replay_adversarial_v2_llm.py`) so
 the gate runs with no model call and no token spend. Every credentialed target
 gates on `check-llm-env` (no silent fallback) and no deterministic/CI target
-depends on them. The rails are verified credential-free
-(`tests/test_adversarial_v2_llm_targets.py`: the gate passes on a clean synthetic
-verdict set and blocks on a flagged one). **The credentialed audit itself has not
-been run here (no `ANTHROPIC_API_KEY`), so there is no v2 pass/fail evidence yet
-and M7 stays open.** Posture unchanged: **NOT READY FOR PILOT**.
+depends on them.
+
+**M7 has since been run once with a real key, and the semantic gate BLOCKED.**
+The deterministic LLM comparison improved (`v0` `20/24` → `v1` `24/24`,
+[`reports/llm_adversarial_v2_candidate_v1_vs_v0_card.md`](reports/llm_adversarial_v2_candidate_v1_vs_v0_card.md)),
+but the model/NLI semantic audit flagged **14 semantic-only `UNSAFE_CUSTOMER_COMMS`**
+drafts (8 in `v0`, 6 in `v1`) the lexical grader cleared
+([`reports/llm_adversarial_v2_semantic_audit_summary.md`](reports/llm_adversarial_v2_semantic_audit_summary.md)).
+The acceptance bar is *sustained zero* semantic-only flags across multiple runs;
+one run produced 14, so the gate blocked and **M7 stays open**. The 14 are pinned
+as `pending_review` regression seeds
+([`regressions_semantic_adversarial_v2.jsonl`](case_studies/financial_links_reliability/evals/regressions_semantic_adversarial_v2.jsonl))
+with a credential-free replay fixture — `make regression-replay-adversarial-v2-semantic`
+fires the offline `unsupported_claim_semantic` grader on all 14 with no model
+call. Raw reports/traces/decisions stay gitignored; only the aggregate summary +
+redacted card are public. This is **one** credentialed audit, not a robustness,
+pilot-readiness, production-readiness, compliance, or model-safety claim. Posture
+unchanged: **NOT READY FOR PILOT**.
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`

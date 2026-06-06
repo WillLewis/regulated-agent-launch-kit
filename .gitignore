@@ -86,3 +86,10 @@ reports/llm_repeats/
 # `make regression-replay-adversarial-v1-semantic`.
 reports/regression_semantic_adversarial_v1_eval.json
 traces/local/regression_semantic_adversarial_v1/
+# Adversarial v2 semantic-regression replay (M7): same as v1 — the report +
+# deterministic improved_v0 traces are regenerable check outputs; the tracked
+# fixture (regressions_semantic_adversarial_v2_decisions.json) + the hermetic
+# test are the durable artifacts. Regenerate with
+# `make regression-replay-adversarial-v2-semantic`.
+reports/regression_semantic_adversarial_v2_eval.json
+traces/local/regression_semantic_adversarial_v2/

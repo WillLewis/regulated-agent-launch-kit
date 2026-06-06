@@ -1,8 +1,8 @@
-# Model/NLI Semantic Audit — Financial Links Adversarial v1 LLM Candidates
+# Model/NLI Semantic Audit — Financial Links Adversarial v2 LLM Candidates
 
 > NOT READY FOR PILOT — local synthetic vertical slice only. This model/NLI semantic audit is an opt-in experiment over drafts already on disk, not a model-safety, production-readiness, regulatory-compliance, or partner claim.
 
-Aggregate-only model/NLI semantic audit of customer-facing drafts already on disk. No raw draft text, model reasoning, or quoted draft spans are included — only counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and list-price cost estimates. Synthetic Financial Links adversarial v1 data only.
+Aggregate-only model/NLI semantic audit of customer-facing drafts already on disk. No raw draft text, model reasoning, or quoted draft spans are included — only counts, enum histograms, synthetic case IDs/risk bands, confidence ranges, and list-price cost estimates. Synthetic Financial Links adversarial v2 data only.
 
 - **Adapter:** `anthropic_nli_semantic_v0`  
 - **Lexical grader:** `unsupported_claim`  

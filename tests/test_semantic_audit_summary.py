@@ -17,6 +17,7 @@ import pytest
 
 from evals.semantic_audit import (
     SEMANTIC_ADAPTER_NAME,
+    _slice_label,
     assert_public_safe,
     build_profile_audit,
     build_semantic_audit_summary,
@@ -211,6 +212,33 @@ def test_render_markdown_is_public_safe_and_pre_pilot() -> None:
     # affirmative readiness overclaims must be absent
     for forbidden in ("production ready", "production-ready", "pilot ready", "pilot-ready"):
         assert forbidden not in md.lower()
+
+
+def test_slice_label_is_derived_from_dataset_path() -> None:
+    """The audit slice label must be data-driven, so the v2 summary is never
+    mislabeled as v1 (and vice versa)."""
+
+    assert _slice_label(["case_studies/.../adversarial_v1.jsonl"]) == "adversarial v1"
+    assert _slice_label(["case_studies/.../adversarial_v2.jsonl"]) == "adversarial v2"
+    assert _slice_label([]) == "adversarial"
+    assert _slice_label(["something_without_a_version.jsonl"]) == "adversarial"
+
+
+def test_render_markdown_title_and_note_match_the_slice() -> None:
+    # The shared fixture is the v1 dataset, so it must render as v1.
+    md_v1 = render_markdown(build_semantic_audit_summary(_pair()))
+    assert "Adversarial v1 LLM Candidates" in md_v1.splitlines()[0]
+    assert "adversarial v1 data only" in md_v1
+    assert "Adversarial v2" not in md_v1
+
+    # A v2 dataset_path must render as v2 from the same code path.
+    summary_v2 = build_semantic_audit_summary(_pair())
+    summary_v2["dataset_path"] = [
+        "case_studies/financial_links_reliability/evals/adversarial_v2.jsonl"
+    ]
+    md_v2 = render_markdown(summary_v2)
+    assert "Adversarial v2 LLM Candidates" in md_v2.splitlines()[0]
+    assert "Adversarial v1" not in md_v2.splitlines()[0]
 
 
 def test_summarize_cli_writes_public_safe_artifacts(tmp_path: Path) -> None:

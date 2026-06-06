@@ -28,12 +28,20 @@ expanded `adversarial_v2` LLM candidate drafts: credentialed eval + model/NLI
 decision targets (raw artifacts gitignored), an on-disk aggregate summary, and a
 **credential-free** `semantic-gate-adversarial-v2-llm` that re-keys the
 candidate's audited verdicts under the deterministic `improved_v0` vehicle so
-the gate runs with no model call and no token spend. The rails are wired and
-verified credential-free (`tests/test_adversarial_v2_llm_targets.py`: the gate
-passes on a clean synthetic verdict set and blocks on a flagged one). **The
-actual credentialed audit has NOT been executed** — this environment has no
-`ANTHROPIC_API_KEY` — so there is **no pass/fail evidence yet**, and **M7 stays
-open**. Running it is a single opt-in step for whoever holds the key.
+the gate runs with no model call and no token spend.
+
+**M7 has since been executed (one credentialed run) and the semantic gate
+BLOCKED.** The deterministic LLM comparison improved (`v0` 20/24 → `v1` 24/24,
+`reports/llm_adversarial_v2_candidate_v1_vs_v0_card.md`), but the model/NLI
+semantic audit flagged **14 semantic-only `UNSAFE_CUSTOMER_COMMS`** drafts (8 in
+`v0`, 6 in `v1`; `reports/llm_adversarial_v2_semantic_audit_summary.md`) that the
+lexical grader cleared — a lexical blind spot, on a larger slice, that confirms
+the v1 finding. The acceptance bar is *sustained zero* semantic-only flags across
+multiple runs; one run produced 14, so **M7 stays open** and the posture is
+unchanged. The 14 are now pinned as `pending_review` regression seeds with a
+credential-free replay (`make regression-replay-adversarial-v2-semantic` fires
+the offline grader on all 14, no model call). Raw reports, traces, and model/NLI
+decisions stay gitignored; only the aggregate summary + redacted card are public.
 
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice

@@ -24,6 +24,7 @@ clean CLI ``SystemExit``.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 from typing import Any
 
@@ -46,13 +47,27 @@ LAUNCH_POSTURE = (
     "semantic audit is an opt-in experiment over drafts already on disk, not a "
     "model-safety, production-readiness, regulatory-compliance, or partner claim."
 )
-SUMMARY_NOTE = (
+# The audit slice label (e.g. "adversarial v2") is derived from the dataset path
+# at render time, so the title and note never hardcode the wrong slice version.
+SUMMARY_NOTE_TEMPLATE = (
     "Aggregate-only model/NLI semantic audit of customer-facing drafts already "
     "on disk. No raw draft text, model reasoning, or quoted draft spans are "
     "included — only counts, enum histograms, synthetic case IDs/risk bands, "
     "confidence ranges, and list-price cost estimates. Synthetic Financial "
-    "Links adversarial v1 data only."
+    "Links {slice_label} data only."
 )
+
+
+def _slice_label(dataset_paths: Any) -> str:
+    """Derive the adversarial-slice label (e.g. ``adversarial v2``) from the
+    dataset path(s). Falls back to ``adversarial`` when no versioned slice is
+    present, so the audit summary is never mislabeled with the wrong version."""
+
+    for path in dataset_paths or []:
+        match = re.search(r"adversarial_v(\d+)", str(path))
+        if match:
+            return f"adversarial v{match.group(1)}"
+    return "adversarial"
 COST_NOTE = (
     "Public list-price planning estimate read from the decision file; not a "
     "billing number, partner commitment, or production forecast."
@@ -297,15 +312,16 @@ def build_semantic_audit_summary(
         ),
     }
 
+    dataset_path_list = sorted(p for p in dataset_paths if p)
     summary = {
         "version": SUMMARY_VERSION,
         "synthetic": True,
         "adapter": SEMANTIC_ADAPTER_NAME,
         "lexical_grader": LEXICAL_GRADER_NAME,
         "semantic_grader": SEMANTIC_GRADER_NAME,
-        "dataset_path": sorted(p for p in dataset_paths if p),
+        "dataset_path": dataset_path_list,
         "launch_posture": LAUNCH_POSTURE,
-        "note": SUMMARY_NOTE,
+        "note": SUMMARY_NOTE_TEMPLATE.format(slice_label=_slice_label(dataset_path_list)),
         "headline": _headline(profiles),
         "profiles": profiles,
         "totals": totals,
@@ -361,8 +377,12 @@ def render_markdown(summary: dict[str, Any]) -> str:
     totals = summary["totals"]
     dataset = ", ".join(summary.get("dataset_path") or []) or "(synthetic)"
 
+    slice_label = _slice_label(summary.get("dataset_path") or [])
+    title_label = slice_label[:1].upper() + slice_label[1:]  # e.g. "Adversarial v2"
     lines: list[str] = []
-    lines.append("# Model/NLI Semantic Audit — Financial Links Adversarial v1 LLM Candidates")
+    lines.append(
+        f"# Model/NLI Semantic Audit — Financial Links {title_label} LLM Candidates"
+    )
     lines.append("")
     lines.append(f"> {summary['launch_posture']}")
     lines.append("")

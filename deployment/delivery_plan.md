@@ -46,7 +46,14 @@ the model/NLI grader flagged 14 semantic-only `UNSAFE_CUSTOMER_COMMS` drafts
 (`reports/llm_adversarial_v2_semantic_audit_summary.md`) that the lexical grader
 cleared. That is the opposite of the acceptance bar (sustained zero semantic-only
 findings across multiple runs), so M7 stays open and the 14 are pinned as
-`pending_review` regression seeds. M9 proved the suspension *mechanism* on a
+`pending_review` regression seeds. The 14 findings are translated into a
+credential-free, public-safe **failure analysis + remediation plan**
+(`reports/llm_adversarial_v2_semantic_failure_analysis.md`; `make
+semantic-failure-analysis-adversarial-v2`) that breaks them down by profile /
+risk band / category, flags the 2 designed-safe calibration cases as ambiguous
+(triage before tuning), and defines the acceptance gates and sustained-zero
+evidence required to close M7 — no prompt tuning or rerun was performed. M9
+proved the suspension *mechanism* on a
 separate synthetic harness; wiring it into a live action path (beyond
 `draft_only`) is a later product decision, not a pilot prerequisite. M10 is
 presentation, not a readiness gate.

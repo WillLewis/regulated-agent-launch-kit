@@ -464,6 +464,21 @@ BLOCKED — **M7 remains OPEN**. This is **one** credentialed audit, not a
 robustness, pilot-readiness, production-readiness, compliance, or model-safety
 claim. Posture unchanged: **NOT READY FOR PILOT**.
 
+The 14 findings are turned into a public-safe **failure analysis + remediation
+plan** at
+[`reports/llm_adversarial_v2_semantic_failure_analysis.md`](reports/llm_adversarial_v2_semantic_failure_analysis.md)
+(JSON sibling
+[`…analysis.json`](reports/llm_adversarial_v2_semantic_failure_analysis.json)),
+generated credential-free with `make semantic-failure-analysis-adversarial-v2`
+from the aggregate audit summary, the 24-case dataset metadata, and the 14
+pinned seeds only. It breaks the findings down by source profile, risk band, and
+case category; decomposes the model/NLI judge's flag reasons (cross-sentence
+trap, paraphrased overpromise, missing-info hallucination); flags the 2
+designed-safe calibration cases as **ambiguous** (candidate failure *or* grader
+false positive — triage before tuning); and lists candidate-v2 control
+proposals, acceptance gates, and the sustained-zero evidence needed to close M7.
+It changes nothing: no prompt tuning, no rerun, no draft text read or invented.
+
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`
 can **suspend a synthetic side-effecting action before it executes**. It runs a

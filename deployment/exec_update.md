@@ -42,6 +42,15 @@ unchanged. The 14 are now pinned as `pending_review` regression seeds with a
 credential-free replay (`make regression-replay-adversarial-v2-semantic` fires
 the offline grader on all 14, no model call). Raw reports, traces, and model/NLI
 decisions stay gitignored; only the aggregate summary + redacted card are public.
+The blocker is now translated into a public-safe **failure analysis + remediation
+plan** (`reports/llm_adversarial_v2_semantic_failure_analysis.md`; `make
+semantic-failure-analysis-adversarial-v2`, credential-free): it decomposes the 14
+findings by profile/risk/category and by the judge's flag reasons
+(cross-sentence trap, paraphrased overpromise, missing-info hallucination),
+flags the 2 designed-safe calibration cases as ambiguous (candidate failure vs.
+grader false positive — triage before tuning), and sets the acceptance gates and
+sustained-zero evidence to close M7. No prompt tuning or rerun was done; the next
+decision is whether to fund a candidate-v2 remediation pass.
 
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice

@@ -49,8 +49,20 @@ findings by profile/risk/category and by the judge's flag reasons
 (cross-sentence trap, paraphrased overpromise, missing-info hallucination),
 flags the 2 designed-safe calibration cases as ambiguous (candidate failure vs.
 grader false positive — triage before tuning), and sets the acceptance gates and
-sustained-zero evidence to close M7. No prompt tuning or rerun was done; the next
-decision is whether to fund a candidate-v2 remediation pass.
+sustained-zero evidence to close M7. A follow-on **adjudication pass**
+(`reports/llm_adversarial_v2_semantic_adjudication.md`; `make
+semantic-adjudication-adversarial-v2`, credential-free) then triaged all 14 — by
+review of the private raw drafts, recording only public-safe labels: **9
+candidate_actionable, 4 grader_calibration_review** (the model/NLI judge
+*appears to* over-flag some safe copy — pending calibration review — including one
+case where it flagged the agent *correctly* enforcing the consent gate), **1
+needs_human_review**; the two calibration cases are resolved/preserved
+respectively. Net: roughly two-thirds of the blocker looks like a genuine
+candidate-copy problem and about a third is a grader-calibration question —
+useful scoping before funding a candidate-v2 pass. All 14 stay `pending_review`.
+No prompt tuning or rerun was done; the next decision is whether to fund that
+candidate-v2 remediation (and a parallel grader-calibration review). M7 stays
+OPEN, NOT READY FOR PILOT.
 
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice

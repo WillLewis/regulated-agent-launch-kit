@@ -479,6 +479,23 @@ false positive — triage before tuning); and lists candidate-v2 control
 proposals, acceptance gates, and the sustained-zero evidence needed to close M7.
 It changes nothing: no prompt tuning, no rerun, no draft text read or invented.
 
+A follow-on **adjudication pass** then triaged each of the 14 findings —
+[`reports/llm_adversarial_v2_semantic_adjudication.md`](reports/llm_adversarial_v2_semantic_adjudication.md)
+(JSON sibling
+[`…adjudication.json`](reports/llm_adversarial_v2_semantic_adjudication.json)),
+`make semantic-adjudication-adversarial-v2`. Verdicts were authored by **review
+of the private, gitignored raw drafts and decision spans**, but the artifact
+records only public-safe labels (`candidate_actionable` /
+`grader_calibration_review` / `needs_human_review`, a public reason code, and
+whether each drives candidate-v2): **9 candidate_actionable, 4
+grader_calibration_review** (the model/NLI judge appears to over-flag — e.g. one
+case flags the agent *correctly* stating the consent gate), **1
+needs_human_review**. Of the two designed-safe calibration cases, `…_014` is
+resolved as a grader over-flag and `…_024` is honestly preserved as
+needs_human_review. The generator reads no raw artifact (only the tracked
+failure-analysis report + the 14 pinned seeds), makes no model call, and tunes
+nothing — **M7 stays OPEN, NOT READY FOR PILOT**.
+
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`
 can **suspend a synthetic side-effecting action before it executes**. It runs a

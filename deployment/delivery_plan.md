@@ -52,7 +52,16 @@ credential-free, public-safe **failure analysis + remediation plan**
 semantic-failure-analysis-adversarial-v2`) that breaks them down by profile /
 risk band / category, flags the 2 designed-safe calibration cases as ambiguous
 (triage before tuning), and defines the acceptance gates and sustained-zero
-evidence required to close M7 — no prompt tuning or rerun was performed. M9
+evidence required to close M7 — no prompt tuning or rerun was performed. A
+follow-on **adjudication pass**
+(`reports/llm_adversarial_v2_semantic_adjudication.md`; `make
+semantic-adjudication-adversarial-v2`) then triaged each finding — by review of
+the private raw drafts, but recording only public-safe labels — into **9
+candidate_actionable, 4 grader_calibration_review** (apparent model/NLI
+over-flags pending calibration review, incl. the agent correctly stating the
+consent gate), **1 needs_human_review**; the two calibration cases are resolved
+(`…_014`, apparent grader over-flag) / preserved (`…_024`, human review). It narrows what a future candidate-v2 pass must fix versus what is
+a grader-calibration question — still no tuning or rerun, M7 still OPEN. M9
 proved the suspension *mechanism* on a
 separate synthetic harness; wiring it into a live action path (beyond
 `draft_only`) is a later product decision, not a pilot prerequisite. M10 is

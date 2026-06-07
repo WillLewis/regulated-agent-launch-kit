@@ -61,7 +61,15 @@ candidate_actionable, 4 grader_calibration_review** (apparent model/NLI
 over-flags pending calibration review, incl. the agent correctly stating the
 consent gate), **1 needs_human_review**; the two calibration cases are resolved
 (`…_014`, apparent grader over-flag) / preserved (`…_024`, human review). It narrows what a future candidate-v2 pass must fix versus what is
-a grader-calibration question — still no tuning or rerun, M7 still OPEN. M9
+a grader-calibration question — still no tuning or rerun, M7 still OPEN. That
+remediation is now **wired but not run**: an opt-in `llm_candidate_v2` prompt
+encodes a control per candidate_actionable reason code (and the failure-analysis
+structural controls) with credentialed Make targets gated on `check-llm-env`
+(raw outputs gitignored), and credential-free grader-calibration fixtures prove
+the offline semantic lane clears the 4 over-flags as non-claims (`make
+calibration-replay-adversarial-v2-semantic`). v0/v1/default behavior is
+unchanged and `case_fl_adv_v2_024` stays open; the next decision is whether to
+fund the credentialed candidate-v2 run. M9
 proved the suspension *mechanism* on a
 separate synthetic harness; wiring it into a live action path (beyond
 `draft_only`) is a later product decision, not a pilot prerequisite. M10 is

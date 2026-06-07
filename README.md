@@ -496,6 +496,31 @@ needs_human_review. The generator reads no raw artifact (only the tracked
 failure-analysis report + the 14 pinned seeds), makes no model call, and tunes
 nothing — **M7 stays OPEN, NOT READY FOR PILOT**.
 
+**M7 remediation (wired, NOT run).** Acting on the adjudication, an opt-in
+`llm_candidate_v2` profile (`app/agents/profiles.py` +
+`_build_llm_prompt_v2`) encodes one semantic control per adjudicated
+`candidate_actionable` reason code (operational-status overpromise,
+resolution/restoration promise, implied future refresh despite a gate,
+disabled-scope continuity, missing-metadata refresh/timeframe, missing-partner
+auto-completion) plus the failure-analysis structural controls (banned
+*semantics* not just substrings, same-clause hedging, no inferred identifiers,
+consent gate never relaxed by partner pressure, the partner-scope decision
+table, cite all applicable policies, separate route health from
+consent/staleness). It keeps every v1 lexical control, so the v0→v1 win is not
+regressed. The credentialed targets (`eval-adversarial-v2-llm-v2`, the v2-vs-v1
+card, `semantic-model-decisions-adversarial-v2-llm-v2`,
+`semantic-gate-adversarial-v2-llm-v2`) are wired and gate on `check-llm-env`
+with raw outputs gitignored — but **none has been run**; v0/v1/default/baseline
+behavior is unchanged. Separately, the 4 `grader_calibration_review` over-flags
+get **credential-free grader-calibration fixtures**
+(`make calibration-seed-adversarial-v2-semantic` /
+`calibration-replay-adversarial-v2-semantic`): the offline
+`unsupported_claim_semantic` lane CLEARS all 4 when they are represented as
+non-claims (the mirror of the regression replay that fires on the 14), without
+adding the semantic grader to the default `GRADERS`. The lone
+`needs_human_review` finding is left open. No prompt was tuned and no
+credentialed run was performed — **M7 remains OPEN, NOT READY FOR PILOT**.
+
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`
 can **suspend a synthetic side-effecting action before it executes**. It runs a

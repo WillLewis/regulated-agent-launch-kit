@@ -28,6 +28,21 @@ adversarial run surfaced on v0 can be measured as a true before/after
 delta. Like v0, it is opt-in and credential-gated; no Make target in
 the public proof loop invokes it.
 
+``LLM_CANDIDATE_V2`` is the *M7 remediation* sibling. Same adapter,
+model, cost path, and deterministic decisions — only the prompt
+changes again. v2's prompt encodes the controls the M7 semantic
+adjudication marked ``candidate_actionable`` (operational-status
+overpromise, resolution/restoration promise, implied future refresh
+despite a gate, disabled-scope continuity, missing-metadata
+refresh/timeframe, missing-partner auto-completion) plus the
+failure-analysis controls (banned *semantics* not just substrings,
+same-clause hedging, no inferred missing identifiers, consent gate
+never relaxed by partner pressure, the partner-scope decision table,
+cite all applicable synthetic policies, and separating route health
+from consent/staleness). It is **wired but not run**: opt-in,
+credential-gated, and excluded from the public proof loop, exactly
+like v0/v1. Adding it changes no v0/v1/default behavior.
+
 Profile strings are stable so they can be written into
 ``TraceRecord.agent_system_version``, surfaced in eval reports, and
 filtered on without parsing. Add new profiles by extending the enum
@@ -46,6 +61,7 @@ class AgentSystemProfile(str, Enum):
     IMPROVED_V0 = "improved_v0"
     LLM_CANDIDATE_V0 = "llm_candidate_v0"
     LLM_CANDIDATE_V1 = "llm_candidate_v1"
+    LLM_CANDIDATE_V2 = "llm_candidate_v2"
 
 
 KNOWN_PROFILES: frozenset[str] = frozenset(profile.value for profile in AgentSystemProfile)

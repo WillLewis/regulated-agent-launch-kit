@@ -61,8 +61,15 @@ respectively. Net: roughly two-thirds of the blocker looks like a genuine
 candidate-copy problem and about a third is a grader-calibration question —
 useful scoping before funding a candidate-v2 pass. All 14 stay `pending_review`.
 No prompt tuning or rerun was done; the next decision is whether to fund that
-candidate-v2 remediation (and a parallel grader-calibration review). M7 stays
-OPEN, NOT READY FOR PILOT.
+candidate-v2 remediation (and a parallel grader-calibration review). That
+remediation is now **wired but not run**: an opt-in `llm_candidate_v2` prompt
+encodes a control per candidate_actionable reason code plus the structural
+controls (credentialed Make targets gated on `check-llm-env`, raw outputs
+gitignored), and credential-free grader-calibration fixtures already prove the
+offline semantic lane clears the 4 over-flags as non-claims. v0/v1/default
+behavior is unchanged and `case_fl_adv_v2_024` stays open. Funding the
+credentialed candidate-v2 run is now a one-command decision, not new build work.
+M7 stays OPEN, NOT READY FOR PILOT.
 
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice

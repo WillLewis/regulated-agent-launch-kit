@@ -454,6 +454,12 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         "semantic-model-decisions-adversarial-v2-llm-v1",
         "semantic-audit-summary-adversarial-v2-llm",
         "semantic-gate-adversarial-v2-llm",
+        # M7 remediation candidate (llm_candidate_v2) — wired, not run. The eval +
+        # semantic-decisions targets gate on check-llm-env; the gate consumes the
+        # gitignored on-disk decisions. All legitimately name the v2 profile/path.
+        "eval-adversarial-v2-llm-v2",
+        "semantic-model-decisions-adversarial-v2-llm-v2",
+        "semantic-gate-adversarial-v2-llm-v2",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

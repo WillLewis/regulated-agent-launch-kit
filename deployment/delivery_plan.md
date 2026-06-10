@@ -82,8 +82,12 @@ tightens only the missing-metadata control for `case_017` (credentialed targets
 gated on `check-llm-env`, raw outputs gitignored), and the grader-calibration
 fixtures were extended from 4 to 5 cases to include `case_006`'s
 tool-verified-fact over-flag (`make calibration-replay-adversarial-v2-semantic`
-clears all 5 as non-claims). The next decision is whether to fund the
-credentialed v2.1 re-run. M9 proved the suspension *mechanism* on a
+clears all 5 as non-claims). **candidate-v2.1 was then run once:** it cleared its
+target `case_017` but the gate still blocked on 3 closed-gate cases
+(`case_010/012/024`) showing the same affirmative-timing failure on gate types
+the narrow control missed. So **`llm_candidate_v2_2`** generalizes the control to
+every closed-gate state (wired, not run). Next decision: fund the credentialed
+v2.2 re-run. M9 proved the suspension *mechanism* on a
 separate synthetic harness; wiring it into a live action path (beyond
 `draft_only`) is a later product decision, not a pilot prerequisite. M10 is
 presentation, not a readiness gate.

@@ -80,8 +80,13 @@ the draft-only judge over-flagged a true tool-verified consent statement), and
 (credential-free, not run):** an opt-in `llm_candidate_v2_1` prompt tightens only
 the missing-metadata control for `case_017`, and the grader-calibration fixtures
 now cover 5 cases (the 4 originals + `case_006`), with the offline lane proven to
-clear all 5. The only remaining spend is the credentialed v2.1 re-run — a funding
-decision, not build work. M7 stays OPEN, NOT READY FOR PILOT.
+clear all 5. **candidate-v2.1 was then run once (~$0.50):** it cleared its target
+`case_017`, but the gate still blocked on 3 cases that, on review, are the same
+affirmative-timing-on-a-closed-gate failure on gate types the narrow fix didn't
+cover. The control has now been **generalized** (`llm_candidate_v2_2`, wired/not
+run) to every closed-gate state. The loop is converging — each ~$0.50 run closes
+a slice and pinpoints the next; the remaining spend is the credentialed v2.2
+re-run. M7 stays OPEN, NOT READY FOR PILOT.
 
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice

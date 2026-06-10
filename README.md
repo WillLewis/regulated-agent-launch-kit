@@ -531,16 +531,21 @@ Both residual routes are now built (credential-free, **not run**). The
 conditional timing guidance ("if institution context were available") and
 requires omitting the customer-facing timing section entirely; a guard asserts
 v2.1 equals v2 with that single control replaced, so v2 stays a faithful
-"before." Its credentialed targets (`eval-adversarial-v2-llm-v2-1`,
-`semantic-model-decisions-adversarial-v2-llm-v2-1`,
-`semantic-gate-adversarial-v2-llm-v2-1`) gate on `check-llm-env` with raw outputs
-gitignored. The `006` route extends the **credential-free grader-calibration
-fixtures** to **5** cases (the 4 original over-flags + `006`'s tool-verified-fact
-over-flag): `make calibration-seed-adversarial-v2-semantic` /
-`calibration-replay-adversarial-v2-semantic` prove the offline
-`unsupported_claim_semantic` lane CLEARS all 5 as non-claims, without adding the
-semantic grader to the default `GRADERS`. No prompt was re-run; **M7 remains
-OPEN, NOT READY FOR PILOT.**
+"before." **candidate-v2.1 was then run once:** it **cleared `017`** (the
+tightening worked) but the gate still blocked on 3 flags (`010`, `012`, `024`) —
+and on review those are the *same* affirmative-timing-on-a-closed-gate failure as
+`017`, on gate types the missing-metadata-only control didn't reach (unavailable/
+degraded/blocked route, insufficient/expired consent). So **`llm_candidate_v2_2`**
+*generalizes* that one control to **every** closed-gate state (missing
+identifier, insufficient/expired/revoked consent, unavailable/degraded/blocked
+route, disabled/fallback_blocked scope) while leaving fully-healthy cases free to
+hedge — built as `_build_llm_prompt_v2_1(...).replace(...)` with the same drift
+guard, **wired but not run**. The `006` route extends the **credential-free
+grader-calibration fixtures** to **5** cases (the 4 original over-flags + `006`'s
+tool-verified-fact over-flag): `make calibration-replay-adversarial-v2-semantic`
+proves the offline `unsupported_claim_semantic` lane CLEARS all 5 as non-claims,
+without adding the semantic grader to the default `GRADERS`. Raw run artifacts
+stay gitignored; **M7 remains OPEN, NOT READY FOR PILOT.**
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`

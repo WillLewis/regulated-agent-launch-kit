@@ -68,6 +68,9 @@ reports/llm_adversarial_v2_candidate_v2_semantic_replay_decisions.json
 # intermediate. The v2.1-vs-v2 card is public-safe (counts only) and trackable.
 reports/llm_adversarial_v2_candidate_v2_1_eval.json
 reports/llm_adversarial_v2_candidate_v2_1_semantic_replay_decisions.json
+# M7 generalized residual candidate (llm_candidate_v2_2) — wired but not run.
+reports/llm_adversarial_v2_candidate_v2_2_eval.json
+reports/llm_adversarial_v2_candidate_v2_2_semantic_replay_decisions.json
 
 # Repeat-run aggregation demo outputs from the variance-report-fixture
 # Make target. The fixture inputs under tests/fixtures/llm_repeats/ are

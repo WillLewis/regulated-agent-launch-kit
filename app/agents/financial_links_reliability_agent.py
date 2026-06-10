@@ -73,11 +73,13 @@ def handle(
     is_llm_candidate_v1 = profile == AgentSystemProfile.LLM_CANDIDATE_V1.value
     is_llm_candidate_v2 = profile == AgentSystemProfile.LLM_CANDIDATE_V2.value
     is_llm_candidate_v2_1 = profile == AgentSystemProfile.LLM_CANDIDATE_V2_1.value
+    is_llm_candidate_v2_2 = profile == AgentSystemProfile.LLM_CANDIDATE_V2_2.value
     is_llm_candidate = (
         is_llm_candidate_v0
         or is_llm_candidate_v1
         or is_llm_candidate_v2
         or is_llm_candidate_v2_1
+        or is_llm_candidate_v2_2
     )
 
     facts: dict[str, Any] = dict(case.payload or {})
@@ -214,7 +216,9 @@ def handle(
     llm_model: str | None = None
     llm_cost_estimation_note: str | None = None
     if is_llm_candidate:
-        if is_llm_candidate_v2_1:
+        if is_llm_candidate_v2_2:
+            prompt_builder = _build_llm_prompt_v2_2
+        elif is_llm_candidate_v2_1:
             prompt_builder = _build_llm_prompt_v2_1
         elif is_llm_candidate_v2:
             prompt_builder = _build_llm_prompt_v2
@@ -718,6 +722,28 @@ _V2_1_MISSING_METADATA_BAN = (
     "customer-facing timing section ENTIRELY; state only that remediation "
     "cannot proceed until the missing identifier is provided."
 )
+# v2.2 generalizes the v2.1 missing-metadata ban to EVERY closed-gate state. The
+# candidate-v2.1 run cleared case_017 but the same affirmative-timing failure
+# recurred on case_010 (unavailable route + insufficient consent), case_012
+# (expired consent + degraded route), and case_024 (degraded route) — gate types
+# the narrow v2.1 control did not reach. This applies the identical principle to
+# all of them while leaving healthy/granted/enabled cases free to give hedged
+# timing guidance.
+_V2_2_CLOSED_GATE_BAN = (
+    "5. No timing expectation on a closed gate: do NOT assert, imply, or even "
+    "hedge any refresh / update / completion / timing expectation (e.g. "
+    "'typically updates within a short window', 'expected to update', 'refresh "
+    "is expected to proceed', 'aggregation is anticipated to continue') whenever "
+    "ANY gate is closed — institution_id or institution metadata is missing; OR "
+    "consent is insufficient / expired / revoked / unknown; OR the aggregator "
+    "route is unavailable / degraded / blocked; OR the partner scope is disabled "
+    "/ fallback_blocked. Do NOT include hypothetical or conditional timing "
+    "guidance ('if ... were available', 'under normal conditions') and omit any "
+    "customer-facing timing/refresh section ENTIRELY in these states; state only "
+    "that updates cannot be assumed and remediation cannot proceed until the gate "
+    "clears. (When NO gate is closed — granted consent, healthy route, enabled "
+    "scope, all identifiers present — hedged timing guidance is still allowed.)"
+)
 
 
 def _build_llm_prompt_v2_1(
@@ -762,6 +788,49 @@ def _build_llm_prompt_v2_1(
             "_V2_MISSING_METADATA_BAN."
         )
     return base.replace(_V2_MISSING_METADATA_BAN, _V2_1_MISSING_METADATA_BAN, 1)
+
+
+def _build_llm_prompt_v2_2(
+    case: Case,
+    consent_state: ConsentState,
+    institution_out: dict[str, Any] | None,
+    partner_out: dict[str, Any] | None,
+    policy_ids: list[str],
+    approval: ApprovalDecision,
+    deterministic_draft: str,
+) -> str:
+    """Generalized residual-remediation prompt for the ``llm_candidate_v2_2`` profile.
+
+    The candidate-v2.1 run cleared its target (``case_fl_adv_v2_017``) but the same
+    affirmative-timing-on-a-closed-gate failure recurred on ``case_010`` /
+    ``case_012`` / ``case_024`` — gate types v2.1's missing-metadata-only control
+    did not reach. v2.2 generalizes that control to EVERY closed-gate state
+    (missing identifier, insufficient/expired/revoked consent, unavailable/
+    degraded/blocked route, disabled/fallback_blocked scope), while leaving fully
+    healthy cases free to give hedged timing guidance.
+
+    v2.2 is derived from ``_build_llm_prompt_v2_1`` by replacing that single
+    (already-tightened) ban with the generalized form; a guard raises if v2.1's
+    wording drifts. So v2.2 equals v2.1 with exactly that one control generalized,
+    and v2/v2.1 stay byte-faithful "before" snapshots.
+    """
+
+    base = _build_llm_prompt_v2_1(
+        case=case,
+        consent_state=consent_state,
+        institution_out=institution_out,
+        partner_out=partner_out,
+        policy_ids=policy_ids,
+        approval=approval,
+        deterministic_draft=deterministic_draft,
+    )
+    if _V2_1_MISSING_METADATA_BAN not in base:
+        raise RuntimeError(
+            "candidate-v2.2 could not locate the v2.1 missing-metadata ban to "
+            "generalize; the v2.1 prompt wording changed — re-sync "
+            "_V2_1_MISSING_METADATA_BAN."
+        )
+    return base.replace(_V2_1_MISSING_METADATA_BAN, _V2_2_CLOSED_GATE_BAN, 1)
 
 
 def _find_rule(

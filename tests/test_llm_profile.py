@@ -464,6 +464,10 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         "eval-adversarial-v2-llm-v2-1",
         "semantic-model-decisions-adversarial-v2-llm-v2-1",
         "semantic-gate-adversarial-v2-llm-v2-1",
+        # M7 generalized residual candidate (llm_candidate_v2_2) — wired, not run.
+        "eval-adversarial-v2-llm-v2-2",
+        "semantic-model-decisions-adversarial-v2-llm-v2-2",
+        "semantic-gate-adversarial-v2-llm-v2-2",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

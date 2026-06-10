@@ -54,7 +54,18 @@ conditional timing guidance and requires omitting the customer-facing
 timing section entirely when a required identifier is missing. Every
 other v2 control is byte-identical (v2 stays a faithful "before"). Like
 v0/v1/v2 it is opt-in, credential-gated, and **wired but not run**;
-adding it changes no v0/v1/v2/default behavior.
+adding it changes no v0/v1/v2/default behavior. It was run once: it
+cleared ``case_fl_adv_v2_017`` but the gate still blocked on the same
+affirmative-timing failure on other closed-gate cases.
+
+``LLM_CANDIDATE_V2_2`` generalizes ``LLM_CANDIDATE_V2_1``. The v2.1 run
+showed the affirmative-timing-on-a-closed-gate failure recurs on gate
+types the missing-metadata-only control did not reach (unavailable/
+degraded/blocked route, insufficient/expired consent). v2.2's prompt is
+v2.1's with that one control generalized to **every** closed-gate state,
+while leaving fully healthy cases free to give hedged timing guidance.
+Like v0/v1/v2/v2.1 it is opt-in, credential-gated, and **wired but not
+run**; it changes no v0/v1/v2/v2.1/default behavior.
 
 Profile strings are stable so they can be written into
 ``TraceRecord.agent_system_version``, surfaced in eval reports, and
@@ -76,6 +87,7 @@ class AgentSystemProfile(str, Enum):
     LLM_CANDIDATE_V1 = "llm_candidate_v1"
     LLM_CANDIDATE_V2 = "llm_candidate_v2"
     LLM_CANDIDATE_V2_1 = "llm_candidate_v2_1"
+    LLM_CANDIDATE_V2_2 = "llm_candidate_v2_2"
 
 
 KNOWN_PROFILES: frozenset[str] = frozenset(profile.value for profile in AgentSystemProfile)

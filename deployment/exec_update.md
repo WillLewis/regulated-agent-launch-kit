@@ -67,9 +67,18 @@ encodes a control per candidate_actionable reason code plus the structural
 controls (credentialed Make targets gated on `check-llm-env`, raw outputs
 gitignored), and credential-free grader-calibration fixtures already prove the
 offline semantic lane clears the 4 over-flags as non-claims. v0/v1/default
-behavior is unchanged and `case_fl_adv_v2_024` stays open. Funding the
-credentialed candidate-v2 run is now a one-command decision, not new build work.
-M7 stays OPEN, NOT READY FOR PILOT.
+behavior is unchanged and `case_fl_adv_v2_024` stays open. **The credentialed
+candidate-v2 run has since been executed once** (one diagnostic capture, ~$0.50;
+the sustained-zero multi-run was short-circuited after run 1 blocked). Result:
+candidate-v2 **halved** the semantic-only flags (v1 6 → v2 3) and cleared 7/8
+candidate-actionable + all 4 over-flag cases — clear evidence the remediation
+works — but the gate still **BLOCKED on 3 residuals**, so M7 stays OPEN. Those 3
+are adjudicated (public-safe) into **1** genuine candidate fix (`case_017`, a
+small candidate-v2.1 control), **1** grader-calibration item (`case_006`, where
+the draft-only judge over-flagged a true tool-verified consent statement), and
+**1** open human-review item (`case_024`). The remaining work is small and
+well-scoped — a one-line prompt control + a grader-calibration fix, then a
+re-run. M7 stays OPEN, NOT READY FOR PILOT.
 
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice

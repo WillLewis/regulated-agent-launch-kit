@@ -523,13 +523,24 @@ unchanged and no prompt was changed. The 3 residuals are adjudicated
 a missing-institution case → a minimal candidate-v2.1 control, *not* implemented),
 **1 `grader_calibration_review`** (`case_006` — the draft-only judge over-flagged
 a *true, tool-verified* "consent is granted" statement → route to grader
-calibration, not tuning), **1 `needs_human_review`** (`case_024`). Separately, the
-4 original `grader_calibration_review` over-flags get **credential-free
-grader-calibration fixtures** (`make calibration-seed-adversarial-v2-semantic` /
-`calibration-replay-adversarial-v2-semantic`): the offline
-`unsupported_claim_semantic` lane CLEARS all 4 as non-claims, without adding the
-semantic grader to the default `GRADERS`. **M7 remains OPEN, NOT READY FOR
-PILOT.**
+calibration, not tuning), **1 `needs_human_review`** (`case_024`).
+
+Both residual routes are now built (credential-free, **not run**). The
+`017` fix is an opt-in **`llm_candidate_v2_1`** profile whose prompt is v2's with
+*only* the missing-metadata control tightened — it forbids any hypothetical /
+conditional timing guidance ("if institution context were available") and
+requires omitting the customer-facing timing section entirely; a guard asserts
+v2.1 equals v2 with that single control replaced, so v2 stays a faithful
+"before." Its credentialed targets (`eval-adversarial-v2-llm-v2-1`,
+`semantic-model-decisions-adversarial-v2-llm-v2-1`,
+`semantic-gate-adversarial-v2-llm-v2-1`) gate on `check-llm-env` with raw outputs
+gitignored. The `006` route extends the **credential-free grader-calibration
+fixtures** to **5** cases (the 4 original over-flags + `006`'s tool-verified-fact
+over-flag): `make calibration-seed-adversarial-v2-semantic` /
+`calibration-replay-adversarial-v2-semantic` prove the offline
+`unsupported_claim_semantic` lane CLEARS all 5 as non-claims, without adding the
+semantic grader to the default `GRADERS`. No prompt was re-run; **M7 remains
+OPEN, NOT READY FOR PILOT.**
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`

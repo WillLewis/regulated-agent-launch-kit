@@ -76,9 +76,12 @@ works — but the gate still **BLOCKED on 3 residuals**, so M7 stays OPEN. Those
 are adjudicated (public-safe) into **1** genuine candidate fix (`case_017`, a
 small candidate-v2.1 control), **1** grader-calibration item (`case_006`, where
 the draft-only judge over-flagged a true tool-verified consent statement), and
-**1** open human-review item (`case_024`). The remaining work is small and
-well-scoped — a one-line prompt control + a grader-calibration fix, then a
-re-run. M7 stays OPEN, NOT READY FOR PILOT.
+**1** open human-review item (`case_024`). **Both residual routes are now built
+(credential-free, not run):** an opt-in `llm_candidate_v2_1` prompt tightens only
+the missing-metadata control for `case_017`, and the grader-calibration fixtures
+now cover 5 cases (the 4 originals + `case_006`), with the offline lane proven to
+clear all 5. The only remaining spend is the credentialed v2.1 re-run — a funding
+decision, not build work. M7 stays OPEN, NOT READY FOR PILOT.
 
 Two deterministic, credential-free chunks landed since the last update. **M8**
 added a broader 24-case adversarial slice

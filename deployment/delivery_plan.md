@@ -74,12 +74,16 @@ candidate's semantic-only flags (v1 `6` → v2 `3`) and cleared `7/8`
 candidate_actionable + all `4` over-flag cases, but the gate still **BLOCKED on 3
 residuals**, so M7 stays OPEN. The 3 residuals are adjudicated
 (`reports/llm_adversarial_v2_candidate_v2_residual_adjudication.md`) into **1
-candidate_actionable** (`case_017` → a minimal candidate-v2.1 control, not yet
-implemented), **1 grader_calibration_review** (`case_006` — the judge over-flagged
-a true tool-verified consent statement → grader calibration), and **1
-needs_human_review** (`case_024`). Next decision: implement the small
-candidate-v2.1 control + a grader-calibration fix, then re-run. M9
-proved the suspension *mechanism* on a
+candidate_actionable** (`case_017`), **1 grader_calibration_review** (`case_006` —
+the judge over-flagged a true tool-verified consent statement → grader
+calibration), and **1 needs_human_review** (`case_024`). **Both residual routes
+are now built (credential-free, not run):** an opt-in `llm_candidate_v2_1` prompt
+tightens only the missing-metadata control for `case_017` (credentialed targets
+gated on `check-llm-env`, raw outputs gitignored), and the grader-calibration
+fixtures were extended from 4 to 5 cases to include `case_006`'s
+tool-verified-fact over-flag (`make calibration-replay-adversarial-v2-semantic`
+clears all 5 as non-claims). The next decision is whether to fund the
+credentialed v2.1 re-run. M9 proved the suspension *mechanism* on a
 separate synthetic harness; wiring it into a live action path (beyond
 `draft_only`) is a later product decision, not a pilot prerequisite. M10 is
 presentation, not a readiness gate.

@@ -39,9 +39,22 @@ failure-analysis controls (banned *semantics* not just substrings,
 same-clause hedging, no inferred missing identifiers, consent gate
 never relaxed by partner pressure, the partner-scope decision table,
 cite all applicable synthetic policies, and separating route health
-from consent/staleness). It is **wired but not run**: opt-in,
-credential-gated, and excluded from the public proof loop, exactly
-like v0/v1. Adding it changes no v0/v1/default behavior.
+from consent/staleness). It was run once (one diagnostic credentialed
+run): it halved the candidate's semantic-only flags but the gate still
+blocked on 3 residuals.
+
+``LLM_CANDIDATE_V2_1`` is the *residual* sibling of
+``LLM_CANDIDATE_V2``. The candidate-v2 run's residual adjudication
+marked one residual (``case_fl_adv_v2_017``) ``candidate_actionable``:
+on a missing-identifier case the v2 draft still emitted a refresh-timing
+expectation, even framed conditionally ("if institution context were
+available"). v2.1's prompt is v2's prompt with **only** the
+missing-metadata control tightened — it forbids any hypothetical or
+conditional timing guidance and requires omitting the customer-facing
+timing section entirely when a required identifier is missing. Every
+other v2 control is byte-identical (v2 stays a faithful "before"). Like
+v0/v1/v2 it is opt-in, credential-gated, and **wired but not run**;
+adding it changes no v0/v1/v2/default behavior.
 
 Profile strings are stable so they can be written into
 ``TraceRecord.agent_system_version``, surfaced in eval reports, and
@@ -62,6 +75,7 @@ class AgentSystemProfile(str, Enum):
     LLM_CANDIDATE_V0 = "llm_candidate_v0"
     LLM_CANDIDATE_V1 = "llm_candidate_v1"
     LLM_CANDIDATE_V2 = "llm_candidate_v2"
+    LLM_CANDIDATE_V2_1 = "llm_candidate_v2_1"
 
 
 KNOWN_PROFILES: frozenset[str] = frozenset(profile.value for profile in AgentSystemProfile)

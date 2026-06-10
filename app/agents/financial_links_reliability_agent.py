@@ -72,8 +72,12 @@ def handle(
     is_llm_candidate_v0 = profile == AgentSystemProfile.LLM_CANDIDATE_V0.value
     is_llm_candidate_v1 = profile == AgentSystemProfile.LLM_CANDIDATE_V1.value
     is_llm_candidate_v2 = profile == AgentSystemProfile.LLM_CANDIDATE_V2.value
+    is_llm_candidate_v2_1 = profile == AgentSystemProfile.LLM_CANDIDATE_V2_1.value
     is_llm_candidate = (
-        is_llm_candidate_v0 or is_llm_candidate_v1 or is_llm_candidate_v2
+        is_llm_candidate_v0
+        or is_llm_candidate_v1
+        or is_llm_candidate_v2
+        or is_llm_candidate_v2_1
     )
 
     facts: dict[str, Any] = dict(case.payload or {})
@@ -210,7 +214,9 @@ def handle(
     llm_model: str | None = None
     llm_cost_estimation_note: str | None = None
     if is_llm_candidate:
-        if is_llm_candidate_v2:
+        if is_llm_candidate_v2_1:
+            prompt_builder = _build_llm_prompt_v2_1
+        elif is_llm_candidate_v2:
             prompt_builder = _build_llm_prompt_v2
         elif is_llm_candidate_v1:
             prompt_builder = _build_llm_prompt_v1
@@ -693,6 +699,69 @@ def _build_llm_prompt_v2(
         "against BOTH the FORBIDDEN PHRASES list and the M7 SEMANTIC BANS one more time before "
         "returning."
     )
+
+
+# The v2 missing-metadata ban (ban #5) verbatim, and the tightened v2.1 form.
+# Kept as module constants so v2.1 can tighten exactly that one control and a
+# guard can fail loudly if v2's wording ever drifts out of sync.
+_V2_MISSING_METADATA_BAN = (
+    "5. Missing-metadata refresh/timeframe: when institution_id or "
+    "institution metadata is missing, do NOT assert any refresh timeframe or "
+    "expectation."
+)
+_V2_1_MISSING_METADATA_BAN = (
+    "5. Missing-metadata refresh/timeframe: when institution_id or "
+    "institution metadata is missing, do NOT assert any refresh timeframe or "
+    "expectation — AND do NOT include any hypothetical or conditional timing "
+    "guidance (e.g. 'if institution context were available', 'under normal "
+    "conditions', or a 'customer-facing guidance if ...' section). Omit the "
+    "customer-facing timing section ENTIRELY; state only that remediation "
+    "cannot proceed until the missing identifier is provided."
+)
+
+
+def _build_llm_prompt_v2_1(
+    case: Case,
+    consent_state: ConsentState,
+    institution_out: dict[str, Any] | None,
+    partner_out: dict[str, Any] | None,
+    policy_ids: list[str],
+    approval: ApprovalDecision,
+    deterministic_draft: str,
+) -> str:
+    """Residual-remediation prompt for the ``llm_candidate_v2_1`` profile.
+
+    The candidate-v2 run blocked on 3 residuals; the residual adjudication
+    (``reports/llm_adversarial_v2_candidate_v2_residual_adjudication.md``)
+    marked exactly one ``candidate_actionable`` — ``case_fl_adv_v2_017``: on a
+    missing-identifier case the v2 draft still emitted a refresh-timing
+    expectation, even framed conditionally ("if institution context were
+    available"). v2.1 is v2's prompt with **only** the missing-metadata control
+    (M7 semantic ban #5) tightened to forbid hypothetical/conditional timing
+    guidance and require omitting the customer-facing timing section entirely.
+
+    Every other v2 control is preserved byte-for-byte: v2.1 is derived from
+    ``_build_llm_prompt_v2`` by replacing that single ban, and a guard raises if
+    v2's wording ever drifts so the two cannot silently desynchronize. v2 stays a
+    faithful "before" for the v2 -> v2.1 comparison.
+    """
+
+    base = _build_llm_prompt_v2(
+        case=case,
+        consent_state=consent_state,
+        institution_out=institution_out,
+        partner_out=partner_out,
+        policy_ids=policy_ids,
+        approval=approval,
+        deterministic_draft=deterministic_draft,
+    )
+    if _V2_MISSING_METADATA_BAN not in base:
+        raise RuntimeError(
+            "candidate-v2.1 could not locate the v2 missing-metadata ban to "
+            "tighten; the v2 prompt wording changed — re-sync "
+            "_V2_MISSING_METADATA_BAN."
+        )
+    return base.replace(_V2_MISSING_METADATA_BAN, _V2_1_MISSING_METADATA_BAN, 1)
 
 
 def _find_rule(

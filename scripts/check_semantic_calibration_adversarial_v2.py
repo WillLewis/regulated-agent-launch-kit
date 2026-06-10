@@ -29,11 +29,17 @@ EVALS_DIR = REPO_ROOT / "case_studies" / "financial_links_reliability" / "evals"
 DEFAULT_ADJUDICATION = (
     REPO_ROOT / "reports" / "llm_adversarial_v2_semantic_adjudication.json"
 )
+DEFAULT_RESIDUAL_ADJUDICATION = (
+    REPO_ROOT / "reports" / "llm_adversarial_v2_candidate_v2_residual_adjudication.json"
+)
 DEFAULT_DATASET = EVALS_DIR / "calibration_semantic_adversarial_v2.jsonl"
 
 GRADER_CALIBRATION_REVIEW = "grader_calibration_review"
 SEMANTIC_GRADER = "unsupported_claim_semantic"
 SEMANTIC_FAILURE_LABEL = "UNSAFE_CUSTOMER_COMMS"
+# Residual grader_calibration_review findings are labelled with the candidate-v2
+# profile (they have no regression seed).
+RESIDUAL_PROFILE = "llm_candidate_v2"
 
 
 def _adjudication_pairs(path: Path) -> set[tuple[str, str]]:
@@ -45,11 +51,27 @@ def _adjudication_pairs(path: Path) -> set[tuple[str, str]]:
     }
 
 
+def _residual_pairs(path: Path | None) -> set[tuple[str, str]]:
+    if path is None or not path.exists():
+        return set()
+    payload = json.loads(path.read_text())
+    return {
+        (str(r["case_id"]), RESIDUAL_PROFILE)
+        for r in payload.get("residuals", [])
+        if r.get("residual_status") == GRADER_CALIBRATION_REVIEW
+    }
+
+
 def _load_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def check_coverage(*, adjudication: Path, dataset: Path) -> list[dict[str, Any]]:
+def check_coverage(
+    *,
+    adjudication: Path,
+    dataset: Path,
+    residual_adjudication: Path | None = None,
+) -> list[dict[str, Any]]:
     if not adjudication.exists():
         raise SystemExit(f"adjudication not found: {adjudication}")
     if not dataset.exists():
@@ -57,7 +79,7 @@ def check_coverage(*, adjudication: Path, dataset: Path) -> list[dict[str, Any]]
             f"calibration dataset not found: {dataset}\n"
             "  Hint: run `make calibration-seed-adversarial-v2-semantic` first."
         )
-    expected = _adjudication_pairs(adjudication)
+    expected = _adjudication_pairs(adjudication) | _residual_pairs(residual_adjudication)
     records = _load_jsonl(dataset)
     got = {
         (str(r.get("source_case_id")), str(r.get("source_agent_system_version")))
@@ -142,6 +164,9 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     parser.add_argument("--adjudication", type=Path, default=DEFAULT_ADJUDICATION)
+    parser.add_argument(
+        "--residual-adjudication", type=Path, default=DEFAULT_RESIDUAL_ADJUDICATION
+    )
     parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
     parser.add_argument(
         "--replay-report",
@@ -154,7 +179,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    records = check_coverage(adjudication=args.adjudication, dataset=args.dataset)
+    records = check_coverage(
+        adjudication=args.adjudication,
+        dataset=args.dataset,
+        residual_adjudication=args.residual_adjudication,
+    )
     msg = f"OK: calibration fixtures cover exactly {len(records)} grader_calibration_review finding(s)"
     if args.replay_report is not None:
         check_replay(dataset=args.dataset, replay_report=args.replay_report)

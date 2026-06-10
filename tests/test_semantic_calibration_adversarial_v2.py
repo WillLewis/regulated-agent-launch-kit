@@ -5,7 +5,8 @@ fixtures represent exactly those 4 as NON-claims so the offline semantic lane
 clears them — the mirror of the regression replay (which proves the lane FIRES on
 the 14). These tests lock in:
 
-1. The fixtures cover exactly the 4 ``grader_calibration_review`` findings; the
+1. The fixtures cover exactly the 5 ``grader_calibration_review`` findings (the 4
+   original over-flags + the candidate-v2 residual case_006); the
    ``needs_human_review`` finding is excluded.
 2. Every calibration decision is a non-claim (``makes_unsupported_claim: false``,
    empty ``evidence_spans``); the fixtures carry no raw draft text or trace path.
@@ -42,43 +43,62 @@ MAKEFILE = ROOT / "Makefile"
 GITIGNORE = ROOT / ".gitignore"
 EVALS = ROOT / "case_studies" / "financial_links_reliability" / "evals"
 ADJUDICATION = ROOT / "reports" / "llm_adversarial_v2_semantic_adjudication.json"
+RESIDUAL_ADJUDICATION = (
+    ROOT / "reports" / "llm_adversarial_v2_candidate_v2_residual_adjudication.json"
+)
 SEEDS = EVALS / "regressions_semantic_adversarial_v2.jsonl"
+SOURCE_DATASET = EVALS / "adversarial_v2.jsonl"
 DATASET = EVALS / "calibration_semantic_adversarial_v2.jsonl"
 DECISIONS = EVALS / "calibration_semantic_adversarial_v2_decisions.json"
 
-EXPECTED_4 = {
+# The 4 original grader_calibration_review over-flags + the candidate-v2 residual
+# adjudication's tool-verified-fact over-flag (case_006).
+EXPECTED_5 = {
     ("case_fl_adv_v2_010", "llm_candidate_v0"),
     ("case_fl_adv_v2_014", "llm_candidate_v0"),
     ("case_fl_adv_v2_023", "llm_candidate_v0"),
     ("case_fl_adv_v2_012", "llm_candidate_v1"),
+    ("case_fl_adv_v2_006", "llm_candidate_v2"),
 }
-NEEDS_HUMAN_REVIEW = ("case_fl_adv_v2_024", "llm_candidate_v1")
+# needs_human_review findings from BOTH adjudications must be excluded.
+NEEDS_HUMAN_REVIEW = {
+    ("case_fl_adv_v2_024", "llm_candidate_v1"),
+    ("case_fl_adv_v2_024", "llm_candidate_v2"),
+}
 
 FORBIDDEN = ("draft_text", "draft_excerpt", "final_response", "traces/local/llm_")
 
 
-# --- Coverage of exactly the 4 grader_calibration_review findings -------------
+# --- Coverage of exactly the 5 grader_calibration_review findings -------------
 
-def test_committed_fixtures_cover_exactly_the_4() -> None:
-    records = check_coverage(adjudication=ADJUDICATION, dataset=DATASET)
+def test_committed_fixtures_cover_exactly_the_5() -> None:
+    records = check_coverage(
+        adjudication=ADJUDICATION,
+        dataset=DATASET,
+        residual_adjudication=RESIDUAL_ADJUDICATION,
+    )
     got = {
         (r["source_case_id"], r["source_agent_system_version"]) for r in records
     }
-    assert got == EXPECTED_4
-    assert NEEDS_HUMAN_REVIEW not in got, "needs_human_review must be excluded"
+    assert got == EXPECTED_5
+    assert not (got & NEEDS_HUMAN_REVIEW), "needs_human_review must be excluded"
 
 
-def test_builder_covers_exactly_the_4_from_adjudication() -> None:
+def test_builder_covers_exactly_the_5_across_adjudications() -> None:
     dataset_records, decisions_fixture = build_fixtures(
-        adjudication_path=ADJUDICATION, seeds_path=SEEDS
+        adjudication_path=ADJUDICATION,
+        seeds_path=SEEDS,
+        residual_adjudication_path=RESIDUAL_ADJUDICATION,
+        dataset_path=SOURCE_DATASET,
     )
     got = {
         (r["source_case_id"], r["source_agent_system_version"]) for r in dataset_records
     }
-    assert got == EXPECTED_4
+    assert got == EXPECTED_5
+    assert ("case_fl_adv_v2_006", "llm_candidate_v2") in got, "residual case_006 missing"
     assert decisions_fixture["dataset_id"] == CALIBRATION_DATASET_ID
     decisions = decisions_fixture["decisions"][REPLAY_PROFILE]
-    assert len(decisions) == 4
+    assert len(decisions) == 5
 
 
 # --- Non-claim representation + public safety ---------------------------------
@@ -86,7 +106,7 @@ def test_builder_covers_exactly_the_4_from_adjudication() -> None:
 def test_all_calibration_decisions_are_non_claims() -> None:
     fixture = json.loads(DECISIONS.read_text())
     decisions = fixture["decisions"][REPLAY_PROFILE]
-    assert len(decisions) == 4
+    assert len(decisions) == 5
     for cid, d in decisions.items():
         assert d["makes_unsupported_claim"] is False, cid
         assert d["evidence_spans"] == [], cid

@@ -63,6 +63,11 @@ reports/llm_adversarial_v2_candidate_v1_semantic_replay_decisions.json
 # committed after a credentialed run.
 reports/llm_adversarial_v2_candidate_v2_eval.json
 reports/llm_adversarial_v2_candidate_v2_semantic_replay_decisions.json
+# M7 residual candidate (llm_candidate_v2_1) — wired but not run. Same posture:
+# raw eval report embeds draft text; replay-decision fixture is a regenerable
+# intermediate. The v2.1-vs-v2 card is public-safe (counts only) and trackable.
+reports/llm_adversarial_v2_candidate_v2_1_eval.json
+reports/llm_adversarial_v2_candidate_v2_1_semantic_replay_decisions.json
 
 # Repeat-run aggregation demo outputs from the variance-report-fixture
 # Make target. The fixture inputs under tests/fixtures/llm_repeats/ are

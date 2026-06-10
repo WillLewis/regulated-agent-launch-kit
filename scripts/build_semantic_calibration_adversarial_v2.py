@@ -45,10 +45,18 @@ DEFAULT_ADJUDICATION = (
     REPO_ROOT / "reports" / "llm_adversarial_v2_semantic_adjudication.json"
 )
 DEFAULT_SEEDS = EVALS_DIR / "regressions_semantic_adversarial_v2.jsonl"
+DEFAULT_RESIDUAL_ADJUDICATION = (
+    REPO_ROOT / "reports" / "llm_adversarial_v2_candidate_v2_residual_adjudication.json"
+)
+DEFAULT_DATASET = EVALS_DIR / "adversarial_v2.jsonl"
 DEFAULT_DATASET_OUT = EVALS_DIR / "calibration_semantic_adversarial_v2.jsonl"
 DEFAULT_DECISIONS_OUT = EVALS_DIR / "calibration_semantic_adversarial_v2_decisions.json"
 
 GRADER_CALIBRATION_REVIEW = "grader_calibration_review"
+# Residual grader_calibration_review findings come from the candidate-v2 run, so
+# their runnable record is sourced from the dataset (they have no regression seed)
+# and labelled with this profile.
+RESIDUAL_PROFILE = "llm_candidate_v2"
 CALIBRATION_DATASET_ID = "financial_links_calibration_semantic_adversarial_v2"
 REPLAY_PROFILE = "improved_v0"
 FIXTURE_VERSION = "semantic_decisions_v0"
@@ -120,6 +128,95 @@ def _load_seeds_by_pair(path: Path) -> dict[tuple[str, str], dict[str, Any]]:
     return by_pair
 
 
+def _load_residual_grader_calibration(path: Path) -> list[tuple[str, str]]:
+    """(case_id, reason_code) for each candidate-v2 residual marked
+    grader_calibration_review. Returns [] when the residual adjudication is absent."""
+
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text())
+    out: list[tuple[str, str]] = []
+    for r in payload.get("residuals", []):
+        if r.get("residual_status") == GRADER_CALIBRATION_REVIEW:
+            out.append((str(r["case_id"]), str(r["public_reason_code"])))
+    return out
+
+
+def _dataset_by_id(path: Path) -> dict[str, dict[str, Any]]:
+    if not path.exists():
+        raise SystemExit(f"dataset not found: {path}")
+    out: dict[str, dict[str, Any]] = {}
+    for line in path.read_text().splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        out[str(row["case_id"])] = row
+    return out
+
+
+def _make_entry(
+    *,
+    source_case: str,
+    profile: str,
+    reason_code: str,
+    runnable_source: dict[str, Any],
+    source_adjudication: str,
+) -> tuple[str, dict[str, Any], dict[str, Any]]:
+    """Build one (calibration_case_id, dataset_record, non-claim decision).
+
+    ``runnable_source`` is a regression seed (original adjudication) or a dataset
+    row (residual adjudication); only the allow-listed runnable fields are copied,
+    so no draft-bearing field can ride along."""
+
+    calibration_case_id = f"{source_case}__{profile}__semantic_calibration_v2"
+    record: dict[str, Any] = {
+        "case_id": calibration_case_id,
+        "calibration_case_id": calibration_case_id,
+        "dataset_id": CALIBRATION_DATASET_ID,
+    }
+    for field in _RUNNABLE_FIELDS:
+        if field in runnable_source:
+            record[field] = runnable_source[field]
+    record.update(
+        {
+            "synthetic": True,
+            "source_case_id": source_case,
+            "source_agent_system_version": profile,
+            "source_adjudication": source_adjudication,
+            "adjudication_status": GRADER_CALIBRATION_REVIEW,
+            "adjudication_reason_code": reason_code,
+            "grader": "unsupported_claim_semantic",
+            "expected_semantic_claim": False,
+            "failure_labels": [],
+            "review_status": GRADER_CALIBRATION_REVIEW,
+            "notes": (
+                f"Grader-calibration target: source case {source_case} on {profile} "
+                f"was adjudicated grader_calibration_review (reason {reason_code}) — "
+                "the model/NLI judge appears to have over-flagged a draft that "
+                "should clear (safe/hedged copy, or a true tool-verified statement "
+                "the draft-only judge could not corroborate). This fixture "
+                "represents it as a NON-claim (makes_unsupported_claim=false) so the "
+                "offline unsupported_claim_semantic lane clears it. Synthetic; no "
+                "raw draft text, model reasoning, or quoted spans are stored."
+            ),
+        }
+    )
+    decision = {
+        "makes_unsupported_claim": False,
+        "claim_type": "none",
+        "confidence": CONFIDENCE,
+        "rationale": (
+            "Authored grader-calibration target: this finding was adjudicated "
+            f"grader_calibration_review (reason {reason_code}); the offline lane "
+            "should clear it. Authored provenance; no raw draft text or quoted "
+            "spans."
+        ),
+        "evidence_spans": [],
+        "calibration": "safe_hedge",
+    }
+    return calibration_case_id, record, decision
+
+
 def _assert_no_forbidden_keys(obj: Any, *, label: str) -> None:
     if isinstance(obj, dict):
         for key, value in obj.items():
@@ -142,13 +239,18 @@ def build_fixtures(
     *,
     adjudication_path: Path,
     seeds_path: Path,
+    residual_adjudication_path: Path | None = None,
+    dataset_path: Path | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     pairs = _load_adjudication(adjudication_path)
     seeds = _load_seeds_by_pair(seeds_path)
 
     dataset_records: list[dict[str, Any]] = []
     decisions: dict[str, dict[str, Any]] = {}
+    seen: set[str] = set()
 
+    # (1) Original adjudication's grader_calibration_review findings — runnable
+    #     record cloned from the matching regression seed.
     for source_case, profile, reason_code in sorted(pairs):
         seed = seeds.get((source_case, profile))
         if seed is None:
@@ -157,68 +259,74 @@ def build_fixtures(
                 f"({source_case}, {profile}); cannot build a runnable calibration "
                 f"case. Re-run `make regression-seed-adversarial-v2-semantic`."
             )
-        calibration_case_id = f"{source_case}__{profile}__semantic_calibration_v2"
-        record: dict[str, Any] = {
-            "case_id": calibration_case_id,
-            "calibration_case_id": calibration_case_id,
-            "dataset_id": CALIBRATION_DATASET_ID,
-        }
-        for field in _RUNNABLE_FIELDS:
-            if field in seed:
-                record[field] = seed[field]
-        record.update(
-            {
-                "synthetic": True,
-                "source_case_id": source_case,
-                "source_agent_system_version": profile,
-                "source_adjudication": "reports/llm_adversarial_v2_semantic_adjudication.json",
-                "adjudication_status": GRADER_CALIBRATION_REVIEW,
-                "adjudication_reason_code": reason_code,
-                "grader": "unsupported_claim_semantic",
-                "expected_semantic_claim": False,
-                "failure_labels": [],
-                "review_status": GRADER_CALIBRATION_REVIEW,
-                "notes": (
-                    "Grader-calibration target derived from the M7 adjudication: "
-                    f"source case {source_case} on {profile} was adjudicated "
-                    f"grader_calibration_review (reason {reason_code}) — the "
-                    "model/NLI judge appears to have over-flagged a safe/hedged "
-                    "draft. This fixture represents it as a NON-claim "
-                    "(makes_unsupported_claim=false) so the offline "
-                    "unsupported_claim_semantic lane clears it. Synthetic; no raw "
-                    "draft text, model reasoning, or quoted spans are stored."
-                ),
-            }
+        cid, record, decision = _make_entry(
+            source_case=source_case,
+            profile=profile,
+            reason_code=reason_code,
+            runnable_source=seed,
+            source_adjudication="reports/llm_adversarial_v2_semantic_adjudication.json",
         )
+        seen.add(cid)
         dataset_records.append(record)
-        decisions[calibration_case_id] = {
-            "makes_unsupported_claim": False,
-            "claim_type": "none",
-            "confidence": CONFIDENCE,
-            "rationale": (
-                "Authored grader-calibration target: this finding was adjudicated "
-                f"grader_calibration_review (reason {reason_code}); it represents a "
-                "safe/hedged draft as a non-claim. Aggregate-derived; no raw draft "
-                "text or quoted spans."
-            ),
-            "evidence_spans": [],
-            "calibration": "safe_hedge",
-        }
+        decisions[cid] = decision
 
+    # (2) candidate-v2 residual adjudication's grader_calibration_review findings
+    #     (e.g. case_006) — no regression seed, so the runnable record is sourced
+    #     from the tracked 24-case dataset.
+    residual_pairs = (
+        _load_residual_grader_calibration(residual_adjudication_path)
+        if residual_adjudication_path is not None
+        else []
+    )
+    if residual_pairs:
+        if dataset_path is None:
+            raise SystemExit(
+                "residual grader_calibration_review findings require --dataset to "
+                "build a runnable record"
+            )
+        dataset_by_id = _dataset_by_id(dataset_path)
+        for source_case, reason_code in sorted(residual_pairs):
+            row = dataset_by_id.get(source_case)
+            if row is None:
+                raise SystemExit(
+                    f"residual calibration case {source_case} absent from dataset "
+                    f"{dataset_path}"
+                )
+            cid, record, decision = _make_entry(
+                source_case=source_case,
+                profile=RESIDUAL_PROFILE,
+                reason_code=reason_code,
+                runnable_source=row,
+                source_adjudication=(
+                    "reports/llm_adversarial_v2_candidate_v2_residual_adjudication.json"
+                ),
+            )
+            if cid in seen:
+                raise SystemExit(f"duplicate calibration case id {cid}")
+            seen.add(cid)
+            dataset_records.append(record)
+            decisions[cid] = decision
+
+    n = len(dataset_records)
     decisions_fixture = {
         "version": FIXTURE_VERSION,
         "dataset_id": CALIBRATION_DATASET_ID,
         "synthetic": True,
         "replay_profile": REPLAY_PROFILE,
-        "source_adjudication": "reports/llm_adversarial_v2_semantic_adjudication.json",
+        "source_adjudications": [
+            "reports/llm_adversarial_v2_semantic_adjudication.json",
+            "reports/llm_adversarial_v2_candidate_v2_residual_adjudication.json",
+        ],
         "note": (
-            "Credential-free grader-calibration fixture for the 4 adversarial v2 "
-            "findings the M7 adjudication marked grader_calibration_review. Every "
-            "decision pins makes_unsupported_claim=false (calibration=safe_hedge) "
-            "so the offline unsupported_claim_semantic grader CLEARS the case — "
-            "proving the safe/hedged cases can be represented as non-claims. "
-            "evidence_spans is empty and rationale is authored provenance; no raw "
-            "draft text. Consumed by scripts/run_eval.py --semantic-decisions with "
+            f"Credential-free grader-calibration fixture for the {n} adversarial v2 "
+            "grader_calibration_review findings — the original adjudication's "
+            "safe/hedged over-flags plus the candidate-v2 residual adjudication's "
+            "tool-verified-fact over-flag (case_006). Every decision pins "
+            "makes_unsupported_claim=false (calibration=safe_hedge) so the offline "
+            "unsupported_claim_semantic grader CLEARS the case — proving these "
+            "should-clear drafts can be represented as non-claims. evidence_spans "
+            "is empty and rationale is authored provenance; no raw draft text. "
+            "Consumed by scripts/run_eval.py --semantic-decisions with "
             f"--agent-system-version {REPLAY_PROFILE} (a deterministic vehicle). "
             "This does NOT change default GRADERS and is NOT a model-safety or "
             "readiness claim; it is a calibration target pending model/NLI review."
@@ -240,12 +348,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--adjudication", type=Path, default=DEFAULT_ADJUDICATION)
     parser.add_argument("--seeds", type=Path, default=DEFAULT_SEEDS)
+    parser.add_argument(
+        "--residual-adjudication", type=Path, default=DEFAULT_RESIDUAL_ADJUDICATION
+    )
+    parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
     parser.add_argument("--out-dataset", type=Path, default=DEFAULT_DATASET_OUT)
     parser.add_argument("--out-decisions", type=Path, default=DEFAULT_DECISIONS_OUT)
     args = parser.parse_args(argv)
 
     dataset_records, decisions_fixture = build_fixtures(
-        adjudication_path=args.adjudication, seeds_path=args.seeds
+        adjudication_path=args.adjudication,
+        seeds_path=args.seeds,
+        residual_adjudication_path=args.residual_adjudication,
+        dataset_path=args.dataset,
     )
 
     args.out_dataset.parent.mkdir(parents=True, exist_ok=True)

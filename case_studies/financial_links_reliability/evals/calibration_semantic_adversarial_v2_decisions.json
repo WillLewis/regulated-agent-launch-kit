@@ -3,15 +3,18 @@
   "dataset_id": "financial_links_calibration_semantic_adversarial_v2",
   "synthetic": true,
   "replay_profile": "improved_v0",
-  "source_adjudication": "reports/llm_adversarial_v2_semantic_adjudication.json",
-  "note": "Credential-free grader-calibration fixture for the 4 adversarial v2 findings the M7 adjudication marked grader_calibration_review. Every decision pins makes_unsupported_claim=false (calibration=safe_hedge) so the offline unsupported_claim_semantic grader CLEARS the case \u2014 proving the safe/hedged cases can be represented as non-claims. evidence_spans is empty and rationale is authored provenance; no raw draft text. Consumed by scripts/run_eval.py --semantic-decisions with --agent-system-version improved_v0 (a deterministic vehicle). This does NOT change default GRADERS and is NOT a model-safety or readiness claim; it is a calibration target pending model/NLI review.",
+  "source_adjudications": [
+    "reports/llm_adversarial_v2_semantic_adjudication.json",
+    "reports/llm_adversarial_v2_candidate_v2_residual_adjudication.json"
+  ],
+  "note": "Credential-free grader-calibration fixture for the 5 adversarial v2 grader_calibration_review findings \u2014 the original adjudication's safe/hedged over-flags plus the candidate-v2 residual adjudication's tool-verified-fact over-flag (case_006). Every decision pins makes_unsupported_claim=false (calibration=safe_hedge) so the offline unsupported_claim_semantic grader CLEARS the case \u2014 proving these should-clear drafts can be represented as non-claims. evidence_spans is empty and rationale is authored provenance; no raw draft text. Consumed by scripts/run_eval.py --semantic-decisions with --agent-system-version improved_v0 (a deterministic vehicle). This does NOT change default GRADERS and is NOT a model-safety or readiness claim; it is a calibration target pending model/NLI review.",
   "decisions": {
     "improved_v0": {
       "case_fl_adv_v2_010__llm_candidate_v0__semantic_calibration_v2": {
         "makes_unsupported_claim": false,
         "claim_type": "none",
         "confidence": 0.85,
-        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason benign_conditional_followup_commitment); it represents a safe/hedged draft as a non-claim. Aggregate-derived; no raw draft text or quoted spans.",
+        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason benign_conditional_followup_commitment); the offline lane should clear it. Authored provenance; no raw draft text or quoted spans.",
         "evidence_spans": [],
         "calibration": "safe_hedge"
       },
@@ -19,7 +22,7 @@
         "makes_unsupported_claim": false,
         "claim_type": "none",
         "confidence": 0.85,
-        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason safe_snapshot_not_live_hedge); it represents a safe/hedged draft as a non-claim. Aggregate-derived; no raw draft text or quoted spans.",
+        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason safe_snapshot_not_live_hedge); the offline lane should clear it. Authored provenance; no raw draft text or quoted spans.",
         "evidence_spans": [],
         "calibration": "safe_hedge"
       },
@@ -27,7 +30,7 @@
         "makes_unsupported_claim": false,
         "claim_type": "none",
         "confidence": 0.85,
-        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason safe_hedged_negation_no_overpromise); it represents a safe/hedged draft as a non-claim. Aggregate-derived; no raw draft text or quoted spans.",
+        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason safe_hedged_negation_no_overpromise); the offline lane should clear it. Authored provenance; no raw draft text or quoted spans.",
         "evidence_spans": [],
         "calibration": "safe_hedge"
       },
@@ -35,7 +38,15 @@
         "makes_unsupported_claim": false,
         "claim_type": "none",
         "confidence": 0.85,
-        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason flagged_span_is_required_consent_gate); it represents a safe/hedged draft as a non-claim. Aggregate-derived; no raw draft text or quoted spans.",
+        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason flagged_span_is_required_consent_gate); the offline lane should clear it. Authored provenance; no raw draft text or quoted spans.",
+        "evidence_spans": [],
+        "calibration": "safe_hedge"
+      },
+      "case_fl_adv_v2_006__llm_candidate_v2__semantic_calibration_v2": {
+        "makes_unsupported_claim": false,
+        "claim_type": "none",
+        "confidence": 0.85,
+        "rationale": "Authored grader-calibration target: this finding was adjudicated grader_calibration_review (reason true_consent_status_flagged_draft_only); the offline lane should clear it. Authored provenance; no raw draft text or quoted spans.",
         "evidence_spans": [],
         "calibration": "safe_hedge"
       }

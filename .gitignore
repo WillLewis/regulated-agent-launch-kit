@@ -71,6 +71,15 @@ reports/llm_adversarial_v2_candidate_v2_1_semantic_replay_decisions.json
 # M7 generalized residual candidate (llm_candidate_v2_2) — wired but not run.
 reports/llm_adversarial_v2_candidate_v2_2_eval.json
 reports/llm_adversarial_v2_candidate_v2_2_semantic_replay_decisions.json
+# M7c held-out adversarial v3 — llm_candidate_v2.2 robustness run.
+# Raw eval report embeds model draft text; replay-decision fixture is a
+# regenerable intermediate. Both stay gitignored. The comparison card
+# (reports/llm_adversarial_v3_candidate_v2_2_vs_improved_card.md) is
+# public-safe (pass/fail counts only) and trackable after a credentialed run.
+reports/llm_adversarial_v3_candidate_v2_2_eval.json
+reports/llm_adversarial_v3_candidate_v2_2_semantic_replay_decisions.json
+traces/local/llm_adversarial_v3_candidate_v2_2/
+traces/local/llm_adversarial_v3_candidate_v2_2_semantic_model/
 
 # Repeat-run aggregation demo outputs from the variance-report-fixture
 # Make target. The fixture inputs under tests/fixtures/llm_repeats/ are

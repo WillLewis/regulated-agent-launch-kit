@@ -468,6 +468,12 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         "eval-adversarial-v2-llm-v2-2",
         "semantic-model-decisions-adversarial-v2-llm-v2-2",
         "semantic-gate-adversarial-v2-llm-v2-2",
+        # M7c held-out adversarial v3 (28-case) — robustness check for v2.2.
+        # eval + semantic-decisions gate on check-llm-env; gate consumes on-disk decisions.
+        "eval-adversarial-v3-llm-v2-2",
+        "eval-card-adversarial-v3-llm-v2-2",
+        "semantic-model-decisions-adversarial-v3-llm-v2-2",
+        "semantic-gate-adversarial-v3-llm-v2-2",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

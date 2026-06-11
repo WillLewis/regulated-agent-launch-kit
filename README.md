@@ -109,7 +109,7 @@ PILOT**:
 - [Executive update](deployment/exec_update.md) — status, what changed, metric movement, top risk, decision needed, recommendation, next milestone.
 - [Field feedback to product](deployment/field_feedback_to_product.md) — eval-loop learnings converted into reusable platform/product requirements.
 
-See [`PLAN_v3_openai_tdl_fde.md`](PLAN_v3_openai_tdl_fde.md) for the full phased plan.
+See [`PLAN.md`](PLAN.md) for phase status and locked decisions.
 
 ## Synthetic Domain Model
 
@@ -942,7 +942,7 @@ artifacts exist.
 
 ## Starter Layout
 
-- `PLAN_v3_openai_tdl_fde.md` contains the detailed build plan.
+- `PLAN.md` tracks phase status and locked decisions.
 - `deployment/` contains the customer-deployment leadership artifacts.
 - `case_studies/` contains public-safe synthetic datasets and dataset cards.
 - `app/` contains the LangGraph system under test; `app/graph.py` is the canonical Financial Links execution path.

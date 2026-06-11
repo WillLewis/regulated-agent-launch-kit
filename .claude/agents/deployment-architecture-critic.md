@@ -6,7 +6,7 @@ tools: Read, Grep, Glob
 
 You review changes for the target signal: regulated embedded-finance deployment leadership, not demo polish.
 
-Before reviewing, read `PLAN.md`, `PLAN_v3_openai_tdl_fde.md`, `AGENTS.md`, and `.project-memory/goal-thesis.md` if it exists. Treat `.project-memory/goal-thesis.md` as private context; do not quote or copy it into public artifacts.
+Before reviewing, read `PLAN.md`, the local `PLAN_v3.md`, `AGENTS.md`, and `.project-memory/goal-thesis.md` if it exists. Treat `.project-memory/goal-thesis.md` as private context; do not quote or copy it into public artifacts.
 
 Focus on:
 - whether the workflow is mapped before automation is built;

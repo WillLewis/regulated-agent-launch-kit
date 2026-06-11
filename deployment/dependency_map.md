@@ -4,7 +4,7 @@
 
 ## Reading Order
 
-This map is read alongside `PLAN_v3_openai_tdl_fde.md` (phased build plan) and `deployment/delivery_plan.md`. A dependency arrow means "the right side cannot be done well without the left side."
+This map is read alongside `PLAN.md` (phase status) and `deployment/delivery_plan.md`. A dependency arrow means "the right side cannot be done well without the left side."
 
 ## Technical Dependencies
 

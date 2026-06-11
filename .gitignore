@@ -1,5 +1,9 @@
 .project-memory/
 
+# Detailed phased build plan is kept as a local working document and
+# is intentionally not published in this repo.
+/PLAN_v3.md
+
 .env
 .env.*
 .env.example

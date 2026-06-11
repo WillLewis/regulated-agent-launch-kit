@@ -8,7 +8,6 @@ def test_required_starter_docs_exist() -> None:
     required = [
         "README.md",
         "PLAN.md",
-        "PLAN_v3_openai_tdl_fde.md",
         "AGENTS.md",
         "AGENT.md",
         "CLAUDE.md",
@@ -21,7 +20,7 @@ def test_required_starter_docs_exist() -> None:
 
 def test_private_thesis_is_referenced_but_ignored() -> None:
     gitignore = (ROOT / ".gitignore").read_text()
-    plan = (ROOT / "PLAN_v3_openai_tdl_fde.md").read_text()
+    plan = (ROOT / "PLAN.md").read_text()
     claude = (ROOT / "CLAUDE.md").read_text()
     agents = (ROOT / "AGENTS.md").read_text()
 

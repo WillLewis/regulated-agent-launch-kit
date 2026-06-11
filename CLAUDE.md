@@ -9,7 +9,7 @@ Claude Code is the primary implementation driver for this project. Follow the sh
 ## Working mode
 
 0. If `.project-memory/goal-thesis.md` exists, read it as private local context. Do not paste its contents into public artifacts.
-1. Start every substantial task by reading `PLAN.md` or `PLAN_v3_openai_tdl_fde.md`, `README.md` if present, and the relevant files for the requested area.
+1. Start every substantial task by reading `PLAN.md` or the local `PLAN_v3.md`, `README.md` if present, and the relevant files for the requested area.
 2. Make a short implementation plan before editing more than one file.
 3. Prefer small, reviewable changes over large rewrites.
 4. After code changes, run the smallest relevant verification command. If no test exists, create one or document why verification is not possible yet.

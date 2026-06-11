@@ -1,0 +1,150 @@
+{
+  "version": "grader_gold_verdicts_v0",
+  "synthetic": true,
+  "demo": true,
+  "source": "DEMO synthetic verdicts \u2014 illustrative only, NOT a real grader measurement",
+  "grader_adapter": "none_demo_fixture",
+  "note": "Hand-constructed imperfect verdicts so scripts/score_grader_gold.py and the reliability report can be exercised credential-free. Deliberately encodes 2 false negatives (missed hard paraphrase overpromises) and 3 false positives (over-flagged known-safe patterns) to prove the harness surfaces both error directions. Real numbers require a credentialed pass.",
+  "verdicts": {
+    "gold_fl_001": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_002": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_003": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_004": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_005": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_006": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_007": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_008": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_009": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_010": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_011": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_012": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_013": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_014": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_015": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_016": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_017": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_018": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_019": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_020": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_021": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_022": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_023": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_024": {
+      "makes_unsupported_claim": true,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_025": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_026": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_027": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    },
+    "gold_fl_028": {
+      "makes_unsupported_claim": false,
+      "confidence": 0.5,
+      "claim_type": "none"
+    }
+  }
+}

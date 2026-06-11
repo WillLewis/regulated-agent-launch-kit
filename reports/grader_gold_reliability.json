@@ -1,0 +1,134 @@
+{
+  "version": "grader_gold_reliability_v0",
+  "synthetic": true,
+  "verdicts_source": "anthropic_nli_semantic_v0 gold-pass (replayed, public-safe)",
+  "positive_class": "positive = grader flags an unsupported claim (makes_unsupported_claim=true)",
+  "scored_count": 28,
+  "gold_positive_count": 14,
+  "gold_negative_count": 14,
+  "confusion": {
+    "tp": 14,
+    "fp": 0,
+    "fn": 0,
+    "tn": 14,
+    "n": 28
+  },
+  "metrics": {
+    "precision": 1.0,
+    "precision_ci95": [
+      0.7847,
+      1.0
+    ],
+    "recall": 1.0,
+    "recall_ci95": [
+      0.7847,
+      1.0
+    ],
+    "specificity": 1.0,
+    "accuracy": 1.0,
+    "f1": 1.0
+  },
+  "false_negatives": [],
+  "false_positives": [],
+  "by_difficulty": {
+    "easy": {
+      "confusion": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "tn": 8,
+        "n": 12
+      },
+      "metrics": {
+        "precision": 1.0,
+        "precision_ci95": [
+          0.5101,
+          1.0
+        ],
+        "recall": 1.0,
+        "recall_ci95": [
+          0.5101,
+          1.0
+        ],
+        "specificity": 1.0,
+        "accuracy": 1.0,
+        "f1": 1.0
+      }
+    },
+    "hard": {
+      "confusion": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0,
+        "tn": 6,
+        "n": 16
+      },
+      "metrics": {
+        "precision": 1.0,
+        "precision_ci95": [
+          0.7225,
+          1.0
+        ],
+        "recall": 1.0,
+        "recall_ci95": [
+          0.7225,
+          1.0
+        ],
+        "specificity": 1.0,
+        "accuracy": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "by_reason_code": {
+    "benign_conditional_followup_commitment": {
+      "n": 3,
+      "correct": 3
+    },
+    "flagged_span_is_required_consent_gate": {
+      "n": 4,
+      "correct": 4
+    },
+    "implied_future_refresh_despite_gate": {
+      "n": 3,
+      "correct": 3
+    },
+    "safe_degraded_disclosure": {
+      "n": 2,
+      "correct": 2
+    },
+    "safe_hedged_negation": {
+      "n": 3,
+      "correct": 3
+    },
+    "safe_snapshot_not_live_hedge": {
+      "n": 2,
+      "correct": 2
+    },
+    "unsupported_auto_completion_promise_missing_partner": {
+      "n": 1,
+      "correct": 1
+    },
+    "unsupported_continuity_claim_disabled_scope": {
+      "n": 2,
+      "correct": 2
+    },
+    "unsupported_operational_status_claim": {
+      "n": 2,
+      "correct": 2
+    },
+    "unsupported_refresh_timeframe_missing_metadata": {
+      "n": 2,
+      "correct": 2
+    },
+    "unsupported_resolution_or_restoration_promise": {
+      "n": 4,
+      "correct": 4
+    }
+  },
+  "caveats": [
+    "Synthetic gold set; labels human-authored independently of the grader.",
+    "Grader received the synthetic operational context but NOT the gold label or any expected/prohibited-behavior answer key, so this measures the grader's independent discrimination.",
+    "Small N (14 known-bad, 14 known-safe): point estimates carry wide Wilson 95% CIs \u2014 read this as a directional reliability check, not a tight estimate."
+  ]
+}

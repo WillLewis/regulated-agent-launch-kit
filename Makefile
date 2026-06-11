@@ -1,4 +1,4 @@
-.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 action-suspension-demo eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm eval-adversarial-v2-llm-v0 eval-adversarial-v2-llm-v1 eval-card-adversarial-v2-llm semantic-model-decisions-adversarial-v2-llm-v0 semantic-model-decisions-adversarial-v2-llm-v1 semantic-audit-summary-adversarial-v2-llm semantic-gate-adversarial-v2-llm eval-adversarial-v2-llm-v2 eval-card-adversarial-v2-llm-v2-vs-v1 semantic-model-decisions-adversarial-v2-llm-v2 semantic-gate-adversarial-v2-llm-v2 eval-adversarial-v2-llm-v2-1 eval-card-adversarial-v2-llm-v2-1-vs-v2 semantic-model-decisions-adversarial-v2-llm-v2-1 semantic-gate-adversarial-v2-llm-v2-1 eval-adversarial-v2-llm-v2-2 eval-card-adversarial-v2-llm-v2-2-vs-v2-1 semantic-model-decisions-adversarial-v2-llm-v2-2 semantic-gate-adversarial-v2-llm-v2-2 calibration-seed-adversarial-v2-semantic calibration-replay-adversarial-v2-semantic regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic regression-seed-adversarial-v2-semantic regression-check-adversarial-v2-semantic regression-replay-adversarial-v2-semantic semantic-failure-analysis-adversarial-v2 semantic-adjudication-adversarial-v2 candidate-v2-residual-adjudication-adversarial-v2 semantic-gate-adversarial-v1-regressions semantic-gate-adversarial-v1-improved evidence-pack-adversarial-v1-llm evidence-pack-adversarial-v2-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary dataset-test-adversarial-v3 eval-adversarial-v3-baseline eval-adversarial-v3-improved eval-card-adversarial-v3 eval-adversarial-v3-llm-v2-2 eval-card-adversarial-v3-llm-v2-2 semantic-model-decisions-adversarial-v3-llm-v2-2 semantic-gate-adversarial-v3-llm-v2-2
+.PHONY: help setup test scaffold-test lint dataset-test dataset-test-adversarial dataset-test-adversarial-v1 dataset-test-adversarial-v2 eval-smoke eval-smoke-baseline eval-smoke-improved eval-card-smoke eval-v0-baseline eval-v0-improved eval-card-v0 eval-adversarial-baseline eval-adversarial-improved eval-card-adversarial eval-adversarial-v1-baseline eval-adversarial-v1-improved eval-card-adversarial-v1 eval-adversarial-v2-baseline eval-adversarial-v2-improved eval-card-adversarial-v2 action-suspension-demo eval-adversarial-v1-baseline-semantic eval-adversarial-v1-improved-semantic semantic-reporting-surface semantic-model-decisions-adversarial-v1-baseline semantic-model-decisions-adversarial-v1-improved eval-adversarial-v1-baseline-semantic-model eval-adversarial-v1-improved-semantic-model semantic-model-reporting-surface regression-seed-v0 regression-check-v0 redact-v0 evidence-pack-v0 check-llm-env eval-smoke-llm eval-card-llm-smoke eval-adversarial-llm eval-card-adversarial-llm redact-llm-adversarial evidence-pack-llm-adversarial eval-adversarial-llm-v1 eval-card-adversarial-llm-v1 redact-llm-adversarial-v1 evidence-pack-llm-adversarial-v1 eval-adversarial-v1-llm-v0 eval-adversarial-v1-llm-v1 eval-card-adversarial-v1-llm semantic-model-decisions-adversarial-v1-llm-v0 semantic-model-decisions-adversarial-v1-llm-v1 redact-adversarial-v1-llm semantic-audit-summary-adversarial-v1-llm eval-adversarial-v2-llm-v0 eval-adversarial-v2-llm-v1 eval-card-adversarial-v2-llm semantic-model-decisions-adversarial-v2-llm-v0 semantic-model-decisions-adversarial-v2-llm-v1 semantic-audit-summary-adversarial-v2-llm semantic-gate-adversarial-v2-llm eval-adversarial-v2-llm-v2 eval-card-adversarial-v2-llm-v2-vs-v1 semantic-model-decisions-adversarial-v2-llm-v2 semantic-gate-adversarial-v2-llm-v2 eval-adversarial-v2-llm-v2-1 eval-card-adversarial-v2-llm-v2-1-vs-v2 semantic-model-decisions-adversarial-v2-llm-v2-1 semantic-gate-adversarial-v2-llm-v2-1 eval-adversarial-v2-llm-v2-2 eval-card-adversarial-v2-llm-v2-2-vs-v2-1 semantic-model-decisions-adversarial-v2-llm-v2-2 semantic-gate-adversarial-v2-llm-v2-2 calibration-seed-adversarial-v2-semantic calibration-replay-adversarial-v2-semantic regression-seed-adversarial-v1-semantic regression-check-adversarial-v1-semantic regression-replay-adversarial-v1-semantic regression-seed-adversarial-v2-semantic regression-check-adversarial-v2-semantic regression-replay-adversarial-v2-semantic semantic-failure-analysis-adversarial-v2 semantic-adjudication-adversarial-v2 candidate-v2-residual-adjudication-adversarial-v2 semantic-gate-adversarial-v1-regressions semantic-gate-adversarial-v1-improved evidence-pack-adversarial-v1-llm evidence-pack-adversarial-v2-llm variance-report-fixture repeat-adversarial-llm-v0 repeat-adversarial-llm-v1 repeat-adversarial-llm-summary repeat-adversarial-v1-llm-v0 repeat-adversarial-v1-llm-v1 repeat-adversarial-v1-llm-summary dataset-test-adversarial-v3 eval-adversarial-v3-baseline eval-adversarial-v3-improved eval-card-adversarial-v3 eval-adversarial-v3-llm-v2-2 eval-card-adversarial-v3-llm-v2-2 semantic-model-decisions-adversarial-v3-llm-v2-2 semantic-gate-adversarial-v3-llm-v2-2 grader-gold-score-demo grader-gold-pass grader-gold-replay grader-reliability-report
 
 # The basic targets (test, scaffold-test, dataset-test, eval-smoke,
 # eval-smoke-baseline, eval-smoke-improved) must succeed without
@@ -86,6 +86,10 @@ help:
 	@echo "  [M7c held-out]   eval-card-adversarial-v3-llm-v2-2  improved_v0 vs v2.2 card on held-out slice"
 	@echo "  [M7c held-out]   semantic-model-decisions-adversarial-v3-llm-v2-2  model/NLI decisions for v2.2 on v3 (credentialed; gitignored)"
 	@echo "  [M7c held-out]   semantic-gate-adversarial-v3-llm-v2-2  credential-free gate on v3 held-out slice (blocks on any flag)"
+	@echo "  [M7d grader]     grader-gold-score-demo  credential-free end-to-end demo of the grader-reliability harness on synthetic verdicts"
+	@echo "  [M7d grader]     grader-gold-pass  run the model/NLI grader over the gold drafts ONCE (credentialed; WIRED, NOT RUN; raw gitignored; answer key withheld)"
+	@echo "  [M7d grader]     grader-gold-replay  strip raw gold-pass verdicts to a public-safe fixture (no model call)"
+	@echo "  [M7d grader]     grader-reliability-report  score the grader vs the gold set -> precision/RECALL + what-a-clean-gate-proves report (no model call)"
 	@echo "  [M7 remediation] calibration-seed-adversarial-v2-semantic  build credential-free grader-calibration fixtures for the 4 grader_calibration_review findings (no LLM call)"
 	@echo "  [M7 remediation] calibration-replay-adversarial-v2-semantic  credential-free replay: prove the 4 over-flag cases clear as non-claims in the offline semantic lane (no LLM call)"
 	@echo "  regression-seed-adversarial-v1-semantic  pin the 3 semantic-only failures as pending_review regression seeds (no LLM call)"
@@ -1082,6 +1086,61 @@ semantic-gate-adversarial-v3-llm-v2-2:
 		--semantic-decisions reports/llm_adversarial_v3_candidate_v2_2_semantic_replay_decisions.json
 	uv run python scripts/check_semantic_gate.py \
 		--report reports/llm_adversarial_v3_candidate_v2_2_semantic_model_eval.json
+
+# ---- M7d: semantic-grader reliability vs human-authored gold set ------------
+# The "grader as ground truth" guard. The model/NLI semantic grader decides
+# makes_unsupported_claim; this measures HOW TRUSTWORTHY that grader is against
+# a human-authored gold set whose labels are independent of any model. Recall
+# (did it catch the real overpromises?) is the safety-critical metric — a false
+# negative is an unsupported claim that passes the gate looking clean. Most
+# targets are credential-free; only grader-gold-pass spends tokens and is
+# WIRED, NOT RUN. M7 stays OPEN / NOT READY FOR PILOT.
+
+# Credential-free end-to-end demo: score the tracked synthetic demo verdicts and
+# render the reliability report. Proves the harness works with NO credentials.
+# Demo outputs are gitignored (illustrative, not a real grader measurement).
+grader-gold-score-demo:
+	uv run python scripts/score_grader_gold.py \
+		--verdicts tests/fixtures/grader_gold/demo_grader_verdicts.json \
+		--out reports/grader_gold_reliability_demo.json
+	uv run python scripts/generate_grader_reliability_report.py \
+		--result reports/grader_gold_reliability_demo.json \
+		--out reports/grader_gold_reliability_demo.md
+
+# Credentialed gold-pass: run the model/NLI grader over the gold drafts ONCE
+# (~$0.30-0.60). Grader gets operational context but NOT the gold label/answer
+# key. Raw output embeds draft-quoting spans -> GITIGNORED. WIRED, NOT RUN.
+grader-gold-pass: check-llm-env
+	uv run python scripts/run_grader_gold_pass.py \
+		--out reports/grader_gold/raw_decisions.json
+
+# Credential-free: strip the gitignored raw verdicts to a public-safe fixture.
+grader-gold-replay:
+	@if [ ! -f reports/grader_gold/raw_decisions.json ]; then \
+		echo "ERROR: reports/grader_gold/raw_decisions.json not found."; \
+		echo "  This strips an existing gold-pass file; it does NOT call the grader."; \
+		echo "  Hint: run \`make grader-gold-pass\` (credentialed) first."; \
+		exit 1; \
+	fi
+	uv run python scripts/build_grader_gold_replay.py \
+		--raw reports/grader_gold/raw_decisions.json \
+		--out reports/grader_gold/verdicts.json
+
+# Credential-free: score the public-safe verdicts and render the reliability
+# report. The report + result JSON are public-safe and meant to be tracked.
+grader-reliability-report:
+	@if [ ! -f reports/grader_gold/verdicts.json ]; then \
+		echo "ERROR: reports/grader_gold/verdicts.json not found."; \
+		echo "  The report scores public-safe verdicts; it does NOT call the grader."; \
+		echo "  Hint: run \`make grader-gold-pass\` then \`make grader-gold-replay\` first."; \
+		exit 1; \
+	fi
+	uv run python scripts/score_grader_gold.py \
+		--verdicts reports/grader_gold/verdicts.json \
+		--out reports/grader_gold_reliability.json
+	uv run python scripts/generate_grader_reliability_report.py \
+		--result reports/grader_gold_reliability.json \
+		--out reports/grader_gold_reliability.md
 
 # ---- Semantic-only regression seeds (adversarial v1 model/NLI audit) ---------
 # On-disk only: NO LLM call, NO credentials, NO candidate rerun. The seeder

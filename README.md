@@ -547,6 +547,65 @@ proves the offline `unsupported_claim_semantic` lane CLEARS all 5 as non-claims,
 without adding the semantic grader to the default `GRADERS`. Raw run artifacts
 stay gitignored; **M7 remains OPEN, NOT READY FOR PILOT.**
 
+**M7d — is the semantic grader itself trustworthy? (gold set built, not yet
+measured).** Every result above is scored *by* the model/NLI semantic grader, so
+a clean gate is only as trustworthy as that grader — and its **recall** (does it
+catch real overpromises?) had never been measured. A false negative is an
+unsupported claim that passes the gate looking clean, so recall, not precision,
+is the safety-critical metric. To measure it without the circularity of letting
+one model validate another, a **human-authored gold set** of 28 synthetic drafts
+([`grader_gold.jsonl`](case_studies/financial_links_reliability/grader_validation/grader_gold.jsonl))
+carries ground-truth `makes_unsupported_claim` labels established independently
+of any model — 14 known overpromises (deliberately paraphrased so they defeat
+lexical matching, where false negatives hide) and 14 known-safe drafts
+(including the exact patterns the grader has historically over-flagged). A
+credential-free scorer (`evals/grader_gold_scorer.py`) turns grader verdicts into
+a confusion matrix with precision, **recall**, specificity, and Wilson 95% CIs,
+plus an honest *what a clean gate does and does not prove* report. The one
+credentialed step — running the grader over the gold drafts (`make
+grader-gold-pass`, answer key withheld so it cannot copy the labels) — is **wired
+but not run**; its raw output is gitignored and stripped to a public-safe verdict
+fixture before scoring. As part of this, the production semantic gate prompt was itself hardened to
+withhold the same answer key — `build_semantic_prompt` now passes the grader
+**only** the neutral, tool-derived connectivity state, never the case-design
+`expected`/`prohibited_behavior`, `category_tags`, or the trap-revealing prose
+summary (which would not exist in real traffic anyway) — so the gate and the
+gold measurement exercise the *same* answer-key-free grader; prior gate findings
+predate this change. The harness is verified end-to-end on synthetic demo
+verdicts (`make grader-gold-score-demo`). **Measured result (one credentialed
+pass, judge `claude-sonnet-4-5`, $0.10):** on the 28-item answer-key-free gold
+set the grader caught **all 14/14** known overpromises (recall 1.0, Wilson 95% CI
+0.78–1.0) — including **10/10** hard paraphrased / cross-sentence cases, where a
+false negative would hide — and over-flagged **none** of the 14 safe drafts
+(precision and specificity 1.0). See
+[`reports/grader_gold_reliability.md`](reports/grader_gold_reliability.md). This
+is a strong but **small-N, single-run** result: the recall lower bound is still
+**78%**, so it is consistent with (not proof of) a near-perfect grader and has
+not been checked for run-to-run variance. It meaningfully de-risks — but does not
+close — the "grader as ground truth" concern: a clean gate is now better
+supported as reflecting real safety rather than grader blindness. **M7 stays
+OPEN, NOT READY FOR PILOT.**
+
+**M7 re-grounded under the hardened gate.** Because the candidate saga above was
+graded *before* the firewall, the existing candidate-v2 / candidate-v2.1 drafts
+(24 each, on disk) were re-graded under the answer-key-free prompt — same drafts,
+new grader, isolating the change (one pass, ~$0.25). The prior residual *sets*
+did not survive. candidate-v2 stayed at 3 flags but shifted to `{002, 006, 017}`;
+candidate-v2.1 rose **3 → 5** (`{005, 012, 013, 015, 024}`). The effect ran
+**opposite** to the "leak inflated false positives" hypothesis: the hardened
+grader is **more sensitive**, surfacing soft forward-looking timing / restoration
+promises in the candidate drafts — including on the *designed-safe* calibration
+cases `013` / `015` — that the answer-key-primed grader had passed, while
+correctly clearing one previously over-flagged well-hedged draft (`010`). The
+long-standing `006` "over-flag" persisted, but via a defensible argument
+(asserting consent status as bald fact in a regulated context), so it is better
+classed `needs_human_review` than a grader error. Whether each new forward-looking
+flag is a real overpromise the leak was masking or new grader strictness is a
+per-case judgment call that a single stochastic run cannot settle. Net: the
+corrected gate **raises** the bar — the earlier "down to 3 residuals" progress
+was partly an artifact of an under-sensitive grader, and both candidates still
+BLOCK. **M7 stays OPEN, NOT READY FOR PILOT.**
+
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`
 can **suspend a synthetic side-effecting action before it executes**. It runs a

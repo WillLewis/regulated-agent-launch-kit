@@ -80,6 +80,14 @@ reports/llm_adversarial_v3_candidate_v2_2_eval.json
 reports/llm_adversarial_v3_candidate_v2_2_semantic_replay_decisions.json
 traces/local/llm_adversarial_v3_candidate_v2_2/
 traces/local/llm_adversarial_v3_candidate_v2_2_semantic_model/
+# M7d grader-reliability: raw credentialed verdicts embed draft-quoting
+# rationale/evidence_spans; the public-safe verdict fixture is a regenerable
+# intermediate. The reliability REPORT (reports/grader_gold_reliability.md) and
+# result JSON are public-safe and meant to be tracked after a real pass; the
+# demo outputs are illustrative and regenerable, so they stay ignored.
+reports/grader_gold/
+reports/grader_gold_reliability_demo.json
+reports/grader_gold_reliability_demo.md
 
 # Repeat-run aggregation demo outputs from the variance-report-fixture
 # Make target. The fixture inputs under tests/fixtures/llm_repeats/ are

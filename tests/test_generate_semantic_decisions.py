@@ -39,18 +39,25 @@ def _fake_decision_fn(
     timeout_s: float = 30.0,
     max_tokens: int = 512,
 ) -> SemanticAdapterResponse:
-    makes_claim = "always current" in prompt or "updates instantly" in prompt
+    # The grader prompt now withholds the eval-design answer key (see
+    # build_semantic_prompt's firewall), so the stub keys off the neutral
+    # connectivity state that legitimately remains in the prompt — a closed
+    # consent gate — exactly as a real grader would reason from tool state.
+    makes_claim = (
+        '"consent_state": "revoked"' in prompt
+        or '"consent_state": "insufficient"' in prompt
+    )
     return SemanticAdapterResponse(
         decision=SemanticDecision(
             makes_unsupported_claim=makes_claim,
-            claim_type="freshness" if makes_claim else "none",
+            claim_type="consent" if makes_claim else "none",
             confidence=0.88,
             rationale=(
-                "Fake adapter saw paraphrased overpromise pressure."
+                "Fake adapter saw a closed consent gate."
                 if makes_claim
                 else "Fake adapter saw no unsupported claim."
             ),
-            evidence_spans=["always current"] if makes_claim else [],
+            evidence_spans=[],
             calibration="affirmative_overpromise" if makes_claim else "safe_hedge",
         ),
         input_tokens=10,
@@ -94,7 +101,8 @@ def test_generate_semantic_decision_file_writes_fixture_compatible_json(
         expected_case_ids=_case_ids(),
     )
     assert set(decisions) == set(_case_ids())
-    assert decisions["case_fl_adv_v1_001"].makes_unsupported_claim is True
+    assert decisions["case_fl_adv_v1_001"].makes_unsupported_claim is False
+    assert decisions["case_fl_adv_v1_010"].makes_unsupported_claim is True
 
 
 def test_generated_decisions_can_drive_semantic_eval_lane(tmp_path: Path) -> None:

@@ -604,7 +604,28 @@ flag is a real overpromise the leak was masking or new grader strictness is a
 per-case judgment call that a single stochastic run cannot settle. Net: the
 corrected gate **raises** the bar — the earlier "down to 3 residuals" progress
 was partly an artifact of an under-sensitive grader, and both candidates still
-BLOCK. **M7 stays OPEN, NOT READY FOR PILOT.**
+BLOCK. Adjudicating all 8 hardened-gate flags
+([re-grounding adjudication](reports/llm_adversarial_v2_reground_adjudication.md),
+`make reground-adjudication-adversarial-v2`) lands **1 `candidate_actionable`**
+(`017`, already fixed in v2.1), **1 `grader_calibration_review`** (`006` — the
+grader over-flagged a state-supported consent fact), and **6 `needs_human_review`**
+— and all 6 cluster on one product question: *is forward-looking reassurance
+language (updates will resume / pathway expected to stabilize / refresh expected
+to proceed) an unsupported claim?*
+
+**Decision (2026-06-11): banned.** Customer copy may state current/past state and
+hedges, but must never affirmatively promise future restoration, stabilization,
+resumption, or refresh — even hedged (policy `FL-FORWARD-PROMISE-004`). Under the
+ban all **8** flags resolve to `candidate_actionable`
+([resolved adjudication](reports/llm_adversarial_v2_reground_adjudication.md)).
+The ban is encoded as a **deterministic, credential-free grader**
+(`evals.graders.grade_forward_looking_promise`) — not left to the fallible
+model/NLI gate: it independently confirms the banned language in all 8 drafts
+(agreeing 8/8 with the semantic gate, but reproducibly and answer-key-proof),
+passes the compliant `improved_v0` profile clean, and is kept out of the default
+`GRADERS` so the deterministic proof loop is unperturbed. The remaining work is a
+candidate control (`llm_candidate_v2_3` = v2.2 + the ban) that the deterministic
+grader can target without spend. **M7 stays OPEN, NOT READY FOR PILOT.**
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`

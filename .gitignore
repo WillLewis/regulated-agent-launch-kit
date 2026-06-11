@@ -84,6 +84,17 @@ reports/llm_adversarial_v3_candidate_v2_2_eval.json
 reports/llm_adversarial_v3_candidate_v2_2_semantic_replay_decisions.json
 traces/local/llm_adversarial_v3_candidate_v2_2/
 traces/local/llm_adversarial_v3_candidate_v2_2_semantic_model/
+# M7e candidate-v2.3 (universal forward-looking ban) — wired, not run. Raw eval
+# reports embed draft text; replay fixtures are regenerable intermediates. The
+# v2.3-vs-v2.2 card is public-safe (counts only) and trackable.
+reports/llm_adversarial_v2_candidate_v2_3_eval.json
+reports/llm_adversarial_v2_candidate_v2_3_semantic_replay_decisions.json
+reports/llm_adversarial_v3_candidate_v2_3_eval.json
+reports/llm_adversarial_v3_candidate_v2_3_semantic_replay_decisions.json
+traces/local/llm_adversarial_v2_candidate_v2_3/
+traces/local/llm_adversarial_v2_candidate_v2_3_semantic_model/
+traces/local/llm_adversarial_v3_candidate_v2_3/
+traces/local/llm_adversarial_v3_candidate_v2_3_semantic_model/
 # M7d grader-reliability: raw credentialed verdicts embed draft-quoting
 # rationale/evidence_spans; the public-safe verdict fixture is a regenerable
 # intermediate. The reliability REPORT (reports/grader_gold_reliability.md) and

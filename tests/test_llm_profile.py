@@ -474,6 +474,14 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         "eval-card-adversarial-v3-llm-v2-2",
         "semantic-model-decisions-adversarial-v3-llm-v2-2",
         "semantic-gate-adversarial-v3-llm-v2-2",
+        # M7e candidate-v2.3 (universal forward-looking ban) — wired, not run.
+        "eval-adversarial-v2-llm-v2-3",
+        "eval-card-adversarial-v2-llm-v2-3-vs-v2-2",
+        "semantic-model-decisions-adversarial-v2-llm-v2-3",
+        "semantic-gate-adversarial-v2-llm-v2-3",
+        "eval-adversarial-v3-llm-v2-3",
+        "semantic-model-decisions-adversarial-v3-llm-v2-3",
+        "semantic-gate-adversarial-v3-llm-v2-3",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

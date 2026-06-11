@@ -623,9 +623,18 @@ The ban is encoded as a **deterministic, credential-free grader**
 model/NLI gate: it independently confirms the banned language in all 8 drafts
 (agreeing 8/8 with the semantic gate, but reproducibly and answer-key-proof),
 passes the compliant `improved_v0` profile clean, and is kept out of the default
-`GRADERS` so the deterministic proof loop is unperturbed. The remaining work is a
-candidate control (`llm_candidate_v2_3` = v2.2 + the ban) that the deterministic
-grader can target without spend. **M7 stays OPEN, NOT READY FOR PILOT.**
+`GRADERS` so the deterministic proof loop is unperturbed. That candidate control is now **built**: **`llm_candidate_v2_3`** = v2.2 with the
+timing ban made *universal* (the v2.2 ban only covered closed gates and allowed
+hedged timing on healthy cases) and the v2.2 prompt's own contradictory guidance
+corrected — its hedging vocab had recommended *"is expected to"* / *"is
+anticipated to"* and a "good" example used *"within a short window"*, i.e. the
+prompt taught the banned language. v2.3 is drift-guarded to equal v2.2 plus
+exactly that one control (three guarded replacements). It is **wired but not
+run**; the deterministic `grade_forward_looking_promise` is its credential-free
+target (it already passes `improved_v0` and flags all 8 prior drafts), and the
+held-out v3 targets (`eval-adversarial-v3-llm-v2-3` …) let a single credentialed
+run measure it on the genuine robustness surface. **M7 stays OPEN, NOT READY FOR
+PILOT.**
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`

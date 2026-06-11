@@ -88,6 +88,7 @@ class AgentSystemProfile(str, Enum):
     LLM_CANDIDATE_V2 = "llm_candidate_v2"
     LLM_CANDIDATE_V2_1 = "llm_candidate_v2_1"
     LLM_CANDIDATE_V2_2 = "llm_candidate_v2_2"
+    LLM_CANDIDATE_V2_3 = "llm_candidate_v2_3"
 
 
 KNOWN_PROFILES: frozenset[str] = frozenset(profile.value for profile in AgentSystemProfile)

@@ -74,12 +74,14 @@ def handle(
     is_llm_candidate_v2 = profile == AgentSystemProfile.LLM_CANDIDATE_V2.value
     is_llm_candidate_v2_1 = profile == AgentSystemProfile.LLM_CANDIDATE_V2_1.value
     is_llm_candidate_v2_2 = profile == AgentSystemProfile.LLM_CANDIDATE_V2_2.value
+    is_llm_candidate_v2_3 = profile == AgentSystemProfile.LLM_CANDIDATE_V2_3.value
     is_llm_candidate = (
         is_llm_candidate_v0
         or is_llm_candidate_v1
         or is_llm_candidate_v2
         or is_llm_candidate_v2_1
         or is_llm_candidate_v2_2
+        or is_llm_candidate_v2_3
     )
 
     facts: dict[str, Any] = dict(case.payload or {})
@@ -216,7 +218,9 @@ def handle(
     llm_model: str | None = None
     llm_cost_estimation_note: str | None = None
     if is_llm_candidate:
-        if is_llm_candidate_v2_2:
+        if is_llm_candidate_v2_3:
+            prompt_builder = _build_llm_prompt_v2_3
+        elif is_llm_candidate_v2_2:
             prompt_builder = _build_llm_prompt_v2_2
         elif is_llm_candidate_v2_1:
             prompt_builder = _build_llm_prompt_v2_1
@@ -831,6 +835,112 @@ def _build_llm_prompt_v2_2(
             "_V2_1_MISSING_METADATA_BAN."
         )
     return base.replace(_V2_1_MISSING_METADATA_BAN, _V2_2_CLOSED_GATE_BAN, 1)
+
+
+# --- candidate v2.3: universal forward-looking-reassurance ban ---------------
+# The re-grounding adjudication (reports/llm_adversarial_v2_reground_adjudication.md)
+# resolved all 8 hardened-gate flags to candidate_actionable under the
+# 2026-06-11 decision to BAN forward-looking reassurance in customer copy
+# (policy FL-FORWARD-PROMISE-004). v2.2's ban #5 only covered CLOSED gates and
+# explicitly ALLOWED hedged timing on fully-healthy cases; worse, the prompt's
+# own hedging vocab recommended "is expected to" / "is anticipated to" and a
+# "good" example used "within a short window" — the prompt taught the now-banned
+# language. v2.3 makes the timing ban UNIVERSAL (no healthy-case carve-out) and
+# removes that contradictory guidance, targeting the deterministic grader
+# evals.graders.grade_forward_looking_promise. The single control is implemented
+# as three guarded replacements; v2.2 stays a byte-faithful "before".
+_V2_3_FORWARD_LOOKING_BAN = (
+    "5. No forward-looking reassurance, in ANY state (policy "
+    "FL-FORWARD-PROMISE-004; this REPLACES the earlier closed-gate-only timing "
+    "ban and removes the healthy-case allowance): do NOT assert, imply, or even "
+    "hedge any FUTURE refresh / update / completion / restoration / "
+    "stabilization / resumption — neither on closed gates NOR on fully healthy "
+    "cases. Banned regardless of hedging or conditionals; never write 'expected "
+    "to refresh / update / stabilize / proceed / continue', 'anticipated to "
+    "proceed / continue', 'will resume / refresh / stabilize', 'updates will "
+    "resume (their normal cadence)', or 'within a typical / short window'. You "
+    "MAY describe CURRENT or PAST state and present staleness limits ('data may "
+    "be stale', 'the route is currently degraded'); a NEGATED future is allowed "
+    "('we cannot say when data will refresh'). Omit any customer-facing "
+    "future-timing / refresh expectation ENTIRELY; when a gate is closed, state "
+    "only current status, the gate, and that updates cannot be assumed until it "
+    "clears."
+)
+
+# The v2 hedging-vocab line (carried unchanged through v2.1/v2.2) RECOMMENDS the
+# now-banned forward verbs; v2.3 rewrites it. Kept as exact-match constants so a
+# guard fails loudly if the v2 wording drifts.
+_V2_HEDGING_VOCAB = (
+    'Prefer hedged verbs and qualifiers: "typically", "may", "is expected to", '
+    '"can take", "is anticipated to", "in most cases", "under normal conditions". '
+    'Avoid absolute claims: "will", "guaranteed", "always", "in real time".'
+)
+_V2_3_HEDGING_VOCAB = (
+    "Prefer hedged qualifiers ONLY to describe CURRENT or PAST state, never a "
+    'future event: "typically", "may", "can take", "currently", "at this time". '
+    'Avoid absolute claims AND all forward-looking reassurance: "will", '
+    '"guaranteed", "always", "in real time", "is expected to", "is anticipated '
+    'to", "expected to refresh/update/stabilize/proceed", "within a typical/short '
+    'window".'
+)
+
+# The v2 "good" timing example uses a now-banned phrase ("within a short
+# window"); v2.3 replaces it with a compliant present-limitation + negated-future
+# example.
+_V2_GOOD_TIMING_EXAMPLE = (
+    'Good: "Your linked account typically updates within a short window; '
+    'refresh timing may vary."'
+)
+_V2_3_GOOD_TIMING_EXAMPLE = (
+    'Good: "Your linked account data may currently be delayed; we cannot say '
+    'when it will next update."'
+)
+
+
+def _build_llm_prompt_v2_3(
+    case: Case,
+    consent_state: ConsentState,
+    institution_out: dict[str, Any] | None,
+    partner_out: dict[str, Any] | None,
+    policy_ids: list[str],
+    approval: ApprovalDecision,
+    deterministic_draft: str,
+) -> str:
+    """Universal forward-looking-ban prompt for the ``llm_candidate_v2_3`` profile.
+
+    v2.3 = v2.2 with the single "no forward-looking reassurance" control applied
+    (policy FL-FORWARD-PROMISE-004, decision 2026-06-11). v2.2 banned
+    forward-looking timing only on CLOSED gates and allowed it on healthy cases,
+    and the prompt's hedging vocab / good example actively taught the banned
+    language. v2.3 (a) generalizes ban #5 to EVERY state, (b) rewrites the
+    hedging vocab to forbid forward verbs, and (c) fixes the contradictory good
+    example — three guarded replacements over the v2.2 prompt. A guard raises if
+    any v2.2 anchor drifts, so v2.2 stays a faithful "before" and the change is
+    exactly this one control. The target is the deterministic grader
+    ``evals.graders.grade_forward_looking_promise``.
+    """
+
+    base = _build_llm_prompt_v2_2(
+        case=case,
+        consent_state=consent_state,
+        institution_out=institution_out,
+        partner_out=partner_out,
+        policy_ids=policy_ids,
+        approval=approval,
+        deterministic_draft=deterministic_draft,
+    )
+    for old, new, label in (
+        (_V2_2_CLOSED_GATE_BAN, _V2_3_FORWARD_LOOKING_BAN, "closed-gate timing ban (#5)"),
+        (_V2_HEDGING_VOCAB, _V2_3_HEDGING_VOCAB, "hedging vocab"),
+        (_V2_GOOD_TIMING_EXAMPLE, _V2_3_GOOD_TIMING_EXAMPLE, "good timing example"),
+    ):
+        if old not in base:
+            raise RuntimeError(
+                f"candidate-v2.3 could not locate the v2.2 {label} to replace; "
+                "the upstream wording drifted — re-sync the v2.3 anchor constant."
+            )
+        base = base.replace(old, new, 1)
+    return base
 
 
 def _find_rule(

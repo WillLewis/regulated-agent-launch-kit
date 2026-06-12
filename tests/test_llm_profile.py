@@ -482,6 +482,9 @@ def test_deterministic_makefile_recipes_do_not_invoke_llm_profile() -> None:
         "eval-adversarial-v3-llm-v2-3",
         "semantic-model-decisions-adversarial-v3-llm-v2-3",
         "semantic-gate-adversarial-v3-llm-v2-3",
+        # Consent-overflag calibrated gate — runs the deterministic improved_v0
+        # vehicle over calibrated on-disk decisions; references the v2.3 path only.
+        "semantic-gate-adversarial-v3-llm-v2-3-calibrated",
     }
 
     llm_profile_token = re.compile(r"llm_candidate_v\d+")

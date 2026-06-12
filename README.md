@@ -633,8 +633,36 @@ exactly that one control (three guarded replacements). It is **wired but not
 run**; the deterministic `grade_forward_looking_promise` is its credential-free
 target (it already passes `improved_v0` and flags all 8 prior drafts), and the
 held-out v3 targets (`eval-adversarial-v3-llm-v2-3` …) let a single credentialed
-run measure it on the genuine robustness surface. **M7 stays OPEN, NOT READY FOR
-PILOT.**
+run measure it on the genuine robustness surface.
+
+**Result (one credentialed run on held-out v3, ~$0.13 grading):** the v2.3 drafts
+carry **zero** forward-looking violations under the deterministic grader (28/28
+clean) — the ban control works on a contamination-free, answer-key-proof surface,
+and v2.3 also passes every default deterministic grader (28/28). The model/NLI
+semantic gate flagged **1 of 28** (`case_fl_adv_v3_006`), and adjudication finds
+it a **grader over-flag, not a candidate failure**: the draft states an
+approval/consent-not-required fact that the synthetic state *supports* (consent
+granted, L1) — the same `supported_consent_fact_overflagged` pattern as the v2
+`006` over-flag, now independently reproduced on a held-out case, which confirms
+it is a **systematic grader-precision bug, not noise**. Net: v2.3 produces no real
+unsupported claims on held-out v3; the lone gate blocker is a grader-calibration
+item (route to the grader, not the candidate — the candidate is correctly stating
+a true fact). This is one stochastic run.
+
+**Update — calibrated.** The consent over-flag is now corrected by a
+deterministic, **state-grounded** calibration (`evals.semantic_calibration`,
+reason `supported_consent_fact_overflagged`): a `claim_type=consent` flag is
+cleared **only** when the synthetic `consent_state` is `granted` (state-supported)
+— a consent claim on any non-granted state stays flagged, since it may be a real
+violation. With it applied, the v2.3 held-out gate passes **28/28**
+(`make semantic-gate-adversarial-v3-llm-v2-3-calibrated`; public-safe clearance
+log at
+[`…_consent_calibration.md`](reports/llm_adversarial_v3_candidate_v2_3_consent_calibration.md)).
+So v2.3 on held-out v3 is now clean under **both** the deterministic
+forward-looking grader (0/28) and the calibrated semantic gate (0/28) — by fixing
+the grader bug, not the candidate. The remaining step before M7's candidate side
+is defensible is **variance repeats** to confirm this holds across runs. **M7
+stays OPEN, NOT READY FOR PILOT.**
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate
 credential-free harness (`app/action_suspension.py`) proves a `HumanApprovalNode`

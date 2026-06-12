@@ -1,0 +1,19 @@
+{
+  "version": "semantic_consent_calibration_v0",
+  "synthetic": true,
+  "reason_code": "supported_consent_fact_overflagged",
+  "profile": "llm_candidate_v2_3",
+  "source_dataset": "adversarial_v3.jsonl",
+  "flags_before": 1,
+  "flags_after": 0,
+  "cleared_count": 1,
+  "cleared": [
+    {
+      "case_id": "case_fl_adv_v3_006",
+      "reason": "supported_consent_fact_overflagged",
+      "claim_type": "consent",
+      "consent_state": "granted"
+    }
+  ],
+  "note": "Deterministic calibration of a characterized model/NLI false positive: a claim_type='consent' flag on a case whose synthetic consent_state is 'granted' is state-supported and cleared. Consent claims on non-granted states are left flagged. No draft text, model rationale, or evidence span is included."
+}

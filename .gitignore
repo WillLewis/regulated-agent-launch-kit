@@ -95,6 +95,12 @@ traces/local/llm_adversarial_v2_candidate_v2_3/
 traces/local/llm_adversarial_v2_candidate_v2_3_semantic_model/
 traces/local/llm_adversarial_v3_candidate_v2_3/
 traces/local/llm_adversarial_v3_candidate_v2_3_semantic_model/
+# Consent-overflag calibration intermediates for v2.3-v3 (regenerable from raw
+# decisions). The clearance LOG (reports/..._consent_calibration.{json,md}) is
+# public-safe and tracked.
+reports/semantic_model_decisions/adversarial_v3_llm_candidate_v2_3_calibrated.json
+reports/llm_adversarial_v3_candidate_v2_3_calibrated_semantic_replay_decisions.json
+traces/local/llm_adversarial_v3_candidate_v2_3_calibrated_semantic_model/
 # M7d grader-reliability: raw credentialed verdicts embed draft-quoting
 # rationale/evidence_spans; the public-safe verdict fixture is a regenerable
 # intermediate. The reliability REPORT (reports/grader_gold_reliability.md) and

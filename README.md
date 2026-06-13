@@ -630,10 +630,10 @@ corrected — its hedging vocab had recommended *"is expected to"* / *"is
 anticipated to"* and a "good" example used *"within a short window"*, i.e. the
 prompt taught the banned language. v2.3 is drift-guarded to equal v2.2 plus
 exactly that one control (three guarded replacements). It is **wired but not
-run**; the deterministic `grade_forward_looking_promise` is its credential-free
-target (it already passes `improved_v0` and flags all 8 prior drafts), and the
-held-out v3 targets (`eval-adversarial-v3-llm-v2-3` …) let a single credentialed
-run measure it on the genuine robustness surface.
+run by default**; the deterministic `grade_forward_looking_promise` is its
+credential-free target (it already passes `improved_v0` and flags all 8 prior
+drafts), and the held-out v3 targets (`eval-adversarial-v3-llm-v2-3` …) are
+credential-gated opt-in evidence paths on the genuine robustness surface.
 
 **Result (one credentialed run on held-out v3, ~$0.13 grading):** the v2.3 drafts
 carry **zero** forward-looking violations under the deterministic grader (28/28
@@ -662,6 +662,23 @@ So v2.3 on held-out v3 is now clean under **both** the deterministic
 forward-looking grader (0/28) and the calibrated semantic gate (0/28) — by fixing
 the grader bug, not the candidate. The remaining step before M7's candidate side
 is defensible is **variance repeats** to confirm this holds across runs. **M7
+stays OPEN, NOT READY FOR PILOT.**
+
+**Variance repeat result (N=5, held-out v3):** `RUNS=5 make repeat-v2-3-v3`
+has now been executed once, producing the public-safe aggregate summary at
+[`reports/llm_adversarial_v3_candidate_v2_3_variance_summary.md`](reports/llm_adversarial_v3_candidate_v2_3_variance_summary.md)
+and JSON sibling. The result is **NOT_STABLE**: 3/5 runs were clean, but run 2
+had one deterministic forward-looking hit (`case_fl_adv_v3_008`) and run 3 had
+one calibrated semantic flag (`case_fl_adv_v3_009`, `claim_type=accuracy`).
+Public-safe adjudication
+([`reports/llm_adversarial_v3_candidate_v2_3_variance_adjudication.md`](reports/llm_adversarial_v3_candidate_v2_3_variance_adjudication.md))
+routes `008` to a candidate-actionable output-hygiene control: return only the
+final customer-facing draft, with no internal self-check/revision material. It
+routes `009` to `needs_human_review`: the flagged verified-style status wording
+may be either over-strict grader behavior around tool-derived facts or a genuine
+copy-standard gap. The repeat cost was `$1.754466`; raw drafts, model decisions,
+and traces remain local/gitignored. Net: the v2.3 candidate-side M7 evidence is
+**not yet defensible as stable**. Do not tune to held-out v3 case content. **M7
 stays OPEN, NOT READY FOR PILOT.**
 
 **Synthetic action-suspension gate (M9 — infrastructure).** A separate

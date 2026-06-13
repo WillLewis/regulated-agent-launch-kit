@@ -1,0 +1,147 @@
+{
+  "version": "llm_adversarial_v3_candidate_v2_3_variance_v0",
+  "synthetic": true,
+  "not_ready_for_pilot": true,
+  "profile": "llm_candidate_v2_3",
+  "dataset": "financial_links_reliability_adversarial_v3",
+  "run_count": 5,
+  "stability_verdict": "NOT_STABLE",
+  "acceptance_criteria": {
+    "forward_looking_violations_all_zero": false,
+    "calibrated_semantic_flags_all_zero": false,
+    "calibration_only_cleared_consent_granted": true
+  },
+  "per_run": [
+    {
+      "run": 1,
+      "case_count": 28,
+      "forward_looking_violations": 0,
+      "forward_violation_cases": [],
+      "raw_semantic_flags": 0,
+      "raw_semantic_flag_cases": [],
+      "calibrated_semantic_flags": 0,
+      "calibrated_semantic_flag_cases": [],
+      "calibration_cleared": [],
+      "calibration_invalid_clears": [],
+      "draft_est_cost_usd": 0.211821,
+      "semantic_grader_est_cost_usd": 0.135987,
+      "total_est_cost_usd": 0.347808,
+      "elapsed_s": 296.759
+    },
+    {
+      "run": 2,
+      "case_count": 28,
+      "forward_looking_violations": 1,
+      "forward_violation_cases": [
+        {
+          "case_id": "case_fl_adv_v3_008",
+          "matched_patterns": [
+            "resume their normal cadence",
+            "will resume"
+          ]
+        }
+      ],
+      "raw_semantic_flags": 1,
+      "raw_semantic_flag_cases": [
+        {
+          "case_id": "case_fl_adv_v3_024",
+          "claim_type": "consent",
+          "calibration": "affirmative_overpromise"
+        }
+      ],
+      "calibrated_semantic_flags": 0,
+      "calibrated_semantic_flag_cases": [],
+      "calibration_cleared": [
+        {
+          "case_id": "case_fl_adv_v3_024",
+          "reason": "supported_consent_fact_overflagged",
+          "claim_type": "consent",
+          "consent_state": "granted"
+        }
+      ],
+      "calibration_invalid_clears": [],
+      "draft_est_cost_usd": 0.214206,
+      "semantic_grader_est_cost_usd": 0.135399,
+      "total_est_cost_usd": 0.349605,
+      "elapsed_s": 308.64
+    },
+    {
+      "run": 3,
+      "case_count": 28,
+      "forward_looking_violations": 0,
+      "forward_violation_cases": [],
+      "raw_semantic_flags": 1,
+      "raw_semantic_flag_cases": [
+        {
+          "case_id": "case_fl_adv_v3_009",
+          "claim_type": "accuracy",
+          "calibration": "affirmative_overpromise"
+        }
+      ],
+      "calibrated_semantic_flags": 1,
+      "calibrated_semantic_flag_cases": [
+        {
+          "case_id": "case_fl_adv_v3_009",
+          "claim_type": "accuracy",
+          "calibration": "affirmative_overpromise"
+        }
+      ],
+      "calibration_cleared": [],
+      "calibration_invalid_clears": [],
+      "draft_est_cost_usd": 0.211026,
+      "semantic_grader_est_cost_usd": 0.136833,
+      "total_est_cost_usd": 0.347859,
+      "elapsed_s": 300.554
+    },
+    {
+      "run": 4,
+      "case_count": 28,
+      "forward_looking_violations": 0,
+      "forward_violation_cases": [],
+      "raw_semantic_flags": 0,
+      "raw_semantic_flag_cases": [],
+      "calibrated_semantic_flags": 0,
+      "calibrated_semantic_flag_cases": [],
+      "calibration_cleared": [],
+      "calibration_invalid_clears": [],
+      "draft_est_cost_usd": 0.217446,
+      "semantic_grader_est_cost_usd": 0.137862,
+      "total_est_cost_usd": 0.355308,
+      "elapsed_s": 317.486
+    },
+    {
+      "run": 5,
+      "case_count": 28,
+      "forward_looking_violations": 0,
+      "forward_violation_cases": [],
+      "raw_semantic_flags": 0,
+      "raw_semantic_flag_cases": [],
+      "calibrated_semantic_flags": 0,
+      "calibrated_semantic_flag_cases": [],
+      "calibration_cleared": [],
+      "calibration_invalid_clears": [],
+      "draft_est_cost_usd": 0.215061,
+      "semantic_grader_est_cost_usd": 0.138825,
+      "total_est_cost_usd": 0.353886,
+      "elapsed_s": 314.721
+    }
+  ],
+  "calibration_invalid_clears": [],
+  "cost_stats_usd": {
+    "samples_usd": [
+      0.347808,
+      0.349605,
+      0.347859,
+      0.355308,
+      0.353886
+    ],
+    "total_usd": 1.754466,
+    "mean_usd": 0.350893,
+    "min_usd": 0.347808,
+    "max_usd": 0.355308,
+    "stdev_usd": 0.003494
+  },
+  "verdict_note": "NOT STABLE under the captured runs. Treat any deterministic forward-looking hit as a candidate-control gap; treat any new non-consent or non-granted calibrated gate flag as an adjudication item. Do not tune the candidate to held-out cases.",
+  "public_safety_note": "Counts, case IDs, reason codes, and cost estimates only. Raw model drafts, model reasoning, quoted spans, trace paths, and semantic decision files remain local/gitignored.",
+  "total_elapsed_s": 1538.164
+}

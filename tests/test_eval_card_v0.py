@@ -8,20 +8,23 @@ the v0 baseline is supposed to surface.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
 from evals.run import run_eval
-from scripts.generate_eval_card import (
-    LAUNCH_POSTURE,
-    generate_eval_card,
-)
+from scripts.generate_eval_card import generate_eval_card
 
 
 ROOT = Path(__file__).resolve().parents[1]
 FULL_V0_PATH = ROOT / "case_studies" / "financial_links_reliability" / "data" / "cases_v0.jsonl"
 MAKEFILE = ROOT / "Makefile"
+LAUNCH_DECISION_JSON = ROOT / "reports" / "launch_decision.json"
+
+
+def _launch_decision_posture() -> str:
+    return json.loads(LAUNCH_DECISION_JSON.read_text())["posture_line"]
 
 
 @pytest.fixture()
@@ -87,8 +90,10 @@ def test_v0_card_keeps_not_ready_for_pilot_posture(
     baseline, improved = v0_paired_reports
     out = tmp_path / "v0_card.md"
     generate_eval_card(baseline, improved, out)
-    assert "NOT READY FOR PILOT" in out.read_text()
-    assert LAUNCH_POSTURE in out.read_text()
+    markdown = out.read_text()
+    assert "NOT READY FOR PILOT" in markdown
+    assert _launch_decision_posture() in markdown
+    assert "reports/launch_decision.md" in markdown
 
 
 def test_v0_card_does_not_overclaim_pilot_or_production_readiness(

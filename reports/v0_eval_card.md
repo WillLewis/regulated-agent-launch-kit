@@ -101,7 +101,7 @@ commitments, or regulatory thresholds.
 
 ## Launch posture
 
-**NOT READY FOR PILOT — local synthetic vertical slice only; proceed to evaluator catch-rate and regression-loop work.**
+**NOT READY FOR PILOT — local synthetic vertical slice only; computed from launch gates, not a launch-readiness claim.  See [`reports/launch_decision.md`](reports/launch_decision.md) for the per-gate computation.**
 
 Specifically: this lab still owes an `EvaluatorNode` catch-rate grader,
 a regression loop that pins failing traces as future test cases, an

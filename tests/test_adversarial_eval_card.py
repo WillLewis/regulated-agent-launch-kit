@@ -11,13 +11,14 @@ has yet been run.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
 import pytest
 
 from evals.run import run_eval
-from scripts.generate_eval_card import LAUNCH_POSTURE, generate_eval_card
+from scripts.generate_eval_card import generate_eval_card
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +27,11 @@ ADVERSARIAL_PATH = (
 )
 MAKEFILE = ROOT / "Makefile"
 README = ROOT / "README.md"
+LAUNCH_DECISION_JSON = ROOT / "reports" / "launch_decision.json"
+
+
+def _launch_decision_posture() -> str:
+    return json.loads(LAUNCH_DECISION_JSON.read_text())["posture_line"]
 
 
 @pytest.fixture()
@@ -106,7 +112,8 @@ def test_card_surfaces_expected_adversarial_failure_labels(
 def test_card_keeps_not_ready_for_pilot_posture(adversarial_card: Path) -> None:
     text = adversarial_card.read_text()
     assert "NOT READY FOR PILOT" in text
-    assert LAUNCH_POSTURE in text
+    assert _launch_decision_posture() in text
+    assert "reports/launch_decision.md" in text
 
 
 def test_card_does_not_claim_pilot_or_production_readiness(

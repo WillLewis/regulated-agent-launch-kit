@@ -22,6 +22,11 @@ from scripts.generate_eval_card import (
 ROOT = Path(__file__).resolve().parents[1]
 SMOKE_PATH = ROOT / "case_studies" / "financial_links_reliability" / "evals" / "smoke.jsonl"
 GENERATOR_SCRIPT = ROOT / "scripts" / "generate_eval_card.py"
+LAUNCH_DECISION_JSON = ROOT / "reports" / "launch_decision.json"
+
+
+def _launch_decision_posture() -> str:
+    return json.loads(LAUNCH_DECISION_JSON.read_text())["posture_line"]
 
 
 @pytest.fixture()
@@ -131,8 +136,24 @@ def test_card_includes_launch_posture(
     out = tmp_path / "card.md"
     generate_eval_card(baseline, improved, out)
     markdown = out.read_text()
+    posture = _launch_decision_posture()
     assert "NOT READY FOR PILOT" in markdown
-    assert LAUNCH_POSTURE in markdown
+    assert posture in markdown
+    assert "reports/launch_decision.md" in markdown
+
+
+def test_card_uses_computed_decision_not_constant(
+    baseline_and_improved_reports: tuple[Path, Path],
+    tmp_path: Path,
+) -> None:
+    baseline, improved = baseline_and_improved_reports
+    out = tmp_path / "card.md"
+    generate_eval_card(baseline, improved, out)
+    markdown = out.read_text()
+
+    assert _launch_decision_posture() in markdown
+    assert "reports/launch_decision.md" in markdown
+    assert "use as evidence for review" not in markdown
 
 
 def test_generator_rejects_missing_baseline(tmp_path: Path) -> None:

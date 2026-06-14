@@ -37,6 +37,23 @@ LAUNCH_POSTURE = (
     "use as evidence for review, not as a launch-readiness claim."
 )
 
+
+def _computed_launch_posture() -> str:
+    """Return the computed launch posture when the decision artifact exists."""
+
+    decision_path = REPO_ROOT / "reports" / "launch_decision.json"
+    try:
+        data = json.loads(decision_path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return LAUNCH_POSTURE
+    if not isinstance(data, dict) or not isinstance(data.get("posture_line"), str):
+        return LAUNCH_POSTURE
+    return (
+        f"{data['posture_line']}  See "
+        "[`reports/launch_decision.md`](reports/launch_decision.md) for the "
+        "per-gate computation."
+    )
+
 SYNTHETIC_DISCLAIMER = (
     "This card is generated from synthetic local eval runs. Identifiers, "
     "policies, partner configurations, and risk bands are fabricated for "
@@ -594,6 +611,7 @@ def render_card(
             "launch-readiness recommendation could be made."
         )
     )
+    launch_posture = _computed_launch_posture()
 
     closing_paragraph = (
         "This is a synthetic deterministic change set; it demonstrates the eval\n"
@@ -670,7 +688,7 @@ Verdicts are categorical: `within_p50`, `between_p50_and_p95`,
 
 ## Launch posture
 
-**{LAUNCH_POSTURE}**
+**{launch_posture}**
 
 {launch_posture_rider}
 """

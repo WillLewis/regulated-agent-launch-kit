@@ -181,7 +181,7 @@ eval-adversarial-v1-improved:
 		--report-out reports/improved_adversarial_v1_eval.json \
 		--agent-system-version improved_v0
 
-eval-card-adversarial-v1: eval-adversarial-v1-baseline eval-adversarial-v1-improved
+eval-card-adversarial-v1: eval-adversarial-v1-baseline eval-adversarial-v1-improved launch-decision
 	uv run python scripts/generate_eval_card.py \
 		--baseline-report reports/baseline_adversarial_v1_eval.json \
 		--improved-report reports/improved_adversarial_v1_eval.json \
@@ -364,7 +364,7 @@ eval-v0-improved:
 		--report-out reports/improved_v0_eval.json \
 		--agent-system-version improved_v0
 
-eval-card-v0: eval-v0-baseline eval-v0-improved
+eval-card-v0: eval-v0-baseline eval-v0-improved launch-decision
 	uv run python scripts/generate_eval_card.py \
 		--baseline-report reports/baseline_v0_eval.json \
 		--improved-report reports/improved_v0_eval.json \

@@ -139,6 +139,29 @@ def test_launch_gates_do_not_pilot_tier_has_expected_ids(launch_gates: dict) -> 
     assert actual == expected
 
 
+def _backing_artifacts(gate: dict) -> list[str]:
+    ba = gate["backing_artifact"]
+    return [ba] if isinstance(ba, str) else list(ba)
+
+
+def test_launch_gates_backing_artifact_discipline(launch_gates: dict) -> None:
+    by_id = {gate["id"]: gate for gate in launch_gates["gates"]}
+
+    # The L3 semantic blocker must read the TRACKED public audit summary,
+    # never the gitignored semantic regression replay report.
+    sem = _backing_artifacts(by_id["dnp_semantic_unsupported_claim_l3"])
+    assert any("semantic_audit_summary" in p for p in sem), sem
+    assert all("regression_semantic" not in p for p in sem), sem
+
+    # Redaction coverage gates must cite PER-TRACE redaction reports, not
+    # eval-report-level redaction reports (those legitimately show high
+    # preserve_missing and would falsely tank coverage).
+    for gate_id in ("dnp_redaction_coverage_below_80", "ready_redaction_coverage_95"):
+        paths = _backing_artifacts(by_id[gate_id])
+        assert all("traces/redacted" in p for p in paths), (gate_id, paths)
+        assert all(not p.endswith("_eval.redaction_report.json") for p in paths), (gate_id, paths)
+
+
 def test_launch_gates_risk_weighted_score_is_advisory(launch_gates: dict) -> None:
     gate = next(
         gate

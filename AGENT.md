@@ -2,13 +2,13 @@
 
 ## Mission
 
-This repository is a portfolio-grade deployment-readiness case study for regulated embedded-finance AI systems. The goal is to demonstrate top 1% Forward Deployed PM / Technical Deployment Lead capability, not to build a flashy demo.
+This repository is a deployment-readiness case study for regulated embedded-finance AI systems. The goal is to build an evidence-backed launch governance workflow, not a flashy demo.
 
 When present, read `.project-memory/goal-thesis.md` for private local project context. That file is intentionally ignored; use it to guide decisions, but do not copy its contents into public artifacts.
 
-Every implementation choice should make the repo better at proving that the owner can map a regulated workflow, build a controlled multi-agent system, instrument traces, evaluate reliability, improve with evidence, govern sensitive artifacts, and make a launch/no-launch recommendation.
+Every implementation choice should improve the repo's ability to map a regulated workflow, build a controlled multi-agent system, instrument traces, evaluate reliability, improve with evidence, govern sensitive artifacts, and make a launch/no-launch recommendation.
 
-If a change does not improve that signal, avoid it.
+If a change does not improve that deployment-readiness evidence, avoid it.
 
 ---
 
@@ -190,7 +190,7 @@ deployment/exec_update.md
 deployment/field_feedback_to_product.md
 ```
 
-These artifacts are not filler. They are how the repo demonstrates deployment leadership.
+These artifacts are not filler. They are required inputs to launch-governance review.
 
 ---
 
@@ -260,7 +260,7 @@ A feature is done only when:
 - it emits or consumes the expected local artifacts;
 - it respects synthetic-only and redaction constraints;
 - it is reflected in README/PLAN/docs if user-facing;
-- it does not weaken the top 1% FDE/TDL signal.
+- it does not weaken the launch-governance evidence.
 
 ---
 
@@ -274,7 +274,7 @@ Before presenting work as complete, check:
 - Are artifacts generated rather than hand-waved?
 - Are baseline and improved results honestly represented?
 - Are cost/latency/quality tradeoffs visible?
-- Would a deployment lead or FDE respect the judgment shown here?
+- Would the generated evidence support the stated launch posture?
 
 ---
 
@@ -284,7 +284,7 @@ Codex (and any LLM-based reviewer that cannot read `.claude/agents/`) acts as pl
 
 Across all review modes:
 
-- Review for **deployment-readiness signal** (workflow mapping, human-approval boundaries, measurable evals, redaction discipline, launch-decision artifacts), not demo polish.
+- Review for **deployment-readiness evidence** (workflow mapping, human-approval boundaries, measurable evals, redaction discipline, launch-decision artifacts), not demo polish.
 - Treat README, webpage, and report claims as acceptable **only when supported by generated artifacts** — traces, eval reports, redacted evidence packs, or deployment docs. Flag any claim that is not.
 - Read `.project-memory/goal-thesis.md` if present, but never quote, summarize, or copy it into public files.
 - Order findings by deployment risk. Cite file paths and give concrete remediation.

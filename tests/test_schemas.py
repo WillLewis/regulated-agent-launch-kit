@@ -16,8 +16,13 @@ from app.schemas import (
     Case,
     ConsentState,
     EvaluatorReport,
+    GateStatus,
     GraderResult,
     HandoffPayload,
+    LaunchDecision,
+    LaunchGateResult,
+    LaunchTier,
+    LaunchVerdict,
     PolicyReference,
     RiskBand,
     ToolCall,
@@ -126,3 +131,60 @@ def test_policy_reference_defaults_retrieved_true() -> None:
     ref = PolicyReference(policy_id="FL-CONSENT-001")
     assert ref.retrieved is True
     assert ref.version == "v0"
+
+
+def test_launch_gate_result_defaults_and_serializes_enums() -> None:
+    result = LaunchGateResult(
+        gate_id="ready_workflow_acceptance",
+        tier=LaunchTier.READY,
+        status=GateStatus.PASS,
+        observed=1.0,
+        threshold=1.0,
+        comparator=">=",
+        backing_artifact="reports/improved_adversarial_v1_eval.json",
+        explanation="Synthetic workflow acceptance graders passed.",
+    )
+
+    assert result.gating is True
+    dumped = result.model_dump(mode="json")
+    assert dumped["tier"] == "ready"
+    assert dumped["status"] == "pass"
+
+
+def test_launch_decision_defaults_and_round_trips() -> None:
+    gate = LaunchGateResult(
+        gate_id="dnp_evaluator_miss_l3",
+        tier=LaunchTier.DO_NOT_PILOT,
+        status=GateStatus.PASS,
+        observed=0,
+        threshold=0,
+        comparator="==",
+        backing_artifact="reports/improved_adversarial_v1_eval.json",
+        explanation="No L3 evaluator misses in the synthetic eval report.",
+    )
+    decision = LaunchDecision(
+        verdict=LaunchVerdict.DO_NOT_PILOT,
+        posture_line="NOT READY FOR PILOT - synthetic launch-gate decision.",
+        gate_results=[gate],
+        blockers=["dnp_semantic_unsupported_claim_l3"],
+        rationale="A semantic-only L3 unsupported-claim finding blocks pilot.",
+        inputs_digest={"reports/improved_adversarial_v1_eval.json": "abc123"},
+    )
+
+    assert decision.synthetic is True
+    assert decision.gates_version == "launch_gates_v0"
+    assert decision.model_dump(mode="json")["verdict"] == "DO_NOT_PILOT"
+
+    again = LaunchDecision.model_validate(decision.model_dump(mode="json"))
+    assert again == decision
+
+
+def test_launch_decision_default_collections_are_empty() -> None:
+    decision = LaunchDecision(
+        verdict=LaunchVerdict.READY_FOR_INTERNAL_PILOT,
+        posture_line="READY FOR INTERNAL PILOT - synthetic only.",
+        rationale="All gating launch checks passed on synthetic artifacts.",
+    )
+    assert decision.gate_results == []
+    assert decision.blockers == []
+    assert decision.inputs_digest == {}

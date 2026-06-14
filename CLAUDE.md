@@ -2,7 +2,7 @@
 
 # Claude Code Instructions
 
-Claude Code is the primary implementation driver for this project. Follow the shared agent instructions above, then apply these Claude-specific working rules.
+Follow the shared agent instructions above, then apply these Claude-specific working rules.
 
 ---
 
@@ -19,7 +19,7 @@ Claude Code is the primary implementation driver for this project. Follow the sh
 
 ## Product bar
 
-The purpose of this repo is to demonstrate top 1% Forward Deployed PM / Technical Deployment Lead capability. Do not optimize for a shallow demo. Optimize for artifacts that prove deployment judgment:
+Do not optimize for a shallow demo. Optimize for artifacts that make launch governance measurable:
 
 - workflow mapping;
 - business-value hypothesis;
@@ -30,9 +30,9 @@ The purpose of this repo is to demonstrate top 1% Forward Deployed PM / Technica
 - redacted evidence;
 - incident-to-regression loop;
 - launch-readiness recommendation;
-- delivery leadership artifacts.
+- delivery artifacts.
 
-If a proposed change does not improve this signal, push back or deprioritize it.
+If a proposed change does not improve the deployment-readiness evidence, push back or deprioritize it.
 
 ---
 
@@ -121,7 +121,7 @@ Do not build a mock dashboard that invents metrics. The mini webpage must visual
 
 ## Coordination with Codex
 
-Codex should be used as planner, QA reviewer, architecture critic, and eval-loop reviewer. Before large changes, prepare a clear summary that Codex can review:
+For large changes, prepare a clear review summary:
 
 ```text
 Goal:

@@ -99,7 +99,7 @@ system):
 - [Risk register](deployment/risk_register.md) — synthetic deployment risks with severity, likelihood, mitigation, detection signal, and owner.
 - [Dependency map](deployment/dependency_map.md) — what blocks what across technical, product, and review dependencies.
 
-Deployment-leadership artifacts for the **current** Financial Links state — each
+Launch-governance artifacts for the **current** Financial Links state — each
 claim points to a generated eval/evidence artifact; all stay **NOT READY FOR
 PILOT**:
 
@@ -997,7 +997,7 @@ artifacts exist.
 ## Starter Layout
 
 - `PLAN.md` tracks phase status and locked decisions.
-- `deployment/` contains the customer-deployment leadership artifacts.
+- `deployment/` contains the launch-governance artifacts.
 - `case_studies/` contains public-safe synthetic datasets and dataset cards.
 - `app/` contains the LangGraph system under test; `app/graph.py` is the canonical Financial Links execution path.
 - `evals/` contains deterministic graders and the local eval runner.

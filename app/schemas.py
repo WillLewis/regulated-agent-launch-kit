@@ -234,3 +234,53 @@ class TraceRecord(BaseModel):
     failure_labels: list[str] = Field(default_factory=list)
     latency_ms: int = 0
     est_cost_usd: float = 0.0
+
+
+class LaunchTier(str, Enum):
+    READY = "ready"
+    CONSTRAINTS = "constraints"
+    DO_NOT_PILOT = "do_not_pilot"
+
+
+class GateStatus(str, Enum):
+    PASS = "pass"
+    FAIL = "fail"
+    NOT_APPLICABLE = "not_applicable"
+
+
+class LaunchVerdict(str, Enum):
+    READY_FOR_INTERNAL_PILOT = "READY_FOR_INTERNAL_PILOT"
+    PILOT_WITH_CONSTRAINTS = "PILOT_WITH_CONSTRAINTS"
+    DO_NOT_PILOT = "DO_NOT_PILOT"
+
+
+class LaunchGateResult(BaseModel):
+    """Single configured launch gate outcome.
+
+    Phase 1 defines the result shape only. Phase 2 will compute these
+    results from local artifacts without calling graders or models.
+    """
+
+    gate_id: str
+    tier: LaunchTier
+    status: GateStatus
+    observed: Any = None
+    threshold: Any = None
+    comparator: str | None = None
+    gating: bool = True
+    backing_artifact: str | list[str]
+    explanation: str
+    evidence: dict[str, Any] = Field(default_factory=dict)
+
+
+class LaunchDecision(BaseModel):
+    """Computed synthetic launch verdict assembled from gate results."""
+
+    verdict: LaunchVerdict
+    posture_line: str
+    gate_results: list[LaunchGateResult] = Field(default_factory=list)
+    blockers: list[str] = Field(default_factory=list)
+    rationale: str
+    inputs_digest: dict[str, str] = Field(default_factory=dict)
+    gates_version: str = "launch_gates_v0"
+    synthetic: bool = True

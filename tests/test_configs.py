@@ -25,6 +25,11 @@ def latency_budgets() -> dict:
     return yaml.safe_load((ROOT / "configs" / "latency_budgets.yaml").read_text())
 
 
+@pytest.fixture(scope="module")
+def launch_gates() -> dict:
+    return yaml.safe_load((ROOT / "configs" / "launch_gates.yaml").read_text())
+
+
 def test_approval_matrix_default_boundary_is_draft_only(approval_matrix: dict) -> None:
     assert approval_matrix["default_action_boundary"] == "draft_only"
 
@@ -86,3 +91,60 @@ def test_financial_links_policies_are_synthetic_and_present() -> None:
     assert "FL-CONSENT-001" in ids
     assert "FL-PARTNER-FALLBACK-002" in ids
     assert "FL-COPY-STALE-003" in ids
+
+
+def test_launch_gates_config_header(launch_gates: dict) -> None:
+    assert launch_gates["version"] == "launch_gates_v0"
+    assert launch_gates["synthetic"] is True
+    assert launch_gates["high_risk_bands"] == ["L3"]
+
+
+def test_launch_gates_have_unique_ids_and_required_keys(launch_gates: dict) -> None:
+    required = {
+        "id",
+        "description",
+        "tier",
+        "signal",
+        "comparator",
+        "threshold",
+        "severity",
+        "gating",
+        "backing_artifact",
+    }
+    gates = launch_gates["gates"]
+    ids = [gate["id"] for gate in gates]
+    assert len(ids) == len(set(ids))
+    for gate in gates:
+        assert set(gate) == required, gate["id"]
+
+
+def test_launch_gates_use_known_tiers(launch_gates: dict) -> None:
+    known = {"ready", "constraints", "do_not_pilot"}
+    assert {gate["tier"] for gate in launch_gates["gates"]} <= known
+
+
+def test_launch_gates_do_not_pilot_tier_has_expected_ids(launch_gates: dict) -> None:
+    expected = {
+        "dnp_evaluator_miss_l3",
+        "dnp_semantic_unsupported_claim_l3",
+        "dnp_consent_grader_failure_l3",
+        "dnp_redaction_coverage_below_80",
+        "dnp_regression_failure_high_risk",
+    }
+    actual = {
+        gate["id"]
+        for gate in launch_gates["gates"]
+        if gate["tier"] == "do_not_pilot"
+    }
+    assert actual == expected
+
+
+def test_launch_gates_risk_weighted_score_is_advisory(launch_gates: dict) -> None:
+    gate = next(
+        gate
+        for gate in launch_gates["gates"]
+        if gate["id"] == "ready_risk_weighted_score"
+    )
+    assert gate["gating"] is False
+    assert gate["comparator"] == "advisory"
+    assert gate["threshold"] is None

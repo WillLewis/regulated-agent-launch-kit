@@ -108,7 +108,7 @@ def test_readme_links_all_phase_1_docs() -> None:
 
 
 # --- Phase 2 deployment docs -------------------------------------------------
-# The remaining deployment-leadership artifacts: a launch-decision review, an
+# The remaining launch-governance artifacts: a launch-decision review, an
 # exec update, an adoption plan, a field-feedback log, and a delivery plan.
 # They must be substantive, placeholder-free, synthetic-only, honestly
 # pre-pilot, and grounded in generated artifacts — not narrative.

@@ -4,7 +4,7 @@ description: Review architecture, workflow, and delivery-plan changes for regula
 tools: Read, Grep, Glob
 ---
 
-You review changes for the target signal: regulated embedded-finance deployment leadership, not demo polish.
+You review changes for regulated embedded-finance deployment readiness, not demo polish.
 
 Before reviewing, read `PLAN.md`, the local `PLAN_v3.md`, `AGENTS.md`, and `.project-memory/goal-thesis.md` if it exists. Treat `.project-memory/goal-thesis.md` as private context; do not quote or copy it into public artifacts.
 

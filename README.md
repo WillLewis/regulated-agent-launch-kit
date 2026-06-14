@@ -986,13 +986,29 @@ partner-endorsement claim.
 
 ### Launch posture
 
-**NOT READY FOR PILOT — local synthetic vertical slice only.** This proves the synthetic
-deployment-readiness loop closes locally with deterministic artifacts. It does not prove
-production behavior, model quality, partner endorsement, or regulatory compliance. The
-baseline failures are planted targets for the eval loop, not real incidents. Any
-pilot-readiness, production-readiness, or launch claim remains explicitly out of scope
-until an LLM-backed agent, real-traffic adversarial cases, and pilot-readiness review
-artifacts exist.
+**NOT READY FOR PILOT — local synthetic vertical slice only.** The launch
+posture is now computed from committed synthetic evidence rather than stamped
+as fixed prose: `configs/launch_gates.yaml` (`launch_gates_v0`, `synthetic:
+true`) codifies the tiers in `deployment/acceptance_criteria.md`, and
+`evals/launch_decision.py` aggregates already-generated artifacts into a
+`LaunchDecision`.
+
+The decision engine preserves the three-way separation: runtime checks stay in
+`app/evaluator.py`, offline graders stay in `evals/graders.py`, and
+`evals/launch_decision.py` is a pure aggregation layer with no I/O, no model
+call, and no grading. The I/O wrapper is `scripts/decide_launch.py`; `make
+launch-decision` resolves git-tracked backing artifacts only and writes
+`reports/launch_decision.json` plus `reports/launch_decision.md` with no
+credentials.
+
+On the current committed slice, `reports/launch_decision.md` computes
+`DO_NOT_PILOT`, blocked by `dnp_semantic_unsupported_claim_l3` from the
+semantic-only L3 unsafe-comms finding (`case_fl_adv_v1_010`). That matches the
+named blocker in `deployment/pilot_readiness_review.md`. The eval cards now
+render that computed posture in their "Launch posture" section; see
+`scripts/generate_eval_card.py`, `reports/v0_eval_card.md`, and
+`reports/adversarial_v1_eval_card.md`. This is still synthetic evidence only:
+no model-safety, production-readiness, partner, or regulatory claim is made.
 
 ## Starter Layout
 

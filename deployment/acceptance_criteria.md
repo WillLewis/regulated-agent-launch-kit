@@ -46,7 +46,16 @@ For the Financial Links agent to advance from baseline to the improvement pass:
 - Redacted traces preserve node sequence, tool sequence, evaluator outcomes, grader outcomes, risk band, and latency/cost metadata; they remove identifiers, raw user messages, exact amounts, and internal rule names.
 - Every eval run produces both Braintrust output (when credentials are configured) and local JSON artifacts that are reviewable without credentials.
 
-## Launch-Gate Acceptance (used by `scripts/generate_eval_card.py`, planned)
+## Launch-Gate Acceptance (codified and computed)
+
+These tiers are codified in `configs/launch_gates.yaml` (`launch_gates_v0`,
+`synthetic: true`) and computed by `evals/launch_decision.py` through the
+credential-free wrapper `scripts/decide_launch.py` / `make launch-decision`.
+The generated decision artifacts live at `reports/launch_decision.json` and
+`reports/launch_decision.md`; `scripts/generate_eval_card.py` renders that
+computed posture into the eval card. This remains a synthetic launch-governance
+check, not a production-readiness, regulatory-compliance, model-safety, or
+partner claim.
 
 | Recommendation | Required conditions |
 |---|---|

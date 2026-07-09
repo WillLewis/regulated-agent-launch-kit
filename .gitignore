@@ -1,5 +1,10 @@
 .project-memory/
 
+# Local-only recert documentation (product IP), relocated out of the code
+# package into a dedicated docs folder. Kept out of the public case-study
+# repo, exactly like .project-memory/ above. Intentionally not published.
+docs-private/
+
 # Detailed phased build plan is kept as a local working document and
 # is intentionally not published in this repo.
 /PLAN_v3.md
